@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, type CSSProperties } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -20,6 +20,12 @@ import { CanvasBackground } from './CanvasBackground';
 import { CanvasControls } from './CanvasControls';
 import { MiniMap } from './MiniMap';
 
+const nodeFontSizeBySetting = {
+  s: 'var(--rm-font-sm)',
+  m: 'var(--rm-font-md)',
+  l: 'var(--rm-font-lg)',
+} as const;
+
 function CanvasInner(): React.JSX.Element {
   useGlobalHotkeys();
 
@@ -35,7 +41,15 @@ function CanvasInner(): React.JSX.Element {
 
   const setSelectedNodeId = useUIStore((s) => s.setSelectedNodeId);
   const editingNodeId = useUIStore((s) => s.editingNodeId);
+  const settings = useUIStore((s) => s.settings);
   const isEditing = editingNodeId !== null;
+  const canvasStyle = useMemo(
+    () =>
+      ({
+        '--rm-node-font-size': nodeFontSizeBySetting[settings.nodeFontSize],
+      }) as CSSProperties,
+    [settings.nodeFontSize],
+  );
 
   // Регистрация кастомных типов (мемоизация обязательна для производительности)
   const nodeTypes = useMemo<NodeTypes>(() => ({ [MIND_NODE_TYPE]: MindNode }), []);
@@ -65,10 +79,11 @@ function CanvasInner(): React.JSX.Element {
       defaultEdgeOptions={{ type: MIND_EDGE_TYPE }}
       nodesDraggable={!isEditing}
       panOnDrag={!isEditing}
+      style={canvasStyle}
     >
-      <CanvasBackground />
-      <CanvasControls />
-      <MiniMap />
+      {settings.showGrid && <CanvasBackground />}
+      {settings.showControls && <CanvasControls />}
+      {settings.showMiniMap && <MiniMap />}
     </ReactFlow>
   );
 }

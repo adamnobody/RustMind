@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMindMapStore } from '../../../store/mindMapStore';
-import { useUIStore } from '../../../store/uiStore';
+import { type NodeEditingIntent, useUIStore } from '../../../store/uiStore';
 
 interface UseNodeEditingParams {
   nodeId: string;
@@ -11,7 +11,7 @@ interface UseNodeEditingResult {
   isEditing: boolean;
   draft: string;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
-  startEditing: () => void;
+  startEditing: (intent?: NodeEditingIntent) => void;
   onChange: (value: string) => void;
   commit: () => void;
   cancel: () => void;
@@ -23,7 +23,9 @@ export function useNodeEditing({
   initialLabel,
 }: UseNodeEditingParams): UseNodeEditingResult {
   const editingNodeId = useUIStore((s) => s.editingNodeId);
+  const editingIntent = useUIStore((s) => s.editingIntent);
   const setEditingNodeId = useUIStore((s) => s.setEditingNodeId);
+  const clearNodeEditing = useUIStore((s) => s.clearNodeEditing);
   const updateNodeLabel = useMindMapStore((s) => s.updateNodeLabel);
 
   const isEditing = editingNodeId === nodeId;
@@ -33,21 +35,30 @@ export function useNodeEditing({
   // Синхронизируем черновик с актуальным label при входе в режим
   useEffect(() => {
     if (isEditing) {
-      setDraft(initialLabel);
+      const nextDraft =
+        editingIntent?.mode === 'replace' ? (editingIntent.initialValue ?? '') : initialLabel;
+      setDraft(nextDraft);
       // Фокус + выделение текста на следующем тике
       requestAnimationFrame(() => {
         const el = textareaRef.current;
         if (el) {
           el.focus();
-          el.select();
+          if (editingIntent?.mode === 'replace') {
+            el.setSelectionRange(nextDraft.length, nextDraft.length);
+          } else {
+            el.select();
+          }
         }
       });
     }
-  }, [isEditing, initialLabel]);
+  }, [editingIntent, isEditing, initialLabel]);
 
-  const startEditing = useCallback(() => {
-    setEditingNodeId(nodeId);
-  }, [nodeId, setEditingNodeId]);
+  const startEditing = useCallback(
+    (intent: NodeEditingIntent = { mode: 'edit' }) => {
+      setEditingNodeId(nodeId, intent);
+    },
+    [nodeId, setEditingNodeId],
+  );
 
   const onChange = useCallback((value: string) => {
     setDraft(value);
@@ -59,13 +70,13 @@ export function useNodeEditing({
     if (trimmed.length > 0 && trimmed !== initialLabel) {
       updateNodeLabel(nodeId, trimmed);
     }
-    setEditingNodeId(null);
-  }, [draft, initialLabel, nodeId, updateNodeLabel, setEditingNodeId]);
+    clearNodeEditing();
+  }, [clearNodeEditing, draft, initialLabel, nodeId, updateNodeLabel]);
 
   const cancel = useCallback(() => {
     setDraft(initialLabel);
-    setEditingNodeId(null);
-  }, [initialLabel, setEditingNodeId]);
+    clearNodeEditing();
+  }, [clearNodeEditing, initialLabel]);
 
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

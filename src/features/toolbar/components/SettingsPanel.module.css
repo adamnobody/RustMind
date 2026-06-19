@@ -1,0 +1,33 @@
+.sections {
+  display: grid;
+  gap: var(--rm-space-6);
+}
+
+.section,
+.about {
+  display: grid;
+  gap: var(--rm-space-4);
+  padding: var(--rm-space-4);
+  border: 1px solid var(--rm-border);
+  border-radius: var(--rm-radius-lg);
+  background: color-mix(in srgb, var(--rm-surface-hover) 62%, transparent);
+}
+
+.heading {
+  color: var(--rm-text);
+  font-size: var(--rm-font-md);
+  font-weight: var(--rm-font-weight-bold);
+  letter-spacing: -0.015em;
+}
+
+.aboutTitle {
+  color: var(--rm-text);
+  font-size: var(--rm-font-lg);
+  font-weight: var(--rm-font-weight-bold);
+}
+
+.aboutText {
+  color: var(--rm-text-muted);
+  font-size: var(--rm-font-sm);
+  line-height: var(--rm-line);
+}

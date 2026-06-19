@@ -1,21 +1,75 @@
 /* Custom styles for React Flow wrapper and elements */
 .react-flow {
-  --xy-edge-stroke-default: var(--border-color);
-  --xy-edge-stroke-selected-default: var(--accent-color);
-  --xy-connection-path-stroke-default: var(--accent-color);
-  --xy-node-border-default: var(--node-border-default);
-  --xy-node-bg-default: var(--node-bg-default);
+  --xy-edge-stroke-default: var(--rm-edge);
+  --xy-edge-stroke-selected-default: var(--rm-accent);
+  --xy-connection-path-stroke-default: var(--rm-accent);
+  --xy-node-border-default: var(--rm-node-border);
+  --xy-node-bg-default: var(--rm-node-bg);
 
-  background-color: var(--bg-primary);
+  background:
+    radial-gradient(circle at 18% 18%, var(--rm-accent-muted), transparent 26%),
+    linear-gradient(180deg, var(--rm-canvas-bg), var(--rm-bg));
 }
 
 .react-flow__edge-path {
   stroke-width: 2;
+  transition:
+    stroke var(--rm-transition-fast) var(--rm-ease-out-expo),
+    stroke-width var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:focus .react-flow__edge-path {
+  stroke: var(--rm-accent);
+  stroke-width: 2.5;
 }
 
 .react-flow__handle {
-  width: 8px;
-  height: 8px;
-  background-color: var(--accent-color);
-  border: 1px solid var(--bg-primary);
+  width: 9px;
+  height: 9px;
+  background-color: var(--rm-edge);
+  border: 2px solid var(--rm-node-bg);
+  transition:
+    background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    transform var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.react-flow__handle:hover {
+  background-color: var(--rm-accent);
+  transform: scale(1.15);
+}
+
+.react-flow__controls {
+  overflow: hidden;
+  border: 1px solid var(--rm-border) !important;
+  border-radius: var(--rm-radius) !important;
+  background: color-mix(in srgb, var(--rm-surface) 92%, transparent) !important;
+  box-shadow: var(--rm-shadow-sm);
+  backdrop-filter: blur(14px);
+}
+
+.react-flow__controls-button {
+  width: 32px !important;
+  height: 32px !important;
+  border-bottom: 1px solid var(--rm-border) !important;
+  background: transparent !important;
+  color: var(--rm-text-muted) !important;
+  transition:
+    background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    color var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.react-flow__controls-button:hover {
+  background: var(--rm-surface-hover) !important;
+  color: var(--rm-text) !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor;
+}
+
+.react-flow__minimap {
+  overflow: hidden;
+  box-shadow: var(--rm-shadow-sm);
+  backdrop-filter: blur(14px);
 }

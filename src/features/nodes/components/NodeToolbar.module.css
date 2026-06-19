@@ -2,10 +2,11 @@
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 4px;
-  background-color: var(--rm-surface);
+  gap: var(--rm-space-1);
+  padding: var(--rm-space-1);
+  background-color: color-mix(in srgb, var(--rm-surface-elevated) 94%, transparent);
   border: 1px solid var(--rm-border);
   border-radius: var(--rm-radius);
   box-shadow: var(--rm-shadow);
+  backdrop-filter: blur(16px);
 }

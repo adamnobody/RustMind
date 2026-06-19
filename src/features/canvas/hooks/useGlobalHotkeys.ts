@@ -3,6 +3,10 @@ import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { isEditableTarget } from '../../../shared/lib/dom';
 
+function isPrintableCharacter(e: KeyboardEvent): boolean {
+  return !e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1 && e.key.trim().length > 0;
+}
+
 /**
  * Глобальные горячие клавиши для управления узлами.
  * Работают по выделенному узлу (selectedNodeId), когда НЕ идёт
@@ -29,11 +33,10 @@ export function useGlobalHotkeys(): void {
         return;
       }
 
-      // Helper: выделить + сразу редактировать новый узел
+      // Helper: выделить новый узел без авто-редактирования — быстрый наброс структуры.
       const focusNew = (newId: string | null): void => {
         if (newId) {
           setSelectedNodeId(newId);
-          setEditingNodeId(newId);
         }
       };
 
@@ -60,7 +63,7 @@ export function useGlobalHotkeys(): void {
         case 'F2': {
           if (selectedNodeId) {
             e.preventDefault();
-            setEditingNodeId(selectedNodeId);
+            setEditingNodeId(selectedNodeId, { mode: 'edit' });
           }
           break;
         }
@@ -87,8 +90,13 @@ export function useGlobalHotkeys(): void {
           break;
         }
 
-        default:
+        default: {
+          if (selectedNodeId && isPrintableCharacter(e)) {
+            e.preventDefault();
+            setEditingNodeId(selectedNodeId, { mode: 'replace', initialValue: e.key });
+          }
           break;
+        }
       }
     }
 

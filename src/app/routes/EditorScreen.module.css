@@ -5,7 +5,9 @@
   height: 100vh;
   background-color: var(--rm-bg);
 }
+
 .canvasWrapper {
+  position: relative;
   flex: 1;
   min-height: 0;
 }

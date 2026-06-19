@@ -31,7 +31,7 @@ export function useNodeActions({
     (newId: string | null) => {
       if (newId) {
         setSelectedNodeId(newId);
-        setEditingNodeId(newId);
+        setEditingNodeId(newId, { mode: 'edit' });
       }
     },
     [setSelectedNodeId, setEditingNodeId],

@@ -1,0 +1,45 @@
+.field {
+  display: grid;
+  gap: var(--rm-space-2);
+}
+
+.label {
+  color: var(--rm-text-muted);
+  font-size: var(--rm-font-sm);
+  font-weight: var(--rm-font-weight-medium);
+}
+
+.control {
+  display: inline-grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--rm-space-1);
+  padding: var(--rm-space-1);
+  border: 1px solid var(--rm-border);
+  border-radius: var(--rm-radius);
+  background: var(--rm-surface-hover);
+}
+
+.item {
+  min-width: 44px;
+  border: none;
+  border-radius: var(--rm-radius-sm);
+  background: transparent;
+  color: var(--rm-text-muted);
+  cursor: pointer;
+  font-size: var(--rm-font-sm);
+  font-weight: var(--rm-font-weight-semibold);
+  padding: var(--rm-space-2) var(--rm-space-3);
+  transition:
+    background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    color var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.item:hover {
+  color: var(--rm-text);
+}
+
+.active {
+  background: var(--rm-surface-elevated);
+  color: var(--rm-text);
+  box-shadow: var(--rm-shadow-sm);
+}

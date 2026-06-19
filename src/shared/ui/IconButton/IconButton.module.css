@@ -3,8 +3,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border: none;
   border-radius: var(--rm-radius-sm);
@@ -12,8 +12,9 @@
   color: var(--rm-text);
   cursor: pointer;
   transition:
-    background-color 0.15s,
-    color 0.15s;
+    transform var(--rm-transition-fast) var(--rm-ease-out-expo),
+    background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    color var(--rm-transition-fast) var(--rm-ease-out-expo);
 }
 
 .button:hover {
@@ -34,6 +35,6 @@
 }
 
 .danger:hover {
-  color: #ef4444;
-  background-color: rgba(239, 68, 68, 0.12);
+  color: var(--rm-danger);
+  background-color: var(--rm-danger-muted);
 }

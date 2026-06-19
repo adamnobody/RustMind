@@ -28,7 +28,7 @@ export const NODE_COLORS = {
 /** Тексты по умолчанию */
 export const DEFAULT_LABELS = {
   root: 'Главная тема',
-  child: 'Новая тема',
+  child: 'Новая идея',
 } as const;
 
 /** Идентификаторы горячих клавиш (для useHotkeys) */

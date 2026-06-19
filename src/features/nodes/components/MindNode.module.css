@@ -1,45 +1,60 @@
 /* MindNode.module.css */
 .node {
-  min-width: 120px;
-  max-width: 240px;
-  padding: 10px 16px;
+  min-width: 132px;
+  max-width: 260px;
+  padding: var(--rm-space-3) var(--rm-space-4);
   border-radius: var(--rm-radius);
   background-color: var(--rm-node-bg);
-  border: 2px solid var(--rm-node-border);
+  border: 1px solid var(--rm-node-border);
   color: var(--rm-text);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--rm-node-font-size);
+  font-weight: var(--rm-font-weight-medium);
   text-align: center;
-  box-shadow: var(--rm-shadow);
+  box-shadow: var(--rm-shadow-sm);
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    transform var(--rm-transition-fast) var(--rm-ease-out-expo),
+    border-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    box-shadow var(--rm-transition-fast) var(--rm-ease-out-expo);
   user-select: none;
 }
 
 .node:hover {
   border-color: var(--rm-accent-hover);
+  background-color: var(--rm-surface-elevated);
+  box-shadow: var(--rm-shadow);
+  transform: translateY(-1px);
 }
 
 .root {
-  font-size: 16px;
-  font-weight: 700;
-  min-width: 160px;
-  padding: 14px 22px;
+  min-width: 172px;
+  padding: var(--rm-space-4) var(--rm-space-6);
+  background-color: var(--rm-node-bg-root);
+  border-color: var(--rm-accent);
+  font-size: calc(var(--rm-node-font-size) + 2px);
+  font-weight: var(--rm-font-weight-bold);
+  letter-spacing: -0.015em;
 }
 
 .selected {
   border-color: var(--rm-node-selected) !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3), var(--rm-shadow);
+  box-shadow: var(--rm-shadow-glow) !important;
 }
 
 .editing {
   border-color: var(--rm-accent) !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4), var(--rm-shadow);
+  box-shadow: var(--rm-shadow-glow) !important;
   cursor: text;
+}
+
+.placeholder {
+  color: var(--rm-node-placeholder) !important;
+  font-style: italic;
 }
 
 .label {
   display: block;
   word-break: break-word;
-  line-height: 1.3;
+  line-height: var(--rm-line-tight);
 }

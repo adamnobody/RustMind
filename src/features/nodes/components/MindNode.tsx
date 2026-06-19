@@ -6,6 +6,7 @@ import { NodeEditor } from './NodeEditor';
 import { MindNodeToolbar } from './NodeToolbar';
 import { useNodeEditing } from '../hooks/useNodeEditing';
 import type { MindNodeData } from '../types';
+import { DEFAULT_LABELS } from '../../../shared/lib/constants';
 import styles from './MindNode.module.css';
 
 function MindNodeComponent({
@@ -32,6 +33,7 @@ function MindNodeComponent({
   }, [startEditing]);
 
   const showToolbar = Boolean(selected) && !isEditing;
+  const isPlaceholderLabel = !isEditing && nodeData.label === DEFAULT_LABELS.child;
 
   return (
     <div
@@ -40,6 +42,7 @@ function MindNodeComponent({
         isRoot && styles.root,
         selected && styles.selected,
         isEditing && styles.editing,
+        isPlaceholderLabel && styles.placeholder,
       )}
       style={{
         backgroundColor: nodeData.color ?? undefined,

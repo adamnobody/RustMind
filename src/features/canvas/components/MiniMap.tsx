@@ -6,11 +6,12 @@ export function MiniMap(): React.JSX.Element {
       pannable
       zoomable
       nodeColor="var(--rm-accent)"
-      maskColor="rgba(15, 23, 42, 0.6)"
+      maskColor="var(--rm-minimap-mask)"
       style={{
         backgroundColor: 'var(--rm-surface)',
         border: '1px solid var(--rm-border)',
-        borderRadius: 'var(--rm-radius-sm)',
+        borderRadius: 'var(--rm-radius)',
+        boxShadow: 'var(--rm-shadow-sm)',
       }}
     />
   );

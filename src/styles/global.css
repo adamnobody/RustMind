@@ -2,8 +2,13 @@
 @import './variables.css';
 @import './reactflow-overrides.css';
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+* {
   margin: 0;
   padding: 0;
 }
@@ -14,11 +19,20 @@ body,
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: var(--font-family);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  font-family: var(--rm-font-family);
+  font-feature-settings:
+    'kern' 1,
+    'liga' 1,
+    'cv05' 1,
+    'tnum' 1;
+  background-color: var(--rm-bg);
+  color: var(--rm-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  text-rendering: geometricPrecision;
 }
 
 button,
@@ -28,4 +42,46 @@ textarea {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
+}
+
+button {
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable='true'] {
+  user-select: text;
+}
+
+::selection {
+  background-color: var(--rm-accent-muted);
+  color: var(--rm-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--rm-accent);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--rm-border-strong);
+  border: 3px solid transparent;
+  border-radius: var(--rm-radius-full);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--rm-text-subtle);
+  border: 3px solid transparent;
+  background-clip: content-box;
 }

@@ -7,7 +7,8 @@ export function CanvasControls(): React.JSX.Element {
       style={{
         backgroundColor: 'var(--rm-surface)',
         border: '1px solid var(--rm-border)',
-        borderRadius: 'var(--rm-radius-sm)',
+        borderRadius: 'var(--rm-radius)',
+        boxShadow: 'var(--rm-shadow-sm)',
       }}
     />
   );

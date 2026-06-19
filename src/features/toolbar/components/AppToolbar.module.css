@@ -1,0 +1,70 @@
+.toolbar {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rm-space-4);
+  height: 64px;
+  padding: 0 var(--rm-space-4);
+  border-bottom: 1px solid var(--rm-border);
+  background: color-mix(in srgb, var(--rm-surface) 88%, transparent);
+  backdrop-filter: blur(18px);
+  user-select: none;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--rm-space-3);
+  min-width: 0;
+}
+
+.logo {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--rm-border);
+  border-radius: var(--rm-radius);
+  background:
+    radial-gradient(circle at 30% 25%, var(--rm-accent-hover), transparent 42%),
+    var(--rm-accent);
+  color: var(--rm-text);
+  font-size: var(--rm-font-lg);
+  font-weight: var(--rm-font-weight-bold);
+  box-shadow: var(--rm-shadow-sm);
+}
+
+.document {
+  display: grid;
+  min-width: 0;
+}
+
+.appName {
+  color: var(--rm-text);
+  font-size: var(--rm-font-sm);
+  font-weight: var(--rm-font-weight-bold);
+  letter-spacing: -0.01em;
+}
+
+.documentName {
+  overflow: hidden;
+  color: var(--rm-text-muted);
+  font-size: var(--rm-font-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--rm-space-1);
+}
+
+.separator {
+  width: 1px;
+  height: 22px;
+  margin: 0 var(--rm-space-1);
+  background: var(--rm-border);
+}

@@ -6,7 +6,7 @@ export function CanvasBackground(): React.JSX.Element {
       variant={BackgroundVariant.Dots}
       gap={20}
       size={1}
-      color="var(--rm-border)"
+      color="var(--rm-grid)"
     />
   );
 }
