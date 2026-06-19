@@ -1,0 +1,11 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--rm-bg);
+}
+.canvasWrapper {
+  flex: 1;
+  min-height: 0;
+}

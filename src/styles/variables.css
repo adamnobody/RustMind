@@ -1,0 +1,58 @@
+:root {
+  /* Тёмная тема (default) */
+  --rm-bg: #0f172a;
+  --rm-bg-canvas: #0b1220;
+  --rm-surface: #1e293b;
+  --rm-surface-hover: #273449;
+  --rm-border: #334155;
+  --rm-text: #f1f5f9;
+  --rm-text-muted: #94a3b8;
+  --rm-accent: #2563eb;
+  --rm-accent-hover: #1d4ed8;
+  --rm-node-bg: #1e293b;
+  --rm-node-border: #334155;
+  --rm-node-selected: #2563eb;
+  --rm-edge: #475569;
+  --rm-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --rm-radius: 10px;
+  --rm-radius-sm: 6px;
+
+  /* Legacy Fallbacks for general styles */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --bg-primary: var(--rm-bg);
+  --bg-secondary: var(--rm-surface);
+  --bg-tertiary: var(--rm-surface-hover);
+  --text-primary: var(--rm-text);
+  --text-secondary: var(--rm-text-muted);
+  --text-tertiary: var(--rm-text-muted);
+  --border-color: var(--rm-border);
+  --border-focus: var(--rm-accent);
+  --accent-color: var(--rm-accent);
+  --accent-hover: var(--rm-accent-hover);
+  --node-bg-default: var(--rm-node-bg);
+  --node-bg-root: var(--rm-node-bg);
+  --node-border-default: var(--rm-node-border);
+  --node-border-root: var(--rm-node-selected);
+  --node-text-default: var(--rm-text);
+  --node-text-root: var(--rm-text);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: var(--rm-shadow);
+  --transition-speed: 0.2s;
+}
+
+[data-theme='light'] {
+  --rm-bg: #f8fafc;
+  --rm-bg-canvas: #ffffff;
+  --rm-surface: #ffffff;
+  --rm-surface-hover: #f1f5f9;
+  --rm-border: #e2e8f0;
+  --rm-text: #0f172a;
+  --rm-text-muted: #64748b;
+  --rm-accent: #2563eb;
+  --rm-accent-hover: #1d4ed8;
+  --rm-node-bg: #ffffff;
+  --rm-node-border: #cbd5e1;
+  --rm-node-selected: #2563eb;
+  --rm-edge: #94a3b8;
+  --rm-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}

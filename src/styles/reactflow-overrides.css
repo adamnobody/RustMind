@@ -1,0 +1,21 @@
+/* Custom styles for React Flow wrapper and elements */
+.react-flow {
+  --xy-edge-stroke-default: var(--border-color);
+  --xy-edge-stroke-selected-default: var(--accent-color);
+  --xy-connection-path-stroke-default: var(--accent-color);
+  --xy-node-border-default: var(--node-border-default);
+  --xy-node-bg-default: var(--node-bg-default);
+
+  background-color: var(--bg-primary);
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+}
+
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background-color: var(--accent-color);
+  border: 1px solid var(--bg-primary);
+}

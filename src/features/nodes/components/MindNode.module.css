@@ -1,0 +1,45 @@
+/* MindNode.module.css */
+.node {
+  min-width: 120px;
+  max-width: 240px;
+  padding: 10px 16px;
+  border-radius: var(--rm-radius);
+  background-color: var(--rm-node-bg);
+  border: 2px solid var(--rm-node-border);
+  color: var(--rm-text);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: var(--rm-shadow);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  user-select: none;
+}
+
+.node:hover {
+  border-color: var(--rm-accent-hover);
+}
+
+.root {
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 160px;
+  padding: 14px 22px;
+}
+
+.selected {
+  border-color: var(--rm-node-selected) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3), var(--rm-shadow);
+}
+
+.editing {
+  border-color: var(--rm-accent) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4), var(--rm-shadow);
+  cursor: text;
+}
+
+.label {
+  display: block;
+  word-break: break-word;
+  line-height: 1.3;
+}
