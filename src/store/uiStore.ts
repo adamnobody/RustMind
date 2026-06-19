@@ -1,18 +1,22 @@
 import { create } from 'zustand';
 
-interface UIState {
+export type Theme = 'dark' | 'light';
+
+interface UiState {
   selectedNodeId: string | null;
   editingNodeId: string | null;
-  theme: 'light' | 'dark';
+  theme: Theme;
+
   setSelectedNodeId: (id: string | null) => void;
   setEditingNodeId: (id: string | null) => void;
-  setTheme: (theme: 'light' | 'dark') => void;
+  setTheme: (theme: Theme) => void;
 }
 
-export const useUIStore = create<UIState>((set) => ({
+export const useUIStore = create<UiState>((set) => ({
   selectedNodeId: null,
   editingNodeId: null,
-  theme: 'light',
+  theme: 'dark',
+
   setSelectedNodeId: (id) => set({ selectedNodeId: id }),
   setEditingNodeId: (id) => set({ editingNodeId: id }),
   setTheme: (theme) => set({ theme }),

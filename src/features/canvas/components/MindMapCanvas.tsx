@@ -15,11 +15,14 @@ import { MindEdge } from '../../edges/components/MindEdge';
 import { MIND_NODE_TYPE } from '../../nodes/types';
 import { MIND_EDGE_TYPE } from '../../edges/types';
 
+import { useGlobalHotkeys } from '../hooks/useGlobalHotkeys';
 import { CanvasBackground } from './CanvasBackground';
 import { CanvasControls } from './CanvasControls';
 import { MiniMap } from './MiniMap';
 
 function CanvasInner(): React.JSX.Element {
+  useGlobalHotkeys();
+
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useMindMapStore(
     useShallow((s) => ({
       nodes: s.nodes,

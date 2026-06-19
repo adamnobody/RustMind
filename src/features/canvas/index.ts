@@ -4,3 +4,4 @@ export { CanvasControls } from './components/CanvasControls';
 export { MiniMap } from './components/MiniMap';
 export { useCanvasViewport } from './hooks/useCanvasViewport';
 export { useCanvasShortcuts } from './hooks/useCanvasShortcuts';
+export { useGlobalHotkeys } from './hooks/useGlobalHotkeys';
