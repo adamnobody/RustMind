@@ -27,6 +27,9 @@ interface UiState {
   isSettingsOpen: boolean;
   settings: UiSettings;
 
+  /** fitView callback registered by the canvas component. Not persisted. */
+  _fitViewFn: (() => void) | null;
+
   setSelectedNodeId: (id: string | null) => void;
   setEditingNodeId: (id: string | null, intent?: NodeEditingIntent) => void;
   startNodeEditing: (id: string, intent?: NodeEditingIntent) => void;
@@ -45,6 +48,8 @@ interface UiState {
     key: 'autoLayoutOnChange' | 'confirmBranchDelete',
     value: boolean,
   ) => void;
+  registerFitView: (fn: () => void) => void;
+  triggerFitView: () => void;
 }
 
 const STORAGE_KEY = 'rustmind-ui';
@@ -98,6 +103,7 @@ export const useUIStore = create<UiState>()(
       theme: initialTheme,
       isSettingsOpen: false,
       settings: defaultSettings,
+      _fitViewFn: null,
 
       setSelectedNodeId: (id) => set({ selectedNodeId: id }),
       setEditingNodeId: (id, intent = { mode: 'edit' }) =>
@@ -139,6 +145,8 @@ export const useUIStore = create<UiState>()(
         set((state) => ({
           settings: { ...state.settings, [key]: value },
         })),
+      registerFitView: (fn) => set({ _fitViewFn: fn }),
+      triggerFitView: () => get()._fitViewFn?.(),
     }),
     {
       name: STORAGE_KEY,
