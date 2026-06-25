@@ -26,13 +26,13 @@ export function SettingsPanel(): React.JSX.Element {
   const setBehaviorOption = useUIStore((s) => s.setBehaviorOption);
 
   return (
-    <Drawer isOpen={isOpen} title="Настройки" onClose={closeSettings}>
+    <Drawer isOpen={isOpen} title="Settings" onClose={closeSettings}>
       <div className={styles.sections}>
         <section className={styles.section}>
-          <h3 className={styles.heading}>Внешний вид</h3>
-          <SegmentedControl label="Тема" value={theme} options={themeOptions} onChange={setTheme} />
+          <h3 className={styles.heading}>Appearance</h3>
+          <SegmentedControl label="Theme" value={theme} options={themeOptions} onChange={setTheme} />
           <SegmentedControl
-            label="Размер текста узлов"
+            label="Node font size"
             value={settings.nodeFontSize}
             options={nodeFontOptions}
             onChange={setNodeFontSize}
@@ -40,45 +40,45 @@ export function SettingsPanel(): React.JSX.Element {
         </section>
 
         <section className={styles.section}>
-          <h3 className={styles.heading}>Холст</h3>
+          <h3 className={styles.heading}>Canvas</h3>
           <Switch
-            label="Показывать сетку"
+            label="Show grid"
             checked={settings.showGrid}
             onCheckedChange={(value) => setCanvasOption('showGrid', value)}
           />
           <Switch
-            label="Показывать мини-карту"
+            label="Show mini-map"
             checked={settings.showMiniMap}
             onCheckedChange={(value) => setCanvasOption('showMiniMap', value)}
           />
           <Switch
-            label="Показывать контролы зума"
+            label="Show zoom controls"
             checked={settings.showControls}
             onCheckedChange={(value) => setCanvasOption('showControls', value)}
           />
         </section>
 
         <section className={styles.section}>
-          <h3 className={styles.heading}>Поведение</h3>
+          <h3 className={styles.heading}>Behaviour</h3>
           <Switch
-            label="Авто-layout при изменениях"
-            description="TODO: подключим вместе с Dagre-layout на шаге 8."
+            label="Auto-layout on changes"
+            description="Re-layout automatically when nodes are added or deleted."
             checked={settings.autoLayoutOnChange}
             onCheckedChange={(value) => setBehaviorOption('autoLayoutOnChange', value)}
           />
           <Switch
-            label="Подтверждать удаление ветки"
-            description="TODO: диалог подтверждения появится после слоя persistence."
+            label="Confirm branch delete"
+            description="Show a confirmation dialog before deleting a branch."
             checked={settings.confirmBranchDelete}
             onCheckedChange={(value) => setBehaviorOption('confirmBranchDelete', value)}
           />
         </section>
 
         <section className={styles.about}>
-          <h3 className={styles.heading}>О программе</h3>
+          <h3 className={styles.heading}>About</h3>
           <p className={styles.aboutTitle}>RustMind 0.1.0</p>
           <p className={styles.aboutText}>
-            Быстрый desktop-редактор mind map, схем и блок-схем на Tauri, React и React Flow.
+            Fast desktop mind-map editor built on Tauri, React, and React Flow.
           </p>
         </section>
       </div>
