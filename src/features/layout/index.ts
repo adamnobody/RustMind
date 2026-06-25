@@ -1,3 +1,4 @@
 export * from './engines/layoutTypes';
-export * from './engines/dagreLayout';
+// dagreLayout re-exports from lib/layoutTree, no need to duplicate
+export * from './lib/layoutTree';
 export * from './applyLayout';

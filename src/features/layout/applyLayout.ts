@@ -1,13 +1,17 @@
 import type { AppNode, AppEdge, LayoutType } from '../../store/types';
+import { layoutTree } from './lib/layoutTree';
 
 /**
- * ВРЕМЕННАЯ ЗАГЛУШКА. Полноценная реализация через dagre — на шаге 8.
- * Сейчас возвращает узлы без изменений, чтобы стор компилировался и работал.
+ * Applies auto-layout to nodes and edges based on the layout type.
+ * Returns new nodes with recalculated positions.
  */
 export function applyLayout(
   nodes: AppNode[],
   edges: AppEdge[],
-  _layoutType: LayoutType,
+  layoutType: LayoutType,
 ): { nodes: AppNode[]; edges: AppEdge[] } {
-  return { nodes, edges };
+  // 'radial' not yet implemented, fall back to LR
+  const direction = layoutType === 'tree-TB' ? 'TB' : 'LR';
+  const laidOutNodes = layoutTree(nodes, edges, { direction });
+  return { nodes: laidOutNodes, edges };
 }
