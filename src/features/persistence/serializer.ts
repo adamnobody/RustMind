@@ -1,12 +1,20 @@
-import { AppNode, AppEdge } from '../../store/types';
+import { AppNode, AppEdge, LayoutType, LoadDocumentPayload } from '../../store/types';
 import { SerializedMindMap } from './schema';
+
+const VALID_LAYOUT_TYPES: LayoutType[] = ['tree-LR', 'tree-TB', 'radial'];
+
+function coerceLayoutType(value: string): LayoutType {
+  return VALID_LAYOUT_TYPES.includes(value as LayoutType) ? (value as LayoutType) : 'tree-LR';
+}
 
 export function serializeMindMap(
   documentName: string,
   layoutType: string,
   nodes: AppNode[],
   edges: AppEdge[],
+  createdAt?: string,
 ): SerializedMindMap {
+  const now = new Date().toISOString();
   return {
     version: 1,
     documentName,
@@ -28,20 +36,15 @@ export function serializeMindMap(
       source: e.source,
       target: e.target,
     })),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: createdAt ?? now,
+    updatedAt: now,
   };
 }
 
-export function deserializeMindMap(serialized: SerializedMindMap): {
-  documentName: string;
-  layoutType: string;
-  nodes: AppNode[];
-  edges: AppEdge[];
-} {
+export function deserializeMindMap(serialized: SerializedMindMap): LoadDocumentPayload {
   return {
     documentName: serialized.documentName,
-    layoutType: serialized.layoutType,
+    layoutType: coerceLayoutType(serialized.layoutType),
     nodes: serialized.nodes.map((n) => ({
       id: n.id,
       type: 'mindNode',
