@@ -40,6 +40,7 @@ export const HOTKEYS = {
   editNode: 'F2',
   exitEdit: 'Escape',
   save: 'mod+s',
+  saveAs: 'mod+shift+s',
   open: 'mod+o',
   newMap: 'mod+n',
 } as const;

@@ -10,6 +10,7 @@ export type IconName =
   | 'file'
   | 'folder-open'
   | 'save'
+  | 'save-as'
   | 'undo'
   | 'redo'
   | 'layout'
@@ -89,6 +90,15 @@ const ICON_PATHS: Record<IconName, React.JSX.Element> = {
       <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
       <polyline points="17 21 17 13 7 13 7 21" />
       <polyline points="7 3 7 8 15 8" />
+    </>
+  ),
+  'save-as': (
+    <>
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+      <polyline points="17 21 17 13 7 13 7 21" />
+      <polyline points="7 3 7 8 15 8" />
+      <line x1="18" y1="9" x2="21" y2="9" />
+      <line x1="19.5" y1="7.5" x2="19.5" y2="10.5" />
     </>
   ),
   undo: <path d="M3 7v6h6M3 13a9 9 0 1 0 3-7.7L3 8" />,
