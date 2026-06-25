@@ -24,17 +24,16 @@ export function useNodeActions({
   const deleteNode = useMindMapStore((s) => s.deleteNode);
 
   const setSelectedNodeId = useUIStore((s) => s.setSelectedNodeId);
-  const setEditingNodeId = useUIStore((s) => s.setEditingNodeId);
 
-  // После создания: выделяем новый узел и сразу открываем редактирование
+  // После создания: выделяем новый узел (без авто-редактирования).
+  // Вход в edit — явным Enter/F2/двойным кликом.
   const focusNewNode = useCallback(
     (newId: string | null) => {
       if (newId) {
         setSelectedNodeId(newId);
-        setEditingNodeId(newId, { mode: 'edit' });
       }
     },
-    [setSelectedNodeId, setEditingNodeId],
+    [setSelectedNodeId],
   );
 
   const addChild = useCallback(() => {

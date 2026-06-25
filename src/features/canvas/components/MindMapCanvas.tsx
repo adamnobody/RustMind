@@ -64,7 +64,6 @@ function CanvasInner(): React.JSX.Element {
   );
 
   const setSelectedNodeId = useUIStore((s) => s.setSelectedNodeId);
-  const setEditingNodeId = useUIStore((s) => s.setEditingNodeId);
   const editingNodeId = useUIStore((s) => s.editingNodeId);
   const settings = useUIStore((s) => s.settings);
   const isEditing = editingNodeId !== null;
@@ -100,10 +99,9 @@ function CanvasInner(): React.JSX.Element {
       const newId = addChildNode(connectionState.fromNode.id, position);
       if (newId) {
         setSelectedNodeId(newId);
-        setEditingNodeId(newId, { mode: 'edit' });
       }
     },
-    [addChildNode, screenToFlowPosition, setSelectedNodeId, setEditingNodeId],
+    [addChildNode, screenToFlowPosition, setSelectedNodeId],
   );
 
   // Drag перемещения узла = одна запись истории: снимок на старте, dirty на финише.
@@ -126,6 +124,7 @@ function CanvasInner(): React.JSX.Element {
       onNodeDragStart={handleNodeDragStart}
       onNodeDragStop={handleNodeDragStop}
       onSelectionChange={handleSelectionChange}
+      onPaneClick={() => setSelectedNodeId(null)}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       fitView
