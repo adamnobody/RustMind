@@ -29,14 +29,17 @@
   height: 9px;
   background-color: var(--rm-edge);
   border: 2px solid var(--rm-node-bg);
-  transition:
-    background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
-    transform var(--rm-transition-fast) var(--rm-ease-out-expo);
+  /* Не анимируем transform: ReactFlow держит хэндл по центру края через
+     transform: translate(...). Любое его переопределение сместит точку. */
+  transition: background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    box-shadow var(--rm-transition-fast) var(--rm-ease-out-expo);
 }
 
 .react-flow__handle:hover {
   background-color: var(--rm-accent);
-  transform: scale(1.15);
+  /* Визуальное укрупнение без изменения геометрии — кольцо через box-shadow,
+     поэтому позиция точки на краю узла не «уезжает» при наведении. */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rm-accent) 35%, transparent);
 }
 
 .react-flow__controls {
