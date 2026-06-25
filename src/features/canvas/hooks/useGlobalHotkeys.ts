@@ -19,7 +19,7 @@ export function useGlobalHotkeys(): void {
       // чтобы не пересоздавать обработчик на каждый рендер.
       const { selectedNodeId, editingNodeId, setSelectedNodeId, setEditingNodeId } =
         useUIStore.getState();
-      const { nodes, addChildNode, addSiblingNode, deleteNode } =
+      const { nodes, addChildNode, addSiblingNode, deleteNode, undo, redo } =
         useMindMapStore.getState();
 
       // 1. Если идёт редактирование — глобальные хоткеи отключены
@@ -28,8 +28,26 @@ export function useGlobalHotkeys(): void {
         return;
       }
 
-      // 2. Если фокус в поле ввода (например, будущее поле имени документа) — пропускаем
+      // 2. Если фокус в поле ввода (например, будущее поле имени документа) — пропускаем.
+      //    Внутри textarea Ctrl+Z остаётся нативным undo, граф не трогаем.
       if (isEditableTarget(e.target)) {
+        return;
+      }
+
+      // 3. Undo / Redo графа (изолированы от редактора шагами 1–2 выше).
+      //    Ctrl/Cmd+Z — undo; Ctrl/Cmd+Shift+Z или Ctrl/Cmd+Y — redo.
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) {
+        e.preventDefault();
+        redo();
         return;
       }
 

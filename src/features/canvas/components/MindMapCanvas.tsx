@@ -1,10 +1,12 @@
-import { useMemo, useCallback, type CSSProperties } from 'react';
+import { useMemo, useCallback, useEffect, type CSSProperties } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
+  useReactFlow,
   type NodeTypes,
   type EdgeTypes,
   type OnSelectionChangeParams,
+  type FinalConnectionState,
 } from '@xyflow/react';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -29,17 +31,40 @@ const nodeFontSizeBySetting = {
 function CanvasInner(): React.JSX.Element {
   useGlobalHotkeys();
 
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useMindMapStore(
+  const { fitView, screenToFlowPosition } = useReactFlow();
+  const registerFitView = useUIStore((s) => s.registerFitView);
+
+  // Register fitView in UIStore so toolbar can call it from outside
+  useEffect(() => {
+    registerFitView(() => {
+      fitView({ padding: 0.1, duration: 300 });
+    });
+  }, [fitView, registerFitView]);
+
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    addChildNode,
+    pushHistory,
+    markDirty,
+  } = useMindMapStore(
     useShallow((s) => ({
       nodes: s.nodes,
       edges: s.edges,
       onNodesChange: s.onNodesChange,
       onEdgesChange: s.onEdgesChange,
       onConnect: s.onConnect,
+      addChildNode: s.addChildNode,
+      pushHistory: s.pushHistory,
+      markDirty: s.markDirty,
     })),
   );
 
   const setSelectedNodeId = useUIStore((s) => s.setSelectedNodeId);
+  const setEditingNodeId = useUIStore((s) => s.setEditingNodeId);
   const editingNodeId = useUIStore((s) => s.editingNodeId);
   const settings = useUIStore((s) => s.settings);
   const isEditing = editingNodeId !== null;
@@ -51,7 +76,6 @@ function CanvasInner(): React.JSX.Element {
     [settings.nodeFontSize],
   );
 
-  // Регистрация кастомных типов (мемоизация обязательна для производительности)
   const nodeTypes = useMemo<NodeTypes>(() => ({ [MIND_NODE_TYPE]: MindNode }), []);
   const edgeTypes = useMemo<EdgeTypes>(() => ({ [MIND_EDGE_TYPE]: MindEdge }), []);
 
@@ -62,6 +86,35 @@ function CanvasInner(): React.JSX.Element {
     [setSelectedNodeId],
   );
 
+  // Drag from handle → drop on empty canvas → create child node at drop point.
+  const handleConnectEnd = useCallback(
+    (event: MouseEvent | TouchEvent, connectionState: FinalConnectionState) => {
+      if (connectionState.isValid || !connectionState.fromNode) return;
+
+      // Экранные координаты точки отпускания (мышь или касание) →
+      // координаты потока, чтобы узел появился ровно там, где отпустили.
+      const point =
+        'changedTouches' in event ? event.changedTouches[0] : (event as MouseEvent);
+      const position = screenToFlowPosition({ x: point.clientX, y: point.clientY });
+
+      const newId = addChildNode(connectionState.fromNode.id, position);
+      if (newId) {
+        setSelectedNodeId(newId);
+        setEditingNodeId(newId, { mode: 'edit' });
+      }
+    },
+    [addChildNode, screenToFlowPosition, setSelectedNodeId, setEditingNodeId],
+  );
+
+  // Drag перемещения узла = одна запись истории: снимок на старте, dirty на финише.
+  const handleNodeDragStart = useCallback(() => {
+    pushHistory();
+  }, [pushHistory]);
+
+  const handleNodeDragStop = useCallback(() => {
+    markDirty();
+  }, [markDirty]);
+
   return (
     <ReactFlow
       nodes={nodes}
@@ -69,6 +122,9 @@ function CanvasInner(): React.JSX.Element {
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
+      onConnectEnd={handleConnectEnd}
+      onNodeDragStart={handleNodeDragStart}
+      onNodeDragStop={handleNodeDragStop}
       onSelectionChange={handleSelectionChange}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
@@ -88,7 +144,7 @@ function CanvasInner(): React.JSX.Element {
   );
 }
 
-/** Обёртка с ReactFlowProvider — обязательна для доступа к контексту */
+/** Wrapper with ReactFlowProvider - required for context access */
 export function MindMapCanvas(): React.JSX.Element {
   return (
     <ReactFlowProvider>
