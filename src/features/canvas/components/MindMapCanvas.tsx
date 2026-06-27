@@ -3,6 +3,7 @@ import {
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
+  ConnectionMode,
   type NodeTypes,
   type EdgeTypes,
   type OnSelectionChangeParams,
@@ -15,7 +16,7 @@ import { useUIStore } from '../../../store/uiStore';
 import { MindNode } from '../../nodes/components/MindNode';
 import { MindEdge } from '../../edges/components/MindEdge';
 import { MIND_NODE_TYPE } from '../../nodes/types';
-import { MIND_EDGE_TYPE } from '../../edges/types';
+import { MIND_EDGE_TYPE, oppositeHandle } from '../../edges/types';
 
 import { useGlobalHotkeys } from '../hooks/useGlobalHotkeys';
 import { CanvasBackground } from './CanvasBackground';
@@ -63,6 +64,8 @@ function CanvasInner(): React.JSX.Element {
     })),
   );
 
+  const handleVisibility = useMindMapStore((s) => s.projectSettings.handleVisibility);
+
   const setSelectedNodeId = useUIStore((s) => s.setSelectedNodeId);
   const editingNodeId = useUIStore((s) => s.editingNodeId);
   const settings = useUIStore((s) => s.settings);
@@ -96,7 +99,13 @@ function CanvasInner(): React.JSX.Element {
         'changedTouches' in event ? event.changedTouches[0] : (event as MouseEvent);
       const position = screenToFlowPosition({ x: point.clientX, y: point.clientY });
 
-      const newId = addChildNode(connectionState.fromNode.id, position);
+      // Ребро выходит ровно из того хэндла, с которого начат drag — без подмены.
+      // Входной хэндл нового узла — противоположный, чтобы линия шла прямо.
+      const sourceHandle = connectionState.fromHandle?.id ?? undefined;
+      const newId = addChildNode(connectionState.fromNode.id, position, {
+        sourceHandle,
+        targetHandle: oppositeHandle(sourceHandle),
+      });
       if (newId) {
         setSelectedNodeId(newId);
       }
@@ -114,32 +123,35 @@ function CanvasInner(): React.JSX.Element {
   }, [markDirty]);
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      onConnectEnd={handleConnectEnd}
-      onNodeDragStart={handleNodeDragStart}
-      onNodeDragStop={handleNodeDragStop}
-      onSelectionChange={handleSelectionChange}
-      onPaneClick={() => setSelectedNodeId(null)}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
-      fitView
-      minZoom={0.2}
-      maxZoom={2}
-      proOptions={{ hideAttribution: true }}
-      defaultEdgeOptions={{ type: MIND_EDGE_TYPE }}
-      nodesDraggable={!isEditing}
-      panOnDrag={!isEditing}
-      style={canvasStyle}
-    >
-      {settings.showGrid && <CanvasBackground />}
-      {settings.showControls && <CanvasControls />}
-      {settings.showMiniMap && <MiniMap />}
-    </ReactFlow>
+    <div data-handle-visibility={handleVisibility} style={{ width: '100%', height: '100%' }}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onConnectEnd={handleConnectEnd}
+        onNodeDragStart={handleNodeDragStart}
+        onNodeDragStop={handleNodeDragStop}
+        onSelectionChange={handleSelectionChange}
+        onPaneClick={() => setSelectedNodeId(null)}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        connectionMode={ConnectionMode.Loose}
+        fitView
+        minZoom={0.2}
+        maxZoom={2}
+        proOptions={{ hideAttribution: true }}
+        defaultEdgeOptions={{ type: MIND_EDGE_TYPE }}
+        nodesDraggable={!isEditing}
+        panOnDrag={!isEditing}
+        style={canvasStyle}
+      >
+        {settings.showGrid && <CanvasBackground />}
+        {settings.showControls && <CanvasControls />}
+        {settings.showMiniMap && <MiniMap />}
+      </ReactFlow>
+    </div>
   );
 }
 

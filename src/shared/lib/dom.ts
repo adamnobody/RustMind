@@ -9,7 +9,7 @@ export function isEditableTarget(target: EventTarget | null): boolean {
   }
 
   const tag = target.tagName.toLowerCase();
-  if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+  if (tag === 'input' || tag === 'textarea') {
     return true;
   }
 

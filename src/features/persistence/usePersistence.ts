@@ -40,6 +40,7 @@ export function usePersistence(): PersistenceActions {
         state.layoutType,
         state.nodes,
         state.edges,
+        state.projectSettings,
       );
       await fileService.saveToPath(path, data);
       state.setFilePath(path);
@@ -58,6 +59,7 @@ export function usePersistence(): PersistenceActions {
         state.layoutType,
         state.nodes,
         state.edges,
+        state.projectSettings,
       );
       await fileService.saveToPath(path, data);
       state.setFilePath(path);
@@ -79,9 +81,10 @@ export function usePersistence(): PersistenceActions {
       const payload = deserializeMindMap(data);
 
       const state = useMindMapStore.getState();
+      // Сохранённые позиции — источник истины: НЕ пересчитываем раскладку на
+      // открытии (это затирало бы ручное размещение и ломалось бы на free-рёбрах).
       state.loadDocument(payload);
       state.setFilePath(path);
-      state.applyAutoLayout();
       setTimeout(triggerFitView, 100);
     });
   }, [triggerFitView]);

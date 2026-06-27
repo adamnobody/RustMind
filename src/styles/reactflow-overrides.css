@@ -76,3 +76,31 @@
   box-shadow: var(--rm-shadow-sm);
   backdrop-filter: blur(14px);
 }
+
+/* ── Handle visibility modes ─────────────────────────────────────────────────
+   Controlled by data-handle-visibility on the canvas wrapper div.
+   "always" = default solid appearance (no overrides needed).
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* hidden: invisible by default, appear when the user hovers the node */
+[data-handle-visibility="hidden"] .react-flow__handle {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+[data-handle-visibility="hidden"] .react-flow__node:hover .react-flow__handle {
+  opacity: 1;
+}
+[data-handle-visibility="hidden"] .react-flow__handle:hover {
+  opacity: 1;
+}
+
+/* dashed: outlined / ghosted — visible but unobtrusive */
+[data-handle-visibility="dashed"] .react-flow__handle {
+  background-color: transparent;
+  border: 1.5px dashed var(--rm-edge);
+}
+[data-handle-visibility="dashed"] .react-flow__handle:hover {
+  background-color: var(--rm-accent);
+  border-color: var(--rm-accent);
+  border-style: solid;
+}

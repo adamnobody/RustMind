@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { IconButton } from '../../../shared/ui/IconButton/IconButton';
+import type { HandleVisibility } from '../../../store/types';
 import styles from './AppToolbar.module.css';
 
 interface AppToolbarProps {
@@ -24,6 +25,8 @@ export function AppToolbar({
   const redo = useMindMapStore((s) => s.redo);
   const canUndo = useMindMapStore((s) => s.canUndo);
   const canRedo = useMindMapStore((s) => s.canRedo);
+  const projectSettings = useMindMapStore((s) => s.projectSettings);
+  const setProjectSettings = useMindMapStore((s) => s.setProjectSettings);
   const theme = useUIStore((s) => s.theme);
   const toggleTheme = useUIStore((s) => s.toggleTheme);
   const openSettings = useUIStore((s) => s.openSettings);
@@ -59,6 +62,20 @@ export function AppToolbar({
         <IconButton icon="redo" label="Вернуть (Ctrl+Shift+Z)" onClick={redo} disabled={!canRedo} />
         <span className={styles.separator} aria-hidden="true" />
         <IconButton icon="layout" label="Auto-layout (L)" onClick={handleAutoLayout} />
+        <span className={styles.separator} aria-hidden="true" />
+        {/* Temporary handle-visibility switcher — full UI arrives at step 15/16 */}
+        <select
+          className={styles.handleVisSelect}
+          value={projectSettings.handleVisibility}
+          title="Видимость хэндлов соединений"
+          onChange={(e) =>
+            setProjectSettings({ handleVisibility: e.target.value as HandleVisibility })
+          }
+        >
+          <option value="hidden">Хэндлы: скрыты</option>
+          <option value="dashed">Хэндлы: пунктир</option>
+          <option value="always">Хэндлы: всегда</option>
+        </select>
         <IconButton
           icon={theme === 'dark' ? 'sun' : 'moon'}
           label={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}

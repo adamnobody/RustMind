@@ -6,17 +6,24 @@ import type {
   Connection,
 } from '@xyflow/react';
 import type { MindNodeData } from '../features/nodes/types';
+import type { MindEdgeData } from '../features/edges/types';
 
 export type AppNode = Node<MindNodeData>;
-export type AppEdge = Edge;
+export type AppEdge = Edge<MindEdgeData>;
 
 export type LayoutType = 'tree-LR' | 'tree-TB' | 'radial';
+export type HandleVisibility = 'hidden' | 'dashed' | 'always';
+
+export interface ProjectSettings {
+  handleVisibility: HandleVisibility;
+}
 
 export interface LoadDocumentPayload {
   documentName: string;
   layoutType: LayoutType;
   nodes: AppNode[];
   edges: AppEdge[];
+  projectSettings?: ProjectSettings;
 }
 
 /**
@@ -34,6 +41,7 @@ export type HistoryCategory = 'structural' | 'layout' | 'move' | 'text';
  * Содержит только источник истины (узлы, связи) и значимую мета
  * (layoutType) плюс категорию перехода. Эфемерное состояние (выделение,
  * hover, редактор, тема) сюда НЕ входит — иначе откат «прыгал» бы по UI.
+ * projectSettings намеренно НЕ входит: это preference документа, а не граф.
  */
 export interface HistorySnapshot {
   nodes: AppNode[];
@@ -50,6 +58,7 @@ export interface MindMapState {
   filePath: string | null;
   isDirty: boolean;
   layoutType: LayoutType;
+  projectSettings: ProjectSettings;
 
   /** Стек прошлого/будущего для undo/redo. */
   past: HistorySnapshot[];
@@ -57,7 +66,11 @@ export interface MindMapState {
   canUndo: boolean;
   canRedo: boolean;
 
-  addChildNode: (parentId: string, position?: { x: number; y: number }) => string | null;
+  addChildNode: (
+    parentId: string,
+    position?: { x: number; y: number },
+    handles?: { sourceHandle?: string; targetHandle?: string },
+  ) => string | null;
   addSiblingNode: (siblingId: string) => string | null;
   updateNodeLabel: (id: string, label: string) => void;
   updateNodeData: (id: string, data: Partial<MindNodeData>) => void;
@@ -83,6 +96,7 @@ export interface MindMapState {
   setDocumentName: (name: string) => void;
   markSaved: () => void;
   markDirty: () => void;
+  setProjectSettings: (patch: Partial<ProjectSettings>) => void;
 
   /** Снять снимок текущего дерева в past (для drag — на старте перетаскивания). */
   pushHistory: (category?: HistoryCategory) => void;

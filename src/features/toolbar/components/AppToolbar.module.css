@@ -68,3 +68,23 @@
   margin: 0 var(--rm-space-1);
   background: var(--rm-border);
 }
+
+/* Temporary handle-visibility select — replaces at step 15/16 */
+.handleVisSelect {
+  height: 30px;
+  padding: 0 var(--rm-space-2);
+  border: 1px solid var(--rm-border);
+  border-radius: var(--rm-radius);
+  background: var(--rm-surface);
+  color: var(--rm-text-muted);
+  font-size: var(--rm-font-xs);
+  cursor: pointer;
+  transition:
+    border-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    color var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.handleVisSelect:hover {
+  border-color: var(--rm-border-strong);
+  color: var(--rm-text);
+}

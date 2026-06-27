@@ -31,6 +31,9 @@ export const DEFAULT_LABELS = {
   child: 'Новая идея',
 } as const;
 
+/** Дефолт видимости хэндлов (используется в сторе и сериализаторе) */
+export const DEFAULT_HANDLE_VISIBILITY = 'dashed' as const;
+
 /** Идентификаторы горячих клавиш (для useHotkeys) */
 export const HOTKEYS = {
   addChild: 'Tab',

@@ -51,7 +51,7 @@ function MindNodeComponent({
       onDoubleClick={handleDoubleClick}
     >
       <MindNodeToolbar nodeId={id} isRoot={isRoot} isVisible={showToolbar} />
-      <NodeHandles isRoot={isRoot} />
+      <NodeHandles />
       {isEditing ? (
         <NodeEditor
           value={draft}

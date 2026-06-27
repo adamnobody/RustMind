@@ -36,7 +36,9 @@ export function useGlobalHotkeys(): void {
 
       // 3. Undo / Redo графа (изолированы от редактора шагами 1–2 выше).
       //    Ctrl/Cmd+Z — undo; Ctrl/Cmd+Shift+Z или Ctrl/Cmd+Y — redo.
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+      //    Сравниваем по e.code (физическая клавиша), а не e.key: при кириллице
+      //    e.key для клавиши Z = 'я', и сравнение с 'z' провалилось бы.
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
         e.preventDefault();
         if (e.shiftKey) {
           redo();
@@ -45,7 +47,7 @@ export function useGlobalHotkeys(): void {
         }
         return;
       }
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) {
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyY') {
         e.preventDefault();
         redo();
         return;

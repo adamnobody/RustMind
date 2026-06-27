@@ -263,3 +263,199 @@ describe('mindMapStore — fitView при undo/redo по категории', ()
     expect(fit).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('mindMapStore — onConnect', () => {
+  beforeEach(() => {
+    useMindMapStore.getState().resetDocument();
+  });
+
+  it('onConnect создаёт free-ребро с sourceHandle/targetHandle', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    store.addChildNode(rootId);
+    const childId = useMindMapStore.getState().nodes.find((n) => !n.data.isRoot)!.id;
+
+    useMindMapStore.getState().onConnect({
+      source: childId,
+      target: rootId,
+      sourceHandle: 'top',
+      targetHandle: 'bottom',
+    });
+
+    const { edges } = useMindMapStore.getState();
+    const assocEdge = edges.find((e) => e.source === childId && e.target === rootId);
+    expect(assocEdge).toBeDefined();
+    expect(assocEdge?.data?.kind).toBe('free');
+    expect(assocEdge?.sourceHandle).toBe('top');
+    expect(assocEdge?.targetHandle).toBe('bottom');
+  });
+
+  it('free-связь X→Y не делает Y потомком X (фильтр по kind)', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    // Два независимых потомка корня: X и Y (оба tree-рёбрами от корня).
+    const xId = store.addChildNode(rootId)!;
+    const yId = useMindMapStore.getState().addChildNode(rootId)!;
+
+    // Рисуем ассоциативную связь X → Y.
+    useMindMapStore.getState().onConnect({
+      source: xId,
+      target: yId,
+      sourceHandle: 'right',
+      targetHandle: 'left',
+    });
+
+    const state = useMindMapStore.getState();
+    // Родитель Y — по-прежнему корень, а не X.
+    expect(state.getParentId(yId)).toBe(rootId);
+    // Y не входит в поддерево X.
+    expect(state.getDescendantIds(xId)).not.toContain(yId);
+    // Каскадное удаление X не уносит Y.
+    useMindMapStore.getState().deleteNode(xId);
+    const after = useMindMapStore.getState();
+    expect(after.nodes.find((n) => n.id === yId)).toBeDefined();
+    expect(after.nodes.find((n) => n.id === xId)).toBeUndefined();
+  });
+
+  it('onConnect записывает structural-снапшот в историю', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    store.addChildNode(rootId);
+    const childId = useMindMapStore.getState().nodes.find((n) => !n.data.isRoot)!.id;
+
+    const prevHistoryLen = useMindMapStore.getState().past.length;
+    useMindMapStore.getState().onConnect({
+      source: childId,
+      target: rootId,
+      sourceHandle: 'top',
+      targetHandle: 'bottom',
+    });
+
+    const { past } = useMindMapStore.getState();
+    expect(past.length).toBeGreaterThan(prevHistoryLen);
+    expect(past.at(-1)?.category).toBe('structural');
+  });
+
+  it('undo после onConnect убирает ассоциативное ребро', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    store.addChildNode(rootId);
+    const childId = useMindMapStore.getState().nodes.find((n) => !n.data.isRoot)!.id;
+
+    useMindMapStore.getState().onConnect({
+      source: childId,
+      target: rootId,
+      sourceHandle: 'top',
+      targetHandle: 'bottom',
+    });
+    const edgesBefore = useMindMapStore.getState().edges.length;
+
+    useMindMapStore.getState().undo();
+    expect(useMindMapStore.getState().edges.length).toBe(edgesBefore - 1);
+  });
+});
+
+describe('mindMapStore — projectSettings', () => {
+  beforeEach(() => {
+    useMindMapStore.getState().resetDocument();
+  });
+
+  it('инициализируется с DEFAULT_HANDLE_VISIBILITY (dashed)', () => {
+    expect(useMindMapStore.getState().projectSettings.handleVisibility).toBe('dashed');
+  });
+
+  it('setProjectSettings обновляет handleVisibility и ставит isDirty', () => {
+    useMindMapStore.getState().setProjectSettings({ handleVisibility: 'always' });
+    const state = useMindMapStore.getState();
+    expect(state.projectSettings.handleVisibility).toBe('always');
+    expect(state.isDirty).toBe(true);
+  });
+
+  it('resetDocument сбрасывает projectSettings на дефолт', () => {
+    useMindMapStore.getState().setProjectSettings({ handleVisibility: 'hidden' });
+    useMindMapStore.getState().resetDocument();
+    expect(useMindMapStore.getState().projectSettings.handleVisibility).toBe('dashed');
+  });
+
+  it('loadDocument восстанавливает projectSettings из payload', () => {
+    useMindMapStore.getState().loadDocument({
+      documentName: 'Test',
+      layoutType: 'tree-LR',
+      nodes: [],
+      edges: [],
+      projectSettings: { handleVisibility: 'hidden' },
+    });
+    expect(useMindMapStore.getState().projectSettings.handleVisibility).toBe('hidden');
+  });
+
+  it('loadDocument без projectSettings: дефолт (dashed)', () => {
+    // Сначала выставляем не-дефолт
+    useMindMapStore.getState().setProjectSettings({ handleVisibility: 'always' });
+    // Загружаем документ без projectSettings (старый файл)
+    useMindMapStore.getState().loadDocument({
+      documentName: 'Old',
+      layoutType: 'tree-LR',
+      nodes: [],
+      edges: [],
+    });
+    expect(useMindMapStore.getState().projectSettings.handleVisibility).toBe('dashed');
+  });
+});
+
+describe('mindMapStore — хэндлы рёбер', () => {
+  beforeEach(() => {
+    useMindMapStore.getState().resetDocument();
+  });
+
+  it('addChildNode с handles сохраняет переданный хэндл (drag-в-пустоту)', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const childId = store.addChildNode(rootId, { x: 0, y: -200 }, {
+      sourceHandle: 'top',
+      targetHandle: 'bottom',
+    })!;
+
+    const edge = useMindMapStore.getState().edges.find((e) => e.target === childId)!;
+    expect(edge.sourceHandle).toBe('top');
+    expect(edge.targetHandle).toBe('bottom');
+    expect(edge.data?.kind).toBe('tree');
+  });
+
+  it('addChildNode без handles (Tab/Enter) — дефолт right/left', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const childId = store.addChildNode(rootId)!;
+
+    const edge = useMindMapStore.getState().edges.find((e) => e.target === childId)!;
+    expect(edge.sourceHandle).toBe('right');
+    expect(edge.targetHandle).toBe('left');
+  });
+
+  it('auto-layout НЕ меняет хэндлы рёбер (ни tree с кастомным хэндлом, ни free)', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+
+    // tree-ребёнок с нестандартным хэндлом 'bottom'
+    const childId = store.addChildNode(rootId, { x: 0, y: 200 }, {
+      sourceHandle: 'bottom',
+      targetHandle: 'top',
+    })!;
+    // free-связь child → root с хэндлами 'left'/'right'
+    useMindMapStore.getState().onConnect({
+      source: childId,
+      target: rootId,
+      sourceHandle: 'left',
+      targetHandle: 'right',
+    });
+
+    useMindMapStore.getState().applyAutoLayoutManual();
+
+    const state = useMindMapStore.getState();
+    const treeEdge = state.edges.find((e) => e.source === rootId && e.target === childId)!;
+    const freeEdge = state.edges.find((e) => e.source === childId && e.target === rootId)!;
+    expect(treeEdge.sourceHandle).toBe('bottom');
+    expect(treeEdge.targetHandle).toBe('top');
+    expect(freeEdge.sourceHandle).toBe('left');
+    expect(freeEdge.targetHandle).toBe('right');
+  });
+});

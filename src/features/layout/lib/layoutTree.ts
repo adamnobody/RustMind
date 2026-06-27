@@ -45,6 +45,10 @@ export function layoutTree(
 
   dagre.layout(g);
 
+  // Привязку рёбер к сторонам узла задают явные sourceHandle/targetHandle на
+  // самих рёбрах (выставляются в applyLayout/store), а не node.sourcePosition —
+  // последний игнорируется ReactFlow при наличии явных <Handle>. Здесь только
+  // позиционируем узлы.
   return nodes.map((node) => {
     const pos = g.node(node.id);
     if (!pos) return node;

@@ -44,6 +44,9 @@ export function useHotkeys(keys: string, callback: HotkeyCallback) {
         else if (key === 'escape' || key === 'esc') isKeyMatch = event.key === 'Escape';
         else if (key === 'delete' || key === 'del') isKeyMatch = event.key === 'Delete';
         else if (key === 'backspace') isKeyMatch = event.key === 'Backspace';
+        // Для буквенных хоткеев сверяем ещё и по физической клавише (event.code):
+        // при кириллице event.key = 'ы'/'я'/…, а event.code остаётся 'KeyS'/'KeyZ'/…
+        else if (/^[a-z]$/.test(key)) isKeyMatch = eventKey === key || event.code === `Key${key.toUpperCase()}`;
         else isKeyMatch = eventKey === key;
 
         if (isKeyMatch && isModPressed && isShiftPressed && isAltPressed) {
