@@ -30,6 +30,11 @@
   cursor: not-allowed;
 }
 
+.active {
+  background-color: var(--rm-accent-muted);
+  color: var(--rm-accent);
+}
+
 .default:hover {
   color: var(--rm-accent);
 }

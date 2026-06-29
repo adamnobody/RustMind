@@ -19,6 +19,8 @@ interface SerializedEdgeStyle {
   sourceArrow?: string;
   targetArrow?: string;
   label?: string;
+  labelFontSize?: number;
+  labelColor?: string;
 }
 
 export interface SerializedNode {

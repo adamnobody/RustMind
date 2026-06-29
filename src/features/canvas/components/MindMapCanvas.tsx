@@ -67,6 +67,7 @@ function CanvasInner(): React.JSX.Element {
   const handleVisibility = useMindMapStore((s) => s.projectSettings.handleVisibility);
 
   const setSelectedNodeId = useUIStore((s) => s.setSelectedNodeId);
+  const setSelection = useUIStore((s) => s.setSelection);
   const editingNodeId = useUIStore((s) => s.editingNodeId);
   const settings = useUIStore((s) => s.settings);
   const isEditing = editingNodeId !== null;
@@ -82,10 +83,13 @@ function CanvasInner(): React.JSX.Element {
   const edgeTypes = useMemo<EdgeTypes>(() => ({ [MIND_EDGE_TYPE]: MindEdge }), []);
 
   const handleSelectionChange = useCallback(
-    ({ nodes: selectedNodes }: OnSelectionChangeParams) => {
-      setSelectedNodeId(selectedNodes[0]?.id ?? null);
+    ({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
+      setSelection(
+        selectedNodes.map((n) => n.id),
+        selectedEdges.map((e) => e.id),
+      );
     },
-    [setSelectedNodeId],
+    [setSelection],
   );
 
   // Drag from handle → drop on empty canvas → create child node at drop point.

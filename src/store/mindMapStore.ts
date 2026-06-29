@@ -8,9 +8,10 @@ import type {
   HistorySnapshot,
   HistoryCategory,
 } from './types';
-import { MIND_NODE_TYPE } from '../features/nodes/types';
+import { MIND_NODE_TYPE, DEFAULT_NODE_STYLE } from '../features/nodes/types';
 import { type EdgeKind, isTreeEdge, DEFAULT_TREE_EDGE_HANDLES } from '../features/edges/types';
 import { generateNodeId, generateEdgeId } from '../shared/lib/id';
+import { pruneStyle } from '../shared/lib/style';
 import { DEFAULT_LABELS, NODE_COLORS, DEFAULT_HANDLE_VISIBILITY } from '../shared/lib/constants';
 import { applyLayout } from '../features/layout/applyLayout';
 import { useUIStore } from './uiStore';
@@ -19,18 +20,19 @@ import { useUIStore } from './uiStore';
 const HISTORY_LIMIT = 100;
 
 /**
- * Окно коалесинга для ввода текста: несколько вызовов updateNodeLabel по
- * одному узлу подряд (быстрая печать) сворачиваются в одну запись истории.
- * Сбрасывается по таймауту, по смене активного узла или любым другим
- * undoable-действием.
+ * Окно коалесинга для непрерывных правок: серия однотипных undoable-действий по
+ * одной цели подряд (быстрая печать в label, протяжка слайдера/цвета в стиле)
+ * сворачивается в одну запись истории. Ключ различает цель+вид правки
+ * (`label:<id>`, `style:<id>`), поэтому смена узла или переключение с текста на
+ * стиль открывают новую запись. Сбрасывается по таймауту, undo/redo, загрузке.
  */
-const LABEL_COALESCE_MS = 600;
-let labelCoalesceId: string | null = null;
-let labelCoalesceAt = 0;
+const COALESCE_MS = 600;
+let coalesceKey: string | null = null;
+let coalesceAt = 0;
 
-function resetLabelCoalesce(): void {
-  labelCoalesceId = null;
-  labelCoalesceAt = 0;
+function resetCoalesce(): void {
+  coalesceKey = null;
+  coalesceAt = 0;
 }
 
 /** Ре-центрируем вид только на структурных и layout-переходах. */
@@ -96,7 +98,22 @@ export const useMindMapStore = create<MindMapState>()(
         state.canUndo = state.past.length > 0;
         state.canRedo = false;
       });
-      resetLabelCoalesce();
+      resetCoalesce();
+    };
+
+    /**
+     * Запись истории с коалесингом по ключу: первый вызов в серии пишет снимок,
+     * последующие вызовы с тем же ключом в пределах окна — нет (одна запись undo
+     * на всю серию). Любой другой ключ/категория или таймаут открывают новую.
+     */
+    const recordCoalesced = (key: string, category: HistoryCategory): void => {
+      const now = Date.now();
+      const coalescing = coalesceKey === key && now - coalesceAt < COALESCE_MS;
+      if (!coalescing) {
+        recordHistory(category); // сбрасывает coalesce* внутри себя
+      }
+      coalesceKey = key;
+      coalesceAt = now;
     };
 
     return {
@@ -182,13 +199,7 @@ export const useMindMapStore = create<MindMapState>()(
     updateNodeLabel: (id, label) => {
       // Коалесинг: подряд идущие правки одного узла в пределах окна — одна
       // запись истории. Смена узла или таймаут открывают новую запись.
-      const now = Date.now();
-      const coalescing = labelCoalesceId === id && now - labelCoalesceAt < LABEL_COALESCE_MS;
-      if (!coalescing) {
-        recordHistory('text'); // сбрасывает labelCoalesce* внутри себя
-      }
-      labelCoalesceId = id;
-      labelCoalesceAt = now;
+      recordCoalesced(`label:${id}`, 'text');
 
       set((state) => {
         const node = state.nodes.find((n) => n.id === id);
@@ -207,6 +218,22 @@ export const useMindMapStore = create<MindMapState>()(
           node.data = { ...node.data, ...data };
           state.isDirty = true;
         }
+      });
+    },
+
+    setNodeStyle: (id, patch) => {
+      // Серия правок стиля одного узла (протяжка слайдера/цвета) — одна запись
+      // undo. Стиль не меняет геометрию → категория 'text', без ре-центровки.
+      recordCoalesced(`style:${id}`, 'text');
+      set((state) => {
+        const node = state.nodes.find((n) => n.id === id);
+        if (!node) return;
+        // Единый источник дефолтов: после merge выкидываем поля, равные дефолту,
+        // тем же pruneStyle, что и сериализатор. Возврат поля к дефолту = его
+        // удаление из style, а не запись явного значения.
+        const merged = { ...node.data.style, ...patch };
+        node.data.style = pruneStyle(merged, DEFAULT_NODE_STYLE);
+        state.isDirty = true;
       });
     },
 
@@ -291,7 +318,7 @@ export const useMindMapStore = create<MindMapState>()(
     loadDocument: (payload) => {
       // Открытие документа сбрасывает историю: снимки из прошлого документа
       // относятся к другому дереву, их откат был бы бессмысленным/опасным.
-      resetLabelCoalesce();
+      resetCoalesce();
       set((state) => {
         state.nodes = payload.nodes;
         state.edges = payload.edges;
@@ -308,7 +335,7 @@ export const useMindMapStore = create<MindMapState>()(
 
     resetDocument: () => {
       const root = createRootNode();
-      resetLabelCoalesce();
+      resetCoalesce();
       set((state) => {
         state.nodes = [root];
         state.edges = [];
@@ -358,7 +385,7 @@ export const useMindMapStore = create<MindMapState>()(
     undo: () => {
       const { past, nodes, edges, layoutType } = get();
       if (past.length === 0) return;
-      resetLabelCoalesce();
+      resetCoalesce();
 
       const previous = past[past.length - 1];
       // Текущее состояние уезжает в future с той же категорией перехода,
@@ -396,7 +423,7 @@ export const useMindMapStore = create<MindMapState>()(
     redo: () => {
       const { future, nodes, edges, layoutType } = get();
       if (future.length === 0) return;
-      resetLabelCoalesce();
+      resetCoalesce();
 
       const next = future[future.length - 1];
       const current: HistorySnapshot = {

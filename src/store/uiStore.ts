@@ -21,16 +21,36 @@ interface UiSettings {
 
 interface UiState {
   selectedNodeId: string | null;
+  /** Full selection from the canvas; drives the inspector's single-selection rule. */
+  selectedNodeIds: string[];
+  selectedEdgeIds: string[];
   editingNodeId: string | null;
   editingIntent: NodeEditingIntent | null;
   theme: Theme;
   isSettingsOpen: boolean;
   settings: UiSettings;
 
+  /**
+   * Inspector (right-docked style panel) visibility — session-only, never
+   * persisted nor written to the document.
+   * - `inspectorOpen` — is it currently shown.
+   * - `inspectorManuallyHidden` — user closed it by hand; this override blocks
+   *   auto-open on subsequent selections until they manually open it again.
+   */
+  inspectorOpen: boolean;
+  inspectorManuallyHidden: boolean;
+
   /** fitView callback registered by the canvas component. Not persisted. */
   _fitViewFn: (() => void) | null;
 
   setSelectedNodeId: (id: string | null) => void;
+  /** Authoritative selection setter called by the canvas; syncs inspector auto-open. */
+  setSelection: (nodeIds: string[], edgeIds: string[]) => void;
+  /** Manual open (toolbar) — clears the manual-hidden override. */
+  openInspector: () => void;
+  /** Manual hide (panel close button) — sets the override so it won't auto-open. */
+  hideInspector: () => void;
+  toggleInspector: () => void;
   setEditingNodeId: (id: string | null, intent?: NodeEditingIntent) => void;
   startNodeEditing: (id: string, intent?: NodeEditingIntent) => void;
   clearNodeEditing: () => void;
@@ -62,6 +82,14 @@ const defaultSettings: UiSettings = {
   autoLayoutOnChange: false,
   confirmBranchDelete: false,
 };
+
+/**
+ * The inspector edits exactly one element at a time. For step 14 that means a
+ * single node and no edges; step 15 broadens this to also accept a single edge.
+ */
+export function isEditableSelection(nodeIds: string[], edgeIds: string[]): boolean {
+  return nodeIds.length === 1 && edgeIds.length === 0;
+}
 
 function applyTheme(theme: Theme): void {
   if (typeof document !== 'undefined') {
@@ -98,14 +126,38 @@ export const useUIStore = create<UiState>()(
   persist(
     (set, get) => ({
       selectedNodeId: null,
+      selectedNodeIds: [],
+      selectedEdgeIds: [],
       editingNodeId: null,
       editingIntent: null,
       theme: initialTheme,
       isSettingsOpen: false,
       settings: defaultSettings,
+      inspectorOpen: false,
+      inspectorManuallyHidden: false,
       _fitViewFn: null,
 
-      setSelectedNodeId: (id) => set({ selectedNodeId: id }),
+      setSelectedNodeId: (id) => get().setSelection(id ? [id] : [], []),
+      setSelection: (nodeIds, edgeIds) =>
+        set((state) => {
+          // Single editable target → auto-open unless the user hid the panel.
+          // Anything else (none / multi / mixed) soft-closes WITHOUT setting the
+          // manual-hidden override, so the next single selection re-opens it.
+          const single = isEditableSelection(nodeIds, edgeIds);
+          const inspectorOpen = single
+            ? !state.inspectorManuallyHidden || state.inspectorOpen
+            : false;
+          return {
+            selectedNodeIds: nodeIds,
+            selectedEdgeIds: edgeIds,
+            selectedNodeId: nodeIds[0] ?? null,
+            inspectorOpen,
+          };
+        }),
+      openInspector: () => set({ inspectorOpen: true, inspectorManuallyHidden: false }),
+      hideInspector: () => set({ inspectorOpen: false, inspectorManuallyHidden: true }),
+      toggleInspector: () =>
+        get().inspectorOpen ? get().hideInspector() : get().openInspector(),
       setEditingNodeId: (id, intent = { mode: 'edit' }) =>
         set({
           editingNodeId: id,

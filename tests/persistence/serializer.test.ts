@@ -119,6 +119,48 @@ describe('style and projectSettings', () => {
     });
   });
 
+  it('borderPattern равный дефолту (solid) НЕ пишется в файл', () => {
+    const node: AppNode = {
+      ...makeNode('root', true),
+      data: { label: 'Root', isRoot: true, style: { borderPattern: 'solid' } },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', [node], [], defaultProjectSettings);
+    expect(serialized.nodes[0].data.style).toBeUndefined();
+  });
+
+  it('дефолтный borderPattern вычищается, не-дефолтные поля остаются', () => {
+    const node: AppNode = {
+      ...makeNode('root', true),
+      data: { label: 'Root', isRoot: true, style: { borderPattern: 'solid', shape: 'diamond' } },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', [node], [], defaultProjectSettings);
+    expect(serialized.nodes[0].data.style).toEqual({ shape: 'diamond' });
+  });
+
+  it("borderPattern: 'none' (не дефолт) сериализуется и читается", () => {
+    const node: AppNode = {
+      ...makeNode('root', true),
+      data: { label: 'Root', isRoot: true, style: { borderPattern: 'none' } },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', [node], [], defaultProjectSettings);
+    expect(serialized.nodes[0].data.style).toEqual({ borderPattern: 'none' });
+    const restored = deserializeMindMap(serialized);
+    expect(restored.nodes[0].data.style).toEqual({ borderPattern: 'none' });
+  });
+
+  it('после JSON-записи у застиленного-в-дефолт узла НЕТ ключа style (ни {}, ни undefined)', () => {
+    const node: AppNode = {
+      ...makeNode('root', true),
+      data: { label: 'Root', isRoot: true, style: { borderPattern: 'solid' } }, // = дефолт
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', [node], [], defaultProjectSettings);
+    // Имитируем фактическую запись на диск (fileService: JSON.stringify).
+    const onDisk = JSON.parse(JSON.stringify(serialized)) as {
+      nodes: { data: Record<string, unknown> }[];
+    };
+    expect('style' in onDisk.nodes[0].data).toBe(false);
+  });
+
   it('sourceHandle/targetHandle ребра переживают round-trip', () => {
     const nodes = [makeNode('a', true), makeNode('b')];
     const edgeWithHandles: AppEdge = {
@@ -217,6 +259,129 @@ describe('style and projectSettings', () => {
       sourceArrow: 'filled',
       label: 'connects to',
     });
+  });
+
+  it('EdgeStyle: стиль текста ребра (labelFontSize/labelColor) переживает round-trip', () => {
+    const nodes = [makeNode('a', true), makeNode('b')];
+    const edge: AppEdge = {
+      id: 'e1',
+      source: 'a',
+      target: 'b',
+      data: { kind: 'tree', style: { label: 'привет', labelFontSize: 16, labelColor: '#abcdef' } },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [edge], defaultProjectSettings);
+    const restored = deserializeMindMap(serialized);
+    expect(restored.edges[0].data?.style).toEqual({
+      label: 'привет',
+      labelFontSize: 16,
+      labelColor: '#abcdef',
+    });
+  });
+
+  it('EdgeStyle: поля, равные дефолту, НЕ пишутся (strip по DEFAULT_EDGE_STYLE)', () => {
+    const nodes = [makeNode('a', true), makeNode('b')];
+    const edge: AppEdge = {
+      id: 'e1',
+      source: 'a',
+      target: 'b',
+      data: {
+        kind: 'tree',
+        // Все значения = дефолтам: ничего не должно записаться.
+        style: {
+          linePattern: 'solid',
+          strokeWidth: 2,
+          strokeColor: 'var(--rm-edge)',
+          sourceArrow: 'none',
+          targetArrow: 'none',
+          labelFontSize: 12,
+          labelColor: 'var(--rm-text)',
+        },
+      },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [edge], defaultProjectSettings);
+    expect(serialized.edges[0].data?.style).toBeUndefined();
+  });
+
+  it('EdgeStyle: дефолтные поля вычищаются, label (без дефолта) и не-дефолты остаются', () => {
+    const nodes = [makeNode('a', true), makeNode('b')];
+    const edge: AppEdge = {
+      id: 'e1',
+      source: 'a',
+      target: 'b',
+      data: {
+        kind: 'tree',
+        // strokeWidth=2 и sourceArrow='none' — дефолт; label и dashed — нет.
+        style: { strokeWidth: 2, sourceArrow: 'none', linePattern: 'dashed', label: 'x' },
+      },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [edge], defaultProjectSettings);
+    expect(serialized.edges[0].data?.style).toEqual({ linePattern: 'dashed', label: 'x' });
+  });
+
+  it('label сохраняется, даже когда ВСЕ остальные поля = дефолту (prune не трогает label)', () => {
+    // DEFAULT_EDGE_STYLE НЕ содержит label → prune не может срезать его по дефолту.
+    const nodes = [makeNode('a', true), makeNode('b')];
+    const edge: AppEdge = {
+      id: 'e1',
+      source: 'a',
+      target: 'b',
+      data: {
+        kind: 'tree',
+        style: {
+          linePattern: 'solid',
+          strokeWidth: 2,
+          strokeColor: 'var(--rm-edge)',
+          sourceArrow: 'none',
+          targetArrow: 'none',
+          labelFontSize: 12,
+          labelColor: 'var(--rm-text)',
+          label: 'keep',
+        },
+      },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [edge], defaultProjectSettings);
+    expect(serialized.edges[0].data?.style).toEqual({ label: 'keep' });
+  });
+
+  it("пустой label: '' пишется как есть (у label нет дефолта; prune режет только undefined/дефолт)", () => {
+    const nodes = [makeNode('a', true), makeNode('b')];
+    const edge: AppEdge = {
+      id: 'e1',
+      source: 'a',
+      target: 'b',
+      data: { kind: 'tree', style: { label: '', strokeWidth: 2 } }, // strokeWidth=2 = дефолт → срежется
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [edge], defaultProjectSettings);
+    expect(serialized.edges[0].data?.style).toEqual({ label: '' });
+  });
+
+  it('после JSON-записи у ребра со всеми-дефолтными полями НЕТ ключа style (edge-путь if не пишет {})', () => {
+    const nodes = [makeNode('a', true), makeNode('b')];
+    const edge: AppEdge = {
+      id: 'e1',
+      source: 'a',
+      target: 'b',
+      data: {
+        kind: 'tree',
+        style: {
+          linePattern: 'solid',
+          strokeWidth: 2,
+          strokeColor: 'var(--rm-edge)',
+          sourceArrow: 'none',
+          targetArrow: 'none',
+          labelFontSize: 12,
+          labelColor: 'var(--rm-text)',
+        },
+      },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [edge], defaultProjectSettings);
+    // Имитируем реальную запись на диск (fileService: JSON.stringify).
+    const onDisk = JSON.parse(JSON.stringify(serialized)) as {
+      edges: { data: Record<string, unknown> }[];
+    };
+    expect('style' in onDisk.edges[0].data).toBe(false);
+    // data ребра существует (kind), но без пустого style: {}.
+    expect(onDisk.edges[0].data).toEqual({ kind: 'tree' });
   });
 
   it('NodeStyle с shape/textColor/fontFamily переживает round-trip', () => {

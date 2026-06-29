@@ -31,6 +31,8 @@ export function AppToolbar({
   const toggleTheme = useUIStore((s) => s.toggleTheme);
   const openSettings = useUIStore((s) => s.openSettings);
   const triggerFitView = useUIStore((s) => s.triggerFitView);
+  const inspectorOpen = useUIStore((s) => s.inspectorOpen);
+  const toggleInspector = useUIStore((s) => s.toggleInspector);
 
   const handleAutoLayout = useCallback(() => {
     applyAutoLayoutManual();
@@ -76,6 +78,12 @@ export function AppToolbar({
           <option value="dashed">Хэндлы: пунктир</option>
           <option value="always">Хэндлы: всегда</option>
         </select>
+        <IconButton
+          icon="sliders"
+          label="Панель стиля"
+          onClick={toggleInspector}
+          active={inspectorOpen}
+        />
         <IconButton
           icon={theme === 'dark' ? 'sun' : 'moon'}
           label={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}

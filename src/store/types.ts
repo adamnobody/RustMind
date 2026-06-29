@@ -5,7 +5,7 @@ import type {
   EdgeChange,
   Connection,
 } from '@xyflow/react';
-import type { MindNodeData } from '../features/nodes/types';
+import type { MindNodeData, NodeStyle } from '../features/nodes/types';
 import type { MindEdgeData } from '../features/edges/types';
 
 export type AppNode = Node<MindNodeData>;
@@ -74,6 +74,12 @@ export interface MindMapState {
   addSiblingNode: (siblingId: string) => string | null;
   updateNodeLabel: (id: string, label: string) => void;
   updateNodeData: (id: string, data: Partial<MindNodeData>) => void;
+  /**
+   * Merge a partial style override into a node, then prune against
+   * DEFAULT_NODE_STYLE so any field set to its default is removed (not stored as
+   * an explicit default). Single source of defaults shared with the serializer.
+   */
+  setNodeStyle: (id: string, patch: Partial<NodeStyle>) => void;
   deleteNode: (id: string) => void;
 
   getRootNode: () => AppNode | undefined;

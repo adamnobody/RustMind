@@ -10,4 +10,13 @@
   position: relative;
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+/* Canvas takes the remaining width; the inspector docks to its right and shrinks it. */
+.canvasArea {
+  position: relative;
+  flex: 1;
+  min-width: 0;
 }

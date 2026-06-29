@@ -459,3 +459,87 @@ describe('mindMapStore — хэндлы рёбер', () => {
     expect(freeEdge.targetHandle).toBe('right');
   });
 });
+
+describe('mindMapStore — setNodeStyle (in-memory prune)', () => {
+  beforeEach(() => {
+    useMindMapStore.getState().resetDocument();
+  });
+
+  it('применяет не-дефолтные поля стиля в объект узла', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    useMindMapStore.getState().setNodeStyle(rootId, { shape: 'diamond', borderWidth: 3 });
+
+    const node = useMindMapStore.getState().nodes.find((n) => n.id === rootId)!;
+    expect(node.data.style).toEqual({ shape: 'diamond', borderWidth: 3 });
+    expect(useMindMapStore.getState().isDirty).toBe(true);
+  });
+
+  it('возврат поля к дефолту удаляет его ИЗ ОБЪЕКТА узла (не только из файла)', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+
+    // Применяем не-дефолт...
+    useMindMapStore.getState().setNodeStyle(rootId, { borderPattern: 'dashed' });
+    expect(
+      useMindMapStore.getState().nodes.find((n) => n.id === rootId)!.data.style,
+    ).toEqual({ borderPattern: 'dashed' });
+
+    // ...возвращаем к дефолту (solid). Поле должно ИСЧЕЗНУТЬ из style в памяти.
+    useMindMapStore.getState().setNodeStyle(rootId, { borderPattern: 'solid' });
+    const node = useMindMapStore.getState().nodes.find((n) => n.id === rootId)!;
+    expect(node.data.style?.borderPattern).toBeUndefined();
+  });
+
+  it('возврат ВСЕХ полей к дефолту делает style пустым (undefined) в памяти', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+
+    useMindMapStore.getState().setNodeStyle(rootId, { shape: 'ellipse', fontSize: 22 });
+    // Возвращаем каждое поле к его дефолту из DEFAULT_NODE_STYLE.
+    useMindMapStore.getState().setNodeStyle(rootId, { shape: 'rounded', fontSize: 14 });
+
+    const node = useMindMapStore.getState().nodes.find((n) => n.id === rootId)!;
+    expect(node.data.style).toBeUndefined();
+  });
+
+  it('явный undefined в патче убирает поле, не затирая остальные', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    useMindMapStore.getState().setNodeStyle(rootId, { shape: 'diamond', borderWidth: 3 });
+    useMindMapStore.getState().setNodeStyle(rootId, { borderWidth: undefined });
+
+    const node = useMindMapStore.getState().nodes.find((n) => n.id === rootId)!;
+    expect(node.data.style).toEqual({ shape: 'diamond' });
+  });
+
+  it('undefined для поля-С-ДЕФОЛТОМ → ключа нет вовсе (ни undefined, ни дефолт 1)', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    useMindMapStore.getState().setNodeStyle(rootId, { shape: 'diamond' });
+    useMindMapStore.getState().setNodeStyle(rootId, { borderWidth: undefined });
+
+    const style = useMindMapStore.getState().nodes.find((n) => n.id === rootId)!.data.style;
+    expect(style).toEqual({ shape: 'diamond' });
+    // Именно отсутствие ключа, а не key=undefined и не key=1.
+    expect('borderWidth' in (style ?? {})).toBe(false);
+  });
+
+  it("'none' для границы — не дефолт, остаётся в style", () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    useMindMapStore.getState().setNodeStyle(rootId, { borderPattern: 'none' });
+
+    const node = useMindMapStore.getState().nodes.find((n) => n.id === rootId)!;
+    expect(node.data.style).toEqual({ borderPattern: 'none' });
+  });
+
+  it('серия правок стиля одного узла коалесится в одну запись истории', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    const before = useMindMapStore.getState().past.length;
+
+    useMindMapStore.getState().setNodeStyle(rootId, { borderWidth: 2 });
+    useMindMapStore.getState().setNodeStyle(rootId, { borderWidth: 3 });
+    useMindMapStore.getState().setNodeStyle(rootId, { borderWidth: 4 });
+
+    expect(useMindMapStore.getState().past.length).toBe(before + 1);
+
+    // Один undo откатывает всю серию — style возвращается к пустому.
+    useMindMapStore.getState().undo();
+    expect(useMindMapStore.getState().nodes.find((n) => n.id === rootId)!.data.style).toBeUndefined();
+  });
+});

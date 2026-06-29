@@ -1,18 +1,10 @@
+import { type NodeStyle, DEFAULT_NODE_STYLE } from '../../features/nodes/types';
+import { type EdgeStyle, type EdgeKind, DEFAULT_TREE_EDGE_HANDLES, DEFAULT_EDGE_STYLE } from '../../features/edges/types';
 import type { AppNode, AppEdge, LayoutType, LoadDocumentPayload, HandleVisibility, ProjectSettings } from '../../store/types';
-import type { NodeStyle } from '../../features/nodes/types';
-import { type EdgeStyle, type EdgeKind, DEFAULT_TREE_EDGE_HANDLES } from '../../features/edges/types';
 import type { SerializedMindMap } from './schema';
 import { FILE_VERSION } from './schema';
 import { DEFAULT_HANDLE_VISIBILITY } from '../../shared/lib/constants';
-
-/** Strip undefined values; return undefined if the result is empty. */
-function stripStyle<T extends object>(style: T | undefined): T | undefined {
-  if (!style) return undefined;
-  const cleaned = Object.fromEntries(
-    Object.entries(style).filter(([, v]) => v !== undefined),
-  ) as T;
-  return Object.keys(cleaned).length > 0 ? cleaned : undefined;
-}
+import { pruneStyle } from '../../shared/lib/style';
 
 const VALID_LAYOUT_TYPES: LayoutType[] = ['tree-LR', 'tree-TB', 'radial'];
 const VALID_HANDLE_VISIBILITIES: HandleVisibility[] = ['hidden', 'dashed', 'always'];
@@ -50,13 +42,13 @@ export function serializeMindMap(
         collapsed: n.data.collapsed,
         isRoot: n.data.isRoot,
         note: n.data.note,
-        style: stripStyle(n.data.style),
+        style: pruneStyle(n.data.style, DEFAULT_NODE_STYLE),
       },
     })),
     edges: edges.map((e) => {
       const data: { kind?: EdgeKind; style?: EdgeStyle } = {};
       if (e.data?.kind) data.kind = e.data.kind;
-      const cleanEdgeStyle = stripStyle(e.data?.style);
+      const cleanEdgeStyle = pruneStyle(e.data?.style, DEFAULT_EDGE_STYLE);
       if (cleanEdgeStyle) data.style = cleanEdgeStyle;
       return {
         id: e.id,

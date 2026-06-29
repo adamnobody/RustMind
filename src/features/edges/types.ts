@@ -9,19 +9,38 @@ export interface EdgeStyle {
   linePattern?: EdgeLinePattern;
   strokeWidth?: number;
   strokeColor?: string;
+  /**
+   * DECISION (diverges from step-15 spec): one enum per end instead of the
+   * spec's `arrowStart/arrowEnd` (boolean) + `arrowType` (shape). The enum makes
+   * illegal states unrepresentable (no "arrow on, but no type" / boolean↔enum
+   * conflict): 'none' = no arrow, 'open'/'filled' = arrow of that shape. The
+   * "tapering line" note is a render concern, not modelled here.
+   */
   sourceArrow?: EdgeArrowType;
   targetArrow?: EdgeArrowType;
-  /** Inline label text rendered on the edge path — wired up in step 15. */
+  /** Inline label text rendered on the edge path. */
   label?: string;
+  /**
+   * Label text styling — mirrors NodeStyle's fontSize/textColor for the edge's
+   * label. Shared render approach (not duplicated node code) lands in step 15B.
+   */
+  labelFontSize?: number;
+  labelColor?: string;
 }
 
-/** Skeleton defaults — merged at render time. label has no universal default. */
+/**
+ * Skeleton defaults — merged at render time and used by the serializer to strip
+ * fields equal to their default (single source, same as DEFAULT_NODE_STYLE).
+ * `label` is intentionally excluded: free text has no universal default.
+ */
 export const DEFAULT_EDGE_STYLE: Required<Omit<EdgeStyle, 'label'>> = {
   linePattern: 'solid',
   strokeWidth: 2,
   strokeColor: 'var(--rm-edge)',
   sourceArrow: 'none',
   targetArrow: 'none',
+  labelFontSize: 12,
+  labelColor: 'var(--rm-text)',
 };
 
 /**

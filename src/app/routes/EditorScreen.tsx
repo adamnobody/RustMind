@@ -1,5 +1,6 @@
 import { MindMapCanvas } from '../../features/canvas';
 import { AppToolbar, SettingsPanel } from '../../features/toolbar';
+import { Inspector } from '../../features/inspector';
 import { usePersistence, useWindowCloseGuard } from '../../features/persistence';
 import { KeyboardProvider } from '../providers/KeyboardProvider';
 import styles from './EditorScreen.module.css';
@@ -23,7 +24,10 @@ export function EditorScreen(): React.JSX.Element {
           onSaveAs={handleSaveAs}
         />
         <div className={styles.canvasWrapper}>
-          <MindMapCanvas />
+          <div className={styles.canvasArea}>
+            <MindMapCanvas />
+          </div>
+          <Inspector />
         </div>
         <SettingsPanel />
       </div>

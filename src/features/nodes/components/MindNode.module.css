@@ -1,7 +1,31 @@
 /* MindNode.module.css */
+
+/*
+ * The outer .node is a transparent wrapper that holds the connection handles and
+ * defines the element ReactFlow measures. All visible styling lives on .box so
+ * shapes (incl. the rotated diamond) never rotate the handles.
+ */
 .node {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+  user-select: none;
+  transition: transform var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.node:hover {
+  transform: translateY(-1px);
+}
+
+.box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   min-width: 132px;
   max-width: 260px;
+  min-height: 44px;
   padding: var(--rm-space-3) var(--rm-space-4);
   border-radius: var(--rm-radius);
   background-color: var(--rm-node-bg);
@@ -11,23 +35,51 @@
   font-weight: var(--rm-font-weight-medium);
   text-align: center;
   box-shadow: var(--rm-shadow-sm);
-  cursor: pointer;
   transition:
-    transform var(--rm-transition-fast) var(--rm-ease-out-expo),
     border-color var(--rm-transition-fast) var(--rm-ease-out-expo),
     background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
     box-shadow var(--rm-transition-fast) var(--rm-ease-out-expo);
-  user-select: none;
 }
 
-.node:hover {
+.node:hover .box {
   border-color: var(--rm-accent-hover);
-  background-color: var(--rm-surface-elevated);
   box-shadow: var(--rm-shadow);
-  transform: translateY(-1px);
 }
 
-.root {
+/* --- Shapes (border-radius / rotation read from node.data.style.shape) --- */
+.shapeRect {
+  border-radius: 0;
+}
+
+.shapeRounded {
+  border-radius: var(--rm-radius);
+}
+
+.shapeEllipse {
+  border-radius: 50%;
+  padding-left: var(--rm-space-6);
+  padding-right: var(--rm-space-6);
+}
+
+/* Rotate the box into a diamond; counter-rotate the content so text stays level.
+   Extra padding gives the inscribed (un-rotated) label some breathing room. */
+.shapeDiamond {
+  border-radius: 0;
+  padding: var(--rm-space-5);
+  transform: rotate(45deg);
+}
+
+.shapeDiamond .content {
+  transform: rotate(-45deg);
+}
+
+.content {
+  display: block;
+  width: 100%;
+}
+
+/* --- Root --- */
+.node.root .box {
   min-width: 172px;
   padding: var(--rm-space-4) var(--rm-space-6);
   background-color: var(--rm-node-bg-root);
@@ -37,7 +89,8 @@
   letter-spacing: -0.015em;
 }
 
-.selected {
+/* --- States --- */
+.node.selected .box {
   border-color: var(--rm-node-selected) !important;
   box-shadow: var(--rm-shadow-glow) !important;
 }

@@ -1,0 +1,176 @@
+.panel {
+  flex: none;
+  width: 280px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--rm-surface);
+  border-left: 1px solid var(--rm-border);
+  box-shadow: var(--rm-shadow);
+  z-index: 5;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--rm-space-3) var(--rm-space-4);
+  border-bottom: 1px solid var(--rm-border);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--rm-font-md);
+  font-weight: var(--rm-font-weight-semibold);
+  color: var(--rm-text);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--rm-space-4);
+}
+
+.empty {
+  margin: 0;
+  color: var(--rm-text-muted);
+  font-size: var(--rm-font-sm);
+  line-height: var(--rm-line-relaxed, 1.5);
+}
+
+.editor {
+  display: grid;
+  gap: var(--rm-space-4);
+}
+
+/* --- field scaffolding --- */
+.field {
+  display: grid;
+  gap: var(--rm-space-2);
+}
+
+.fieldHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.fieldLabel {
+  color: var(--rm-text-muted);
+  font-size: var(--rm-font-sm);
+  font-weight: var(--rm-font-weight-medium);
+}
+
+.fieldValue {
+  color: var(--rm-text);
+  font-size: var(--rm-font-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- segmented control (N columns) --- */
+.segment {
+  display: grid;
+  gap: var(--rm-space-1);
+  padding: var(--rm-space-1);
+  border: 1px solid var(--rm-border);
+  border-radius: var(--rm-radius);
+  background: var(--rm-surface-hover);
+}
+
+.segmentItem {
+  border: none;
+  border-radius: var(--rm-radius-sm);
+  background: transparent;
+  color: var(--rm-text-muted);
+  cursor: pointer;
+  font-size: var(--rm-font-md);
+  line-height: 1;
+  padding: var(--rm-space-2) 0;
+  transition:
+    background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    color var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.segmentItem:hover {
+  color: var(--rm-text);
+}
+
+.segmentActive {
+  background: var(--rm-surface-elevated);
+  color: var(--rm-text);
+  box-shadow: var(--rm-shadow-sm);
+}
+
+/* --- colour field --- */
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: var(--rm-space-2);
+}
+
+.swatch {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--rm-radius-sm);
+  border: 1px solid var(--rm-border-strong);
+  overflow: hidden;
+  flex: none;
+}
+
+.swatchDefault {
+  /* hint that this colour is the inherited default, not an explicit override */
+  opacity: 0.55;
+}
+
+.colorInput {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.colorValue {
+  flex: 1;
+  color: var(--rm-text-muted);
+  font-size: var(--rm-font-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.resetButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--rm-border);
+  border-radius: var(--rm-radius-sm);
+  background: transparent;
+  color: var(--rm-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    border-color var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.resetButton:hover:not(:disabled) {
+  color: var(--rm-text);
+  border-color: var(--rm-border-strong);
+}
+
+.resetButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* --- range --- */
+.range {
+  width: 100%;
+  accent-color: var(--rm-accent);
+  cursor: pointer;
+}
