@@ -3,6 +3,7 @@ import { serializeMindMap, deserializeMindMap } from '../../src/features/persist
 import { useMindMapStore } from '../../src/store/mindMapStore';
 import type { AppNode, AppEdge, ProjectSettings } from '../../src/store/types';
 import type { SerializedMindMap } from '../../src/features/persistence/schema';
+import { FILE_VERSION } from '../../src/features/persistence/schema';
 
 const defaultProjectSettings: ProjectSettings = { handleVisibility: 'dashed' };
 
@@ -51,7 +52,7 @@ describe('serializer round-trip', () => {
     const second = serializeMindMap('Doc', 'tree-TB', nodes, [], defaultProjectSettings, first.createdAt);
 
     expect(second.createdAt).toBe(first.createdAt);
-    expect(second.version).toBe(1);
+    expect(second.version).toBe(FILE_VERSION);
   });
 
   it('coerceLayoutType заменяет неизвестный тип на tree-LR', () => {
@@ -193,6 +194,123 @@ describe('style and projectSettings', () => {
     };
     const restored = deserializeMindMap(badFormat);
     expect(restored.projectSettings?.handleVisibility).toBe('dashed');
+  });
+
+  it('EdgeStyle переживает round-trip', () => {
+    const nodes = [makeNode('root', true), makeNode('child')];
+    const styledEdge: AppEdge = {
+      id: 'e1',
+      source: 'root',
+      target: 'child',
+      sourceHandle: 'right',
+      targetHandle: 'left',
+      data: {
+        kind: 'tree',
+        style: { linePattern: 'dashed', strokeWidth: 3, sourceArrow: 'filled', label: 'connects to' },
+      },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [styledEdge], defaultProjectSettings);
+    const restored = deserializeMindMap(serialized);
+    expect(restored.edges[0].data?.style).toEqual({
+      linePattern: 'dashed',
+      strokeWidth: 3,
+      sourceArrow: 'filled',
+      label: 'connects to',
+    });
+  });
+
+  it('пустой NodeStyle не записывается в файл', () => {
+    const nodeWithEmptyStyle: AppNode = {
+      ...makeNode('root', true),
+      data: { label: 'Root', isRoot: true, style: {} },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', [nodeWithEmptyStyle], [], defaultProjectSettings);
+    expect(serialized.nodes[0].data.style).toBeUndefined();
+  });
+
+  it('NodeStyle с undefined-полями не раздувает файл', () => {
+    const nodeWithPartialStyle: AppNode = {
+      ...makeNode('root', true),
+      data: { label: 'Root', isRoot: true, style: { shape: undefined, borderWidth: 3 } },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', [nodeWithPartialStyle], [], defaultProjectSettings);
+    expect(serialized.nodes[0].data.style).toEqual({ borderWidth: 3 });
+  });
+
+  it('edge без style не раздувает данные', () => {
+    const nodes = [makeNode('a', true), makeNode('b')];
+    const edge: AppEdge = { id: 'e1', source: 'a', target: 'b', data: { kind: 'tree' } };
+    const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [edge], defaultProjectSettings);
+    expect(serialized.edges[0].data?.style).toBeUndefined();
+  });
+
+  it('версия файла соответствует FILE_VERSION', () => {
+    const nodes = [makeNode('root', true)];
+    const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [], defaultProjectSettings);
+    expect(serialized.version).toBe(FILE_VERSION);
+  });
+
+  it('старый файл (version 1, без NodeStyle/EdgeStyle) открывается без ошибок', () => {
+    const oldFile: SerializedMindMap = {
+      version: 1,
+      documentName: 'Old Doc',
+      layoutType: 'tree-LR',
+      nodes: [{ id: 'root', position: { x: 0, y: 0 }, data: { label: 'Root', isRoot: true } }],
+      edges: [],
+      createdAt: '2025-01-01T00:00:00.000Z',
+      updatedAt: '2025-01-01T00:00:00.000Z',
+    };
+    const restored = deserializeMindMap(oldFile);
+    expect(restored.documentName).toBe('Old Doc');
+    expect(restored.nodes[0].data.style).toBeUndefined();
+    expect(restored.edges).toHaveLength(0);
+  });
+
+  it('старый файл (version 1) с рёбрами открывается: kind=tree, backfill хэндлов', () => {
+    const oldFile: SerializedMindMap = {
+      version: 1,
+      documentName: 'Old With Edges',
+      layoutType: 'tree-LR',
+      nodes: [
+        { id: 'root', position: { x: 0, y: 0 }, data: { label: 'Root', isRoot: true } },
+        { id: 'child', position: { x: 200, y: 0 }, data: { label: 'Child' } },
+      ],
+      edges: [{ id: 'e1', source: 'root', target: 'child' }],
+      createdAt: '2025-01-01T00:00:00.000Z',
+      updatedAt: '2025-01-01T00:00:00.000Z',
+    };
+    const restored = deserializeMindMap(oldFile);
+    expect(restored.edges[0].data?.kind).toBe('tree');
+    expect(restored.edges[0].data?.style).toBeUndefined();
+    expect(restored.edges[0].sourceHandle).toBe('right');
+    expect(restored.edges[0].targetHandle).toBe('left');
+  });
+
+  it('ребро: kind + оба хэндла + style выживают round-trip одновременно', () => {
+    // free-ребро: kind не coerce-ится, хэндлы не получают backfill, style — полный
+    const nodes = [makeNode('a', true), makeNode('b')];
+    const edge: AppEdge = {
+      id: 'e1',
+      source: 'a',
+      target: 'b',
+      sourceHandle: 'bottom',
+      targetHandle: 'top',
+      data: {
+        kind: 'free',
+        style: { linePattern: 'dotted', strokeWidth: 4, targetArrow: 'open', label: 'assoc' },
+      },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [edge], defaultProjectSettings);
+    const restored = deserializeMindMap(serialized);
+    expect(restored.edges[0].data?.kind).toBe('free');
+    expect(restored.edges[0].sourceHandle).toBe('bottom');
+    expect(restored.edges[0].targetHandle).toBe('top');
+    expect(restored.edges[0].data?.style).toEqual({
+      linePattern: 'dotted',
+      strokeWidth: 4,
+      targetArrow: 'open',
+      label: 'assoc',
+    });
   });
 });
 

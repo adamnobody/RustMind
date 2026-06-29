@@ -1,4 +1,4 @@
-export const FILE_VERSION = 1;
+export const FILE_VERSION = 2;
 export const FILE_EXTENSION = 'rustmind';
 
 interface SerializedNodeStyle {
@@ -18,6 +18,7 @@ interface SerializedEdgeStyle {
   strokeColor?: string;
   sourceArrow?: string;
   targetArrow?: string;
+  label?: string;
 }
 
 export interface SerializedNode {

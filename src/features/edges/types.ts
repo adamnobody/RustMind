@@ -3,7 +3,7 @@ export type EdgeArrowType = 'none' | 'open' | 'filled';
 
 /**
  * Per-element edge style override. All fields optional — absent = use default.
- * Rendering starts from step 14.
+ * Rendering starts from step 15.
  */
 export interface EdgeStyle {
   linePattern?: EdgeLinePattern;
@@ -11,10 +11,12 @@ export interface EdgeStyle {
   strokeColor?: string;
   sourceArrow?: EdgeArrowType;
   targetArrow?: EdgeArrowType;
+  /** Inline label text rendered on the edge path — wired up in step 15. */
+  label?: string;
 }
 
-/** Skeleton defaults — merged at render time. */
-export const DEFAULT_EDGE_STYLE: Required<EdgeStyle> = {
+/** Skeleton defaults — merged at render time. label has no universal default. */
+export const DEFAULT_EDGE_STYLE: Required<Omit<EdgeStyle, 'label'>> = {
   linePattern: 'solid',
   strokeWidth: 2,
   strokeColor: 'var(--rm-edge)',
