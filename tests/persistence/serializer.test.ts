@@ -219,6 +219,37 @@ describe('style and projectSettings', () => {
     });
   });
 
+  it('NodeStyle с shape/textColor/fontFamily переживает round-trip', () => {
+    const nodeWithStyle: AppNode = {
+      ...makeNode('root', true),
+      data: {
+        label: 'Root',
+        isRoot: true,
+        style: { shape: 'diamond', textColor: '#ff0000', fontFamily: 'Monospace' },
+      },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', [nodeWithStyle], [], defaultProjectSettings);
+    const restored = deserializeMindMap(serialized);
+    expect(restored.nodes[0].data.style).toEqual({
+      shape: 'diamond',
+      textColor: '#ff0000',
+      fontFamily: 'Monospace',
+    });
+  });
+
+  it('NodeStyle с shape/textColor/fontFamily = undefined не пишется в файл', () => {
+    const nodeWithAllUndefined: AppNode = {
+      ...makeNode('root', true),
+      data: {
+        label: 'Root',
+        isRoot: true,
+        style: { shape: undefined, textColor: undefined, fontFamily: undefined },
+      },
+    };
+    const serialized = serializeMindMap('Doc', 'tree-LR', [nodeWithAllUndefined], [], defaultProjectSettings);
+    expect(serialized.nodes[0].data.style).toBeUndefined();
+  });
+
   it('пустой NodeStyle не записывается в файл', () => {
     const nodeWithEmptyStyle: AppNode = {
       ...makeNode('root', true),
