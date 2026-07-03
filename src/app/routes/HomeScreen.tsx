@@ -9,6 +9,8 @@ import {
 } from '../../features/persistence';
 import { Icon } from '../../shared/ui/Icon/Icon';
 import { IconButton } from '../../shared/ui/IconButton/IconButton';
+import { HomeBackdrop } from './HomeBackdrop';
+import { HomeAppearanceDialog } from './HomeAppearanceDialog';
 import styles from './HomeScreen.module.css';
 
 interface HomeScreenProps {
@@ -31,6 +33,7 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
   // Снимок на маунт: список меняется только действиями на этом же экране,
   // поэтому обновляем state вручную после удаления записи.
   const [recent, setRecent] = useState<RecentFile[]>(() => getRecentFiles());
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
 
   const handleCreate = useCallback(() => {
     useMindMapStore.getState().resetDocument();
@@ -71,6 +74,17 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
 
   return (
     <div className={styles.screen}>
+      <HomeBackdrop />
+
+      <button
+        type="button"
+        className={styles.appearanceButton}
+        onClick={() => setAppearanceOpen(true)}
+      >
+        <Icon name="palette" size={16} />
+        Внешний вид
+      </button>
+
       <div className={styles.content}>
         <header className={styles.hero}>
           <div className={styles.logo} aria-hidden="true">
@@ -146,6 +160,8 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
           )}
         </section>
       </div>
+
+      <HomeAppearanceDialog isOpen={appearanceOpen} onClose={() => setAppearanceOpen(false)} />
     </div>
   );
 }

@@ -1,0 +1,129 @@
+.backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  background: linear-gradient(180deg, var(--rm-canvas-bg), var(--rm-bg));
+
+  /* Темп дрейфа: базовая длительность цикла (умножается на каждое пятно). */
+  --drift: 44s;
+}
+
+.backdrop[data-anim='lively'] {
+  --drift: 16s;
+}
+
+/* --- жидкие цветовые пятна --- */
+.blob {
+  position: absolute;
+  width: 72vmax;
+  height: 72vmax;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--blob-color) 0%, transparent 68%);
+  filter: blur(70px) saturate(1.15);
+  opacity: 0.5;
+  will-change: transform;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+/* В светлой теме иная физика: размытие о белый фон съедает цвет,
+   поэтому опускаем прозрачность лишь слегка. */
+:global([data-theme='light']) .blob {
+  opacity: 0.42;
+  filter: blur(70px) saturate(1.3);
+}
+
+.blobA {
+  top: -28vmax;
+  left: -18vmax;
+  animation-name: driftA;
+  animation-duration: var(--drift);
+}
+
+.blobB {
+  top: -6vmax;
+  right: -24vmax;
+  animation-name: driftB;
+  animation-duration: calc(var(--drift) * 1.35);
+}
+
+.blobC {
+  bottom: -30vmax;
+  left: 10vmax;
+  animation-name: driftC;
+  animation-duration: calc(var(--drift) * 1.7);
+}
+
+.backdrop[data-anim='off'] .blob {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blob {
+    animation: none !important;
+  }
+}
+
+@keyframes driftA {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(14vmax, 10vmax) scale(1.18) rotate(12deg);
+  }
+  100% {
+    transform: translate(-6vmax, 16vmax) scale(0.94) rotate(-8deg);
+  }
+}
+
+@keyframes driftB {
+  0% {
+    transform: translate(0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate(-16vmax, 12vmax) scale(0.92);
+  }
+  100% {
+    transform: translate(-4vmax, -8vmax) scale(1.22);
+  }
+}
+
+@keyframes driftC {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(12vmax, -14vmax) scale(1.16);
+  }
+  100% {
+    transform: translate(-10vmax, -4vmax) scale(0.9);
+  }
+}
+
+/* --- плёночное зерно (SVG feTurbulence, повторяющийся тайл) --- */
+.grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
+:global([data-theme='light']) .grain {
+  opacity: 0.04;
+  mix-blend-mode: multiply;
+}
+
+/* --- вуаль: мягко подмешивает цвет темы, чтобы контент читался --- */
+.veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--rm-bg) 18%, transparent),
+    color-mix(in srgb, var(--rm-bg) 44%, transparent)
+  );
+}

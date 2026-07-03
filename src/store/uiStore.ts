@@ -5,6 +5,10 @@ export type Theme = 'dark' | 'light';
 export type NodeFontSize = 's' | 'm' | 'l';
 export type NodeEditingMode = 'edit' | 'replace';
 export type BackgroundPattern = 'dots' | 'lines' | 'cross';
+/** Палитра анимированного фона главного меню. */
+export type HomePalette = 'iridescent' | 'aurora' | 'sunset' | 'ocean' | 'mono';
+/** Темп анимации фона главного меню. */
+export type HomeAnimation = 'off' | 'calm' | 'lively';
 
 export interface NodeEditingIntent {
   mode: NodeEditingMode;
@@ -22,6 +26,11 @@ interface UiSettings {
   backgroundPattern: BackgroundPattern;
   /** Яркость паттерна фона: 0–100 → альфа 0–1. */
   backgroundBrightness: number;
+  /** Внешний вид главного меню. */
+  homePalette: HomePalette;
+  homeAnimation: HomeAnimation;
+  /** Плёночное зерно поверх фона главного меню. */
+  homeGrain: boolean;
 }
 
 interface UiState {
@@ -71,6 +80,9 @@ interface UiState {
   ) => void;
   setBackgroundPattern: (pattern: BackgroundPattern) => void;
   setBackgroundBrightness: (value: number) => void;
+  setHomePalette: (palette: HomePalette) => void;
+  setHomeAnimation: (animation: HomeAnimation) => void;
+  setHomeGrain: (enabled: boolean) => void;
   setBehaviorOption: (
     key: 'autoLayoutOnChange' | 'confirmBranchDelete',
     value: boolean,
@@ -91,6 +103,9 @@ const defaultSettings: UiSettings = {
   backgroundPattern: 'dots',
   // 26 ≈ прежняя захардкоженная альфа сетки (rgba …, 0.26)
   backgroundBrightness: 26,
+  homePalette: 'iridescent',
+  homeAnimation: 'calm',
+  homeGrain: true,
 };
 
 /**
@@ -216,6 +231,18 @@ export const useUIStore = create<UiState>()(
             ...state.settings,
             backgroundBrightness: Math.min(100, Math.max(0, value)),
           },
+        })),
+      setHomePalette: (palette) =>
+        set((state) => ({
+          settings: { ...state.settings, homePalette: palette },
+        })),
+      setHomeAnimation: (animation) =>
+        set((state) => ({
+          settings: { ...state.settings, homeAnimation: animation },
+        })),
+      setHomeGrain: (enabled) =>
+        set((state) => ({
+          settings: { ...state.settings, homeGrain: enabled },
         })),
       setBehaviorOption: (key, value) =>
         set((state) => ({

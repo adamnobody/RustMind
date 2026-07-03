@@ -1,20 +1,52 @@
 .screen {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100vw;
   height: 100vh;
   overflow-y: auto;
-  background:
-    radial-gradient(circle at 16% 12%, var(--rm-accent-muted), transparent 32%),
-    linear-gradient(180deg, var(--rm-canvas-bg), var(--rm-bg));
+  /* фон рисует HomeBackdrop (анимированные пятна + зерно + вуаль) */
+  background: var(--rm-bg);
 }
 
 .content {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: var(--rm-space-8);
   width: min(640px, calc(100vw - var(--rm-space-8)));
   padding: var(--rm-space-8) 0;
+}
+
+/* --- кнопка настроек внешнего вида (ghost pill из дизайн-референса) --- */
+.appearanceButton {
+  position: absolute;
+  top: var(--rm-space-6);
+  right: var(--rm-space-6);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rm-space-2);
+  padding: 9px 18px;
+  border: 1px solid color-mix(in srgb, var(--rm-text) 28%, transparent);
+  border-radius: var(--rm-radius-full);
+  background: color-mix(in srgb, var(--rm-bg) 35%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--rm-text);
+  font-size: var(--rm-font-sm);
+  font-weight: var(--rm-font-weight-medium);
+  cursor: pointer;
+  /* терпеливое скольжение — фирменная кривая референса */
+  transition:
+    border-color 0.8s cubic-bezier(0.19, 1, 0.22, 1),
+    letter-spacing 0.8s cubic-bezier(0.19, 1, 0.22, 1),
+    background-color 0.4s ease;
+}
+
+.appearanceButton:hover {
+  border-color: color-mix(in srgb, var(--rm-text) 70%, transparent);
+  letter-spacing: 0.04em;
 }
 
 /* --- hero --- */

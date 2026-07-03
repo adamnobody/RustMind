@@ -142,3 +142,28 @@ describe('uiStore — внешний вид холста (шаг 16)', () => {
     useUIStore.getState().setBackgroundBrightness(26);
   });
 });
+
+describe('uiStore — внешний вид главного меню', () => {
+  it('дефолты: перелив, спокойная анимация, зерно включено', () => {
+    const { settings } = useUIStore.getState();
+    expect(settings.homePalette).toBe('iridescent');
+    expect(settings.homeAnimation).toBe('calm');
+    expect(settings.homeGrain).toBe(true);
+  });
+
+  it('сеттеры обновляют палитру, анимацию и зерно', () => {
+    useUIStore.getState().setHomePalette('ocean');
+    useUIStore.getState().setHomeAnimation('lively');
+    useUIStore.getState().setHomeGrain(false);
+
+    const { settings } = useUIStore.getState();
+    expect(settings.homePalette).toBe('ocean');
+    expect(settings.homeAnimation).toBe('lively');
+    expect(settings.homeGrain).toBe(false);
+
+    // вернуть дефолты (store — синглтон)
+    useUIStore.getState().setHomePalette('iridescent');
+    useUIStore.getState().setHomeAnimation('calm');
+    useUIStore.getState().setHomeGrain(true);
+  });
+});
