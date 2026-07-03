@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 export type Theme = 'dark' | 'light';
 export type NodeFontSize = 's' | 'm' | 'l';
 export type NodeEditingMode = 'edit' | 'replace';
+export type BackgroundPattern = 'dots' | 'lines' | 'cross';
 
 export interface NodeEditingIntent {
   mode: NodeEditingMode;
@@ -17,6 +18,10 @@ interface UiSettings {
   showControls: boolean;
   autoLayoutOnChange: boolean;
   confirmBranchDelete: boolean;
+  /** Паттерн фона холста (когда showGrid включён). */
+  backgroundPattern: BackgroundPattern;
+  /** Яркость паттерна фона: 0–100 → альфа 0–1. */
+  backgroundBrightness: number;
 }
 
 interface UiState {
@@ -64,6 +69,8 @@ interface UiState {
     key: 'showGrid' | 'showMiniMap' | 'showControls',
     value: boolean,
   ) => void;
+  setBackgroundPattern: (pattern: BackgroundPattern) => void;
+  setBackgroundBrightness: (value: number) => void;
   setBehaviorOption: (
     key: 'autoLayoutOnChange' | 'confirmBranchDelete',
     value: boolean,
@@ -81,6 +88,9 @@ const defaultSettings: UiSettings = {
   showControls: true,
   autoLayoutOnChange: false,
   confirmBranchDelete: false,
+  backgroundPattern: 'dots',
+  // 26 ≈ прежняя захардкоженная альфа сетки (rgba …, 0.26)
+  backgroundBrightness: 26,
 };
 
 /**
@@ -196,6 +206,17 @@ export const useUIStore = create<UiState>()(
         set((state) => ({
           settings: { ...state.settings, [key]: value },
         })),
+      setBackgroundPattern: (pattern) =>
+        set((state) => ({
+          settings: { ...state.settings, backgroundPattern: pattern },
+        })),
+      setBackgroundBrightness: (value) =>
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            backgroundBrightness: Math.min(100, Math.max(0, value)),
+          },
+        })),
       setBehaviorOption: (key, value) =>
         set((state) => ({
           settings: { ...state.settings, [key]: value },
@@ -209,6 +230,16 @@ export const useUIStore = create<UiState>()(
         theme: state.theme,
         settings: state.settings,
       }),
+      // Deep-merge settings: localStorage со старой версией settings иначе
+      // целиком заменил бы объект и потерял ключи, добавленные позже.
+      merge: (persisted, current) => {
+        const p = persisted as { theme?: Theme; settings?: Partial<UiSettings> } | undefined;
+        return {
+          ...current,
+          ...(p ?? {}),
+          settings: { ...current.settings, ...(p?.settings ?? {}) },
+        };
+      },
       onRehydrateStorage: () => (state) => {
         applyTheme(state?.theme ?? 'dark');
       },

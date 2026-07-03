@@ -31,3 +31,32 @@
   font-size: var(--rm-font-sm);
   line-height: var(--rm-line);
 }
+
+.rangeField {
+  display: grid;
+  gap: var(--rm-space-2);
+}
+
+.rangeHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.rangeLabel {
+  color: var(--rm-text-muted);
+  font-size: var(--rm-font-sm);
+  font-weight: var(--rm-font-weight-medium);
+}
+
+.rangeValue {
+  color: var(--rm-text);
+  font-size: var(--rm-font-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.range {
+  width: 100%;
+  accent-color: var(--rm-accent);
+  cursor: pointer;
+}

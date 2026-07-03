@@ -111,3 +111,34 @@ describe('uiStore — inspector visibility', () => {
     expect(useUIStore.getState().inspectorOpen).toBe(false);
   });
 });
+
+describe('uiStore — внешний вид холста (шаг 16)', () => {
+  it('дефолты: точки с яркостью 26%', () => {
+    const { settings } = useUIStore.getState();
+    expect(settings.backgroundPattern).toBe('dots');
+    expect(settings.backgroundBrightness).toBe(26);
+  });
+
+  it('setBackgroundPattern / setBackgroundBrightness обновляют настройки', () => {
+    useUIStore.getState().setBackgroundPattern('cross');
+    useUIStore.getState().setBackgroundBrightness(55);
+
+    const { settings } = useUIStore.getState();
+    expect(settings.backgroundPattern).toBe('cross');
+    expect(settings.backgroundBrightness).toBe(55);
+
+    // вернуть дефолты, чтобы не влиять на другие тесты (store — синглтон)
+    useUIStore.getState().setBackgroundPattern('dots');
+    useUIStore.getState().setBackgroundBrightness(26);
+  });
+
+  it('яркость клампится в диапазон 0–100', () => {
+    useUIStore.getState().setBackgroundBrightness(400);
+    expect(useUIStore.getState().settings.backgroundBrightness).toBe(100);
+
+    useUIStore.getState().setBackgroundBrightness(-5);
+    expect(useUIStore.getState().settings.backgroundBrightness).toBe(0);
+
+    useUIStore.getState().setBackgroundBrightness(26);
+  });
+});
