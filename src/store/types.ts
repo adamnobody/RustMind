@@ -5,7 +5,7 @@ import type {
   EdgeChange,
   Connection,
 } from '@xyflow/react';
-import type { MindNodeData, NodeStyle } from '../features/nodes/types';
+import type { HandleSide, MindNodeData, NodeStyle } from '../features/nodes/types';
 import type { EdgeStyle, MindEdgeData } from '../features/edges/types';
 
 export type AppNode = Node<MindNodeData>;
@@ -80,6 +80,11 @@ export interface MindMapState {
    * an explicit default). Single source of defaults shared with the serializer.
    */
   setNodeStyle: (id: string, patch: Partial<NodeStyle>) => void;
+  /**
+   * Move a connection handle along its side (percent 0–100, 50 = centre).
+   * Values are clamped and rounded; 50 removes the key (default not stored).
+   */
+  setNodeHandleOffset: (id: string, side: HandleSide, value: number) => void;
   deleteNode: (id: string) => void;
 
   /**

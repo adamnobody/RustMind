@@ -62,6 +62,27 @@ describe('serializer round-trip', () => {
     expect(restored.layoutType).toBe('tree-LR');
   });
 
+  it('handleOffsets переживают round-trip; отсутствие — не материализуется', () => {
+    const withOffsets = makeNode('n1');
+    withOffsets.data.handleOffsets = { top: 15, left: 90 };
+    const without = makeNode('n2');
+
+    const serialized = serializeMindMap(
+      'Doc',
+      'tree-LR',
+      [withOffsets, without],
+      [],
+      defaultProjectSettings,
+    );
+    // JSON-цикл — как при реальном сохранении на диск (undefined-ключи выпадают).
+    const restored = deserializeMindMap(
+      JSON.parse(JSON.stringify(serialized)) as SerializedMindMap,
+    );
+
+    expect(restored.nodes[0].data.handleOffsets).toEqual({ top: 15, left: 90 });
+    expect(restored.nodes[1].data.handleOffsets).toBeUndefined();
+  });
+
   it('round-trip через store: loadDocument восстанавливает состояние', () => {
     const store = useMindMapStore.getState();
     store.resetDocument();

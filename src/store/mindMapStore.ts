@@ -8,7 +8,12 @@ import type {
   HistorySnapshot,
   HistoryCategory,
 } from './types';
-import { MIND_NODE_TYPE, DEFAULT_NODE_STYLE } from '../features/nodes/types';
+import {
+  MIND_NODE_TYPE,
+  DEFAULT_NODE_STYLE,
+  DEFAULT_HANDLE_OFFSET,
+  type HandleOffsets,
+} from '../features/nodes/types';
 import {
   type EdgeKind,
   isTreeEdge,
@@ -238,6 +243,24 @@ export const useMindMapStore = create<MindMapState>()(
         // удаление из style, а не запись явного значения.
         const merged = { ...node.data.style, ...patch };
         node.data.style = pruneStyle(merged, DEFAULT_NODE_STYLE);
+        state.isDirty = true;
+      });
+    },
+
+    setNodeHandleOffset: (id, side, value) => {
+      // Протяжка слайдера — одна запись undo на серию (как правки стиля).
+      recordCoalesced(`handles:${id}`, 'text');
+      set((state) => {
+        const node = state.nodes.find((n) => n.id === id);
+        if (!node) return;
+        const clamped = Math.min(100, Math.max(0, Math.round(value)));
+        const next: HandleOffsets = { ...node.data.handleOffsets };
+        if (clamped === DEFAULT_HANDLE_OFFSET) {
+          delete next[side]; // центр = дефолт — не храним
+        } else {
+          next[side] = clamped;
+        }
+        node.data.handleOffsets = Object.keys(next).length > 0 ? next : undefined;
         state.isDirty = true;
       });
     },

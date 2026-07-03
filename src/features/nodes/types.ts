@@ -29,6 +29,18 @@ export const DEFAULT_NODE_STYLE: Required<NodeStyle> = {
   fontFamily: 'inherit',
 };
 
+/** Сторона узла — совпадает с id хэндлов в NodeHandles. */
+export type HandleSide = 'top' | 'right' | 'bottom' | 'left';
+
+/**
+ * Per-node смещение точек соединения вдоль своей стороны, в процентах (0–100).
+ * Отсутствие ключа = центр стороны (DEFAULT_HANDLE_OFFSET); храним только
+ * отклонения — тот же принцип «дефолт не хранится», что и в NodeStyle.
+ */
+export type HandleOffsets = Partial<Record<HandleSide, number>>;
+
+export const DEFAULT_HANDLE_OFFSET = 50;
+
 export interface MindNodeData {
   label: string;
   color?: string;
@@ -37,6 +49,7 @@ export interface MindNodeData {
   isRoot?: boolean;
   note?: string;
   style?: NodeStyle;
+  handleOffsets?: HandleOffsets;
   [key: string]: unknown; // требование @xyflow/react v12 для Record-совместимости
 }
 

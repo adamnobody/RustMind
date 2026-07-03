@@ -1,5 +1,5 @@
-import { memo, useCallback, type CSSProperties } from 'react';
-import type { NodeProps } from '@xyflow/react';
+import { memo, useCallback, useEffect, type CSSProperties } from 'react';
+import { useUpdateNodeInternals, type NodeProps } from '@xyflow/react';
 import clsx from 'clsx';
 import { NodeHandles } from './NodeHandles';
 import { NodeEditor } from './NodeEditor';
@@ -43,6 +43,14 @@ function MindNodeComponent({
   const isRoot = Boolean(data.isRoot);
   const nodeData = data as unknown as MindNodeData;
 
+  // Смещение хэндлов меняет их DOM-позиции — просим RF перемерить узел,
+  // иначе рёбра продолжат целиться в старые точки до первого drag.
+  const updateNodeInternals = useUpdateNodeInternals();
+  const handleOffsets = nodeData.handleOffsets;
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, handleOffsets, updateNodeInternals]);
+
   const {
     isEditing,
     draft,
@@ -68,7 +76,7 @@ function MindNodeComponent({
       onDoubleClick={handleDoubleClick}
     >
       <MindNodeToolbar nodeId={id} isRoot={isRoot} isVisible={showToolbar} />
-      <NodeHandles />
+      <NodeHandles offsets={handleOffsets} />
       <div
         className={clsx(
           styles.box,

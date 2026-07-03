@@ -34,6 +34,8 @@ export interface SerializedNode {
     isRoot?: boolean;
     note?: string;
     style?: SerializedNodeStyle;
+    /** Смещения хэндлов (проценты); хранятся только отклонения от центра. */
+    handleOffsets?: Record<string, number>;
   };
 }
 

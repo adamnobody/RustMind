@@ -44,6 +44,15 @@
   gap: var(--rm-space-4);
 }
 
+.subheading {
+  margin: var(--rm-space-2) 0 0;
+  padding-top: var(--rm-space-3);
+  border-top: 1px solid var(--rm-border);
+  color: var(--rm-text);
+  font-size: var(--rm-font-sm);
+  font-weight: var(--rm-font-weight-semibold);
+}
+
 /* --- field scaffolding --- */
 .field {
   display: grid;

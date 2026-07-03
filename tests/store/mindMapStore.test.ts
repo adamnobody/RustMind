@@ -544,6 +544,59 @@ describe('mindMapStore — setNodeStyle (in-memory prune)', () => {
   });
 });
 
+describe('mindMapStore — setNodeHandleOffset (шаг 17)', () => {
+  beforeEach(() => {
+    useMindMapStore.getState().resetDocument();
+  });
+
+  it('сохраняет отклонение и ставит isDirty', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    useMindMapStore.getState().setNodeHandleOffset(rootId, 'top', 20);
+
+    const node = useMindMapStore.getState().nodes.find((n) => n.id === rootId)!;
+    expect(node.data.handleOffsets).toEqual({ top: 20 });
+    expect(useMindMapStore.getState().isDirty).toBe(true);
+  });
+
+  it('возврат к центру (50) удаляет ключ; пустой объект → undefined', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    useMindMapStore.getState().setNodeHandleOffset(rootId, 'left', 80);
+    useMindMapStore.getState().setNodeHandleOffset(rootId, 'left', 50);
+
+    const node = useMindMapStore.getState().nodes.find((n) => n.id === rootId)!;
+    expect(node.data.handleOffsets).toBeUndefined();
+  });
+
+  it('клампит значение в 0–100 и округляет', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    useMindMapStore.getState().setNodeHandleOffset(rootId, 'right', 140);
+    expect(
+      useMindMapStore.getState().nodes.find((n) => n.id === rootId)!.data.handleOffsets,
+    ).toEqual({ right: 100 });
+
+    useMindMapStore.getState().setNodeHandleOffset(rootId, 'right', -7);
+    expect(
+      useMindMapStore.getState().nodes.find((n) => n.id === rootId)!.data.handleOffsets,
+    ).toEqual({ right: 0 });
+  });
+
+  it('серия движений слайдера коалесится в одну запись истории', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    const before = useMindMapStore.getState().past.length;
+
+    useMindMapStore.getState().setNodeHandleOffset(rootId, 'top', 10);
+    useMindMapStore.getState().setNodeHandleOffset(rootId, 'top', 20);
+    useMindMapStore.getState().setNodeHandleOffset(rootId, 'top', 30);
+
+    expect(useMindMapStore.getState().past.length).toBe(before + 1);
+
+    useMindMapStore.getState().undo();
+    expect(
+      useMindMapStore.getState().nodes.find((n) => n.id === rootId)!.data.handleOffsets,
+    ).toBeUndefined();
+  });
+});
+
 describe('mindMapStore — setEdgeStyle / deleteEdges (шаг 15)', () => {
   /** Корень + потомок (tree-ребро) + free-связь потомок→корень. */
   function seedGraph(): { treeEdgeId: string; freeEdgeId: string } {

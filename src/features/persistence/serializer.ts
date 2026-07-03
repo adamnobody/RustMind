@@ -1,4 +1,4 @@
-import { type NodeStyle, DEFAULT_NODE_STYLE } from '../../features/nodes/types';
+import { type NodeStyle, type HandleOffsets, DEFAULT_NODE_STYLE } from '../../features/nodes/types';
 import { type EdgeStyle, type EdgeKind, DEFAULT_TREE_EDGE_HANDLES, DEFAULT_EDGE_STYLE } from '../../features/edges/types';
 import type { AppNode, AppEdge, LayoutType, LoadDocumentPayload, HandleVisibility, ProjectSettings } from '../../store/types';
 import type { SerializedMindMap } from './schema';
@@ -43,6 +43,8 @@ export function serializeMindMap(
         isRoot: n.data.isRoot,
         note: n.data.note,
         style: pruneStyle(n.data.style, DEFAULT_NODE_STYLE),
+        // Стор хранит только отклонения от центра — пишем как есть.
+        handleOffsets: n.data.handleOffsets,
       },
     })),
     edges: edges.map((e) => {
@@ -89,6 +91,7 @@ export function deserializeMindMap(serialized: SerializedMindMap): LoadDocumentP
         note: n.data.note,
         // Serialized style uses string for union fields; cast to domain type.
         style: n.data.style as NodeStyle | undefined,
+        handleOffsets: n.data.handleOffsets as HandleOffsets | undefined,
       },
     })),
     edges: serialized.edges.map((e) => {
