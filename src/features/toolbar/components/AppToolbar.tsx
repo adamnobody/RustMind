@@ -10,6 +10,7 @@ interface AppToolbarProps {
   onOpen?: () => Promise<void>;
   onSave?: () => Promise<void>;
   onSaveAs?: () => Promise<void>;
+  onHome?: () => void;
 }
 
 export function AppToolbar({
@@ -17,6 +18,7 @@ export function AppToolbar({
   onOpen,
   onSave,
   onSaveAs,
+  onHome,
 }: AppToolbarProps): React.JSX.Element {
   const documentName = useMindMapStore((s) => s.documentName);
   const isDirty = useMindMapStore((s) => s.isDirty);
@@ -55,6 +57,12 @@ export function AppToolbar({
       </div>
 
       <div className={styles.actions} aria-label="Actions">
+        {onHome && (
+          <>
+            <IconButton icon="home" label="Главное меню" onClick={onHome} />
+            <span className={styles.separator} aria-hidden="true" />
+          </>
+        )}
         <IconButton icon="file" label="Новый (Ctrl+N)" onClick={onNew} />
         <IconButton icon="folder-open" label="Открыть (Ctrl+O)" onClick={onOpen} />
         <IconButton icon="save" label="Сохранить (Ctrl+S)" onClick={onSave} />

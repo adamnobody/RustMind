@@ -4,6 +4,7 @@ import { useMindMapStore } from '../../store/mindMapStore';
 import { useUIStore } from '../../store/uiStore';
 import { fileService } from './fileService';
 import { serializeMindMap, deserializeMindMap } from './serializer';
+import { addRecentFile } from './recentFiles';
 
 export interface PersistenceActions {
   handleSave: () => Promise<void>;
@@ -20,6 +21,24 @@ async function withErrorAlert<T>(fn: () => Promise<T>): Promise<T | undefined> {
     window.alert(`Ошибка: ${message}`);
     return undefined;
   }
+}
+
+/**
+ * Открывает документ по известному пути (без диалога) — общая точка для
+ * «Открыть…» в редакторе и списка недавних на стартовом экране. Бросает
+ * исключение при ошибке чтения/формата — обработка у вызывающего.
+ */
+export async function openDocumentFromPath(path: string): Promise<void> {
+  const data = await fileService.loadFromPath(path);
+  const payload = deserializeMindMap(data);
+
+  const state = useMindMapStore.getState();
+  // Сохранённые позиции — источник истины: НЕ пересчитываем раскладку на
+  // открытии (это затирало бы ручное размещение и ломалось бы на free-рёбрах).
+  state.loadDocument(payload);
+  state.setFilePath(path);
+  addRecentFile(path, payload.documentName);
+  setTimeout(() => useUIStore.getState().triggerFitView(), 100);
 }
 
 export function usePersistence(): PersistenceActions {
@@ -45,6 +64,7 @@ export function usePersistence(): PersistenceActions {
       await fileService.saveToPath(path, data);
       state.setFilePath(path);
       state.markSaved();
+      addRecentFile(path, state.documentName);
     });
   }, []);
 
@@ -64,6 +84,7 @@ export function usePersistence(): PersistenceActions {
       await fileService.saveToPath(path, data);
       state.setFilePath(path);
       state.markSaved();
+      addRecentFile(path, state.documentName);
     });
   }, []);
 
@@ -76,18 +97,9 @@ export function usePersistence(): PersistenceActions {
     await withErrorAlert(async () => {
       const path = await fileService.showOpenDialog();
       if (!path) return;
-
-      const data = await fileService.loadFromPath(path);
-      const payload = deserializeMindMap(data);
-
-      const state = useMindMapStore.getState();
-      // Сохранённые позиции — источник истины: НЕ пересчитываем раскладку на
-      // открытии (это затирало бы ручное размещение и ломалось бы на free-рёбрах).
-      state.loadDocument(payload);
-      state.setFilePath(path);
-      setTimeout(triggerFitView, 100);
+      await openDocumentFromPath(path);
     });
-  }, [triggerFitView]);
+  }, []);
 
   const handleNew = useCallback(() => {
     const { isDirty } = useMindMapStore.getState();

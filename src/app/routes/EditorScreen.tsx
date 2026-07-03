@@ -5,7 +5,12 @@ import { usePersistence, useWindowCloseGuard } from '../../features/persistence'
 import { KeyboardProvider } from '../providers/KeyboardProvider';
 import styles from './EditorScreen.module.css';
 
-export function EditorScreen(): React.JSX.Element {
+interface EditorScreenProps {
+  /** Возврат на стартовый экран (с подтверждением при несохранённых изменениях). */
+  onGoHome?: () => void;
+}
+
+export function EditorScreen({ onGoHome }: EditorScreenProps = {}): React.JSX.Element {
   const { handleSave, handleSaveAs, handleOpen, handleNew } = usePersistence();
   useWindowCloseGuard();
 
@@ -22,6 +27,7 @@ export function EditorScreen(): React.JSX.Element {
           onOpen={handleOpen}
           onSave={handleSave}
           onSaveAs={handleSaveAs}
+          onHome={onGoHome}
         />
         <div className={styles.canvasWrapper}>
           <div className={styles.canvasArea}>
