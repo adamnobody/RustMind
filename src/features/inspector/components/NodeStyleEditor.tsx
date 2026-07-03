@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useMindMapStore } from '../../../store/mindMapStore';
+import { listSystemFonts, FALLBACK_FONTS } from '../../../shared/lib/fonts';
 import {
   DEFAULT_NODE_STYLE,
   DEFAULT_HANDLE_OFFSET,
@@ -8,7 +9,7 @@ import {
   type BorderPattern,
   type HandleSide,
 } from '../../nodes/types';
-import { ColorField, NumberField, SegField } from './fields';
+import { ColorField, FontField, NumberField, SegField } from './fields';
 import styles from './Inspector.module.css';
 
 const handleSides: { side: HandleSide; label: string }[] = [
@@ -50,6 +51,19 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
   const setNodeStyle = useMindMapStore((s) => s.setNodeStyle);
   const setNodeHandleOffset = useMindMapStore((s) => s.setNodeHandleOffset);
   const style = data.style;
+
+  // Системные шрифты приходят из Rust асинхронно; до ответа показываем фолбэк,
+  // сам listSystemFonts кэширует результат на всё время жизни приложения.
+  const [fonts, setFonts] = useState<string[]>([...FALLBACK_FONTS]);
+  useEffect(() => {
+    let alive = true;
+    void listSystemFonts().then((list) => {
+      if (alive) setFonts(list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // One setter to rule them all — passing the default value back prunes the field
   // (see setNodeStyle), so "reset to default" is just "set to default".
@@ -106,6 +120,13 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
         max={40}
         suffix="px"
         onChange={(fontSize) => set({ fontSize })}
+      />
+
+      <FontField
+        label="Шрифт"
+        value={style?.fontFamily}
+        fonts={fonts}
+        onChange={(fontFamily) => set({ fontFamily })}
       />
 
       <ColorField

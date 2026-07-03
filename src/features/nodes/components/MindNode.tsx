@@ -32,6 +32,8 @@ function boxStyleFrom(data: MindNodeData): CSSProperties {
     borderWidth: s?.borderWidth != null ? `${s.borderWidth}px` : undefined,
     borderStyle: pattern ? (pattern === 'none' ? 'none' : pattern) : undefined,
     fontSize: s?.fontSize != null ? `${s.fontSize}px` : undefined,
+    // Кавычки — имена системных шрифтов содержат пробелы ("Segoe UI")
+    fontFamily: s?.fontFamily ? `"${s.fontFamily}"` : undefined,
   };
 }
 

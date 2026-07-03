@@ -127,6 +127,44 @@ export function TextField({
   );
 }
 
+interface FontFieldProps {
+  label: string;
+  /** Активное переопределение; undefined = наследуемый шрифт приложения. */
+  value: string | undefined;
+  fonts: string[];
+  onChange: (font: string | undefined) => void;
+}
+
+export function FontField({
+  label,
+  value,
+  fonts,
+  onChange,
+}: FontFieldProps): React.JSX.Element {
+  // Шрифт из открытого файла может отсутствовать в системе — показываем его
+  // в списке, чтобы select не «терял» значение.
+  const options = value !== undefined && !fonts.includes(value) ? [value, ...fonts] : fonts;
+  return (
+    <div className={styles.field}>
+      <span className={styles.fieldLabel}>{label}</span>
+      <select
+        className={styles.select}
+        value={value ?? ''}
+        aria-label={label}
+        style={value !== undefined ? { fontFamily: `"${value}"` } : undefined}
+        onChange={(e) => onChange(e.target.value === '' ? undefined : e.target.value)}
+      >
+        <option value="">По умолчанию</option>
+        {options.map((font) => (
+          <option key={font} value={font} style={{ fontFamily: `"${font}"` }}>
+            {font}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 interface NumberFieldProps {
   label: string;
   value: number;

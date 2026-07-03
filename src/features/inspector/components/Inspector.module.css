@@ -177,6 +177,24 @@
   cursor: default;
 }
 
+/* --- font select --- */
+.select {
+  width: 100%;
+  padding: var(--rm-space-2) var(--rm-space-3);
+  border: 1px solid var(--rm-border);
+  border-radius: var(--rm-radius-sm);
+  background: var(--rm-surface-hover);
+  color: var(--rm-text);
+  font-size: var(--rm-font-sm);
+  cursor: pointer;
+  transition: border-color var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--rm-accent);
+}
+
 /* --- text field --- */
 .textInput {
   width: 100%;
