@@ -6,7 +6,7 @@ import type {
   Connection,
 } from '@xyflow/react';
 import type { MindNodeData, NodeStyle } from '../features/nodes/types';
-import type { MindEdgeData } from '../features/edges/types';
+import type { EdgeStyle, MindEdgeData } from '../features/edges/types';
 
 export type AppNode = Node<MindNodeData>;
 export type AppEdge = Edge<MindEdgeData>;
@@ -81,6 +81,18 @@ export interface MindMapState {
    */
   setNodeStyle: (id: string, patch: Partial<NodeStyle>) => void;
   deleteNode: (id: string) => void;
+
+  /**
+   * Merge a partial style override into an edge, pruned against
+   * DEFAULT_EDGE_STYLE — same contract as setNodeStyle. `label` lives in the
+   * style; pass `label: undefined` to remove it.
+   */
+  setEdgeStyle: (id: string, patch: Partial<EdgeStyle>) => void;
+  /**
+   * Delete free (associative) edges by id. Tree edges are skipped: they define
+   * the hierarchy and are only removed together with their child node.
+   */
+  deleteEdges: (ids: string[]) => void;
 
   getRootNode: () => AppNode | undefined;
   getParentId: (nodeId: string) => string | null;

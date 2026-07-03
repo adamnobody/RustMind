@@ -9,7 +9,12 @@ import type {
   HistoryCategory,
 } from './types';
 import { MIND_NODE_TYPE, DEFAULT_NODE_STYLE } from '../features/nodes/types';
-import { type EdgeKind, isTreeEdge, DEFAULT_TREE_EDGE_HANDLES } from '../features/edges/types';
+import {
+  type EdgeKind,
+  isTreeEdge,
+  DEFAULT_TREE_EDGE_HANDLES,
+  DEFAULT_EDGE_STYLE,
+} from '../features/edges/types';
 import { generateNodeId, generateEdgeId } from '../shared/lib/id';
 import { pruneStyle } from '../shared/lib/style';
 import { DEFAULT_LABELS, NODE_COLORS, DEFAULT_HANDLE_VISIBILITY } from '../shared/lib/constants';
@@ -233,6 +238,37 @@ export const useMindMapStore = create<MindMapState>()(
         // удаление из style, а не запись явного значения.
         const merged = { ...node.data.style, ...patch };
         node.data.style = pruneStyle(merged, DEFAULT_NODE_STYLE);
+        state.isDirty = true;
+      });
+    },
+
+    setEdgeStyle: (id, patch) => {
+      // Тот же контракт, что setNodeStyle: коалесинг серии правок одного ребра,
+      // прунинг против дефолтов — поле, равное дефолту, не хранится.
+      recordCoalesced(`edgestyle:${id}`, 'text');
+      set((state) => {
+        const edge = state.edges.find((e) => e.id === id);
+        if (!edge) return;
+        const merged = { ...edge.data?.style, ...patch };
+        edge.data = { ...edge.data, style: pruneStyle(merged, DEFAULT_EDGE_STYLE) };
+        state.isDirty = true;
+      });
+    },
+
+    deleteEdges: (ids) => {
+      // Только free-связи: структурное ребро — часть иерархии, его удаление
+      // осиротило бы поддерево (getParentId/addSibling перестали бы работать).
+      const requested = new Set(ids);
+      const deletable = new Set(
+        get()
+          .edges.filter((e) => requested.has(e.id) && !isTreeEdge(e))
+          .map((e) => e.id),
+      );
+      if (deletable.size === 0) return;
+
+      recordHistory('structural');
+      set((state) => {
+        state.edges = state.edges.filter((e) => !deletable.has(e.id));
         state.isDirty = true;
       });
     },

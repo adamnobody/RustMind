@@ -16,11 +16,15 @@ describe('uiStore — isEditableSelection (single element rule)', () => {
     expect(isEditableSelection(['n1'], [])).toBe(true);
   });
 
-  it('ноль / много узлов или примесь рёбер → false (для шага 14)', () => {
+  it('ровно одно ребро и ноль узлов → true (шаг 15)', () => {
+    expect(isEditableSelection([], ['e1'])).toBe(true);
+  });
+
+  it('ноль / много элементов или смешанный выбор → false', () => {
     expect(isEditableSelection([], [])).toBe(false);
     expect(isEditableSelection(['n1', 'n2'], [])).toBe(false);
     expect(isEditableSelection(['n1'], ['e1'])).toBe(false);
-    expect(isEditableSelection([], ['e1'])).toBe(false);
+    expect(isEditableSelection([], ['e1', 'e2'])).toBe(false);
   });
 });
 
@@ -39,9 +43,10 @@ describe('uiStore — inspector visibility', () => {
     expect(useUIStore.getState().inspectorManuallyHidden).toBe(false);
   });
 
-  it('одиночное ребро (без узла) не открывает узловую панель в шаге 14', () => {
+  it('одиночное ребро (без узла) авто-открывает панель (шаг 15)', () => {
     useUIStore.getState().setSelection([], ['e1']);
-    expect(useUIStore.getState().inspectorOpen).toBe(false);
+    expect(useUIStore.getState().inspectorOpen).toBe(true);
+    expect(useUIStore.getState().selectedEdgeIds).toEqual(['e1']);
   });
 
   it('ручное скрытие перебивает авто-открытие при выборе ДРУГИХ узлов', () => {

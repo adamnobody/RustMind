@@ -3,6 +3,7 @@ import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { IconButton } from '../../../shared/ui/IconButton/IconButton';
 import { NodeStyleEditor } from './NodeStyleEditor';
+import { EdgeStyleEditor } from './EdgeStyleEditor';
 import styles from './Inspector.module.css';
 
 /**
@@ -23,13 +24,20 @@ export function Inspector(): React.JSX.Element | null {
 
   const singleNodeId =
     selectedNodeIds.length === 1 && selectedEdgeIds.length === 0 ? selectedNodeIds[0] : null;
+  const singleEdgeId =
+    selectedEdgeIds.length === 1 && selectedNodeIds.length === 0 ? selectedEdgeIds[0] : null;
   const node = useMindMapStore((s) =>
     singleNodeId ? s.nodes.find((n) => n.id === singleNodeId) : undefined,
+  );
+  const edge = useMindMapStore((s) =>
+    singleEdgeId ? s.edges.find((e) => e.id === singleEdgeId) : undefined,
   );
 
   if (!inspectorOpen) {
     return null;
   }
+
+  const title = node ? 'Стиль узла' : edge ? 'Стиль связи' : 'Свойства';
 
   return (
     // Keep keystrokes typed into the panel away from the canvas' global node
@@ -40,14 +48,16 @@ export function Inspector(): React.JSX.Element | null {
       onKeyDown={(e) => e.stopPropagation()}
     >
       <header className={styles.header}>
-        <h2 className={styles.title}>{node ? 'Стиль узла' : 'Свойства'}</h2>
+        <h2 className={styles.title}>{title}</h2>
         <IconButton icon="x" label="Скрыть панель" onClick={hideInspector} />
       </header>
       <div className={styles.body}>
         {node ? (
           <NodeStyleEditor nodeId={node.id} data={node.data} />
+        ) : edge ? (
+          <EdgeStyleEditor edgeId={edge.id} data={edge.data} />
         ) : (
-          <p className={styles.empty}>Выберите один узел, чтобы изменить его стиль.</p>
+          <p className={styles.empty}>Выберите узел или связь, чтобы изменить стиль.</p>
         )}
       </div>
     </aside>

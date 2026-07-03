@@ -84,11 +84,14 @@ const defaultSettings: UiSettings = {
 };
 
 /**
- * The inspector edits exactly one element at a time. For step 14 that means a
- * single node and no edges; step 15 broadens this to also accept a single edge.
+ * The inspector edits exactly one element at a time: a single node OR a single
+ * edge. Mixed or multi selections have no single editing target.
  */
 export function isEditableSelection(nodeIds: string[], edgeIds: string[]): boolean {
-  return nodeIds.length === 1 && edgeIds.length === 0;
+  return (
+    (nodeIds.length === 1 && edgeIds.length === 0) ||
+    (nodeIds.length === 0 && edgeIds.length === 1)
+  );
 }
 
 function applyTheme(theme: Theme): void {

@@ -1,0 +1,13 @@
+.label {
+  position: absolute;
+  pointer-events: none;
+  max-width: 220px;
+  padding: 2px 8px;
+  border-radius: var(--rm-radius-sm);
+  background: color-mix(in srgb, var(--rm-canvas-bg) 84%, transparent);
+  font-weight: var(--rm-font-weight-medium);
+  line-height: var(--rm-line-tight);
+  text-align: center;
+  overflow-wrap: break-word;
+  backdrop-filter: blur(2px);
+}

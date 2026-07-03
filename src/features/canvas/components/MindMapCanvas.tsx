@@ -142,6 +142,9 @@ function CanvasInner(): React.JSX.Element {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         connectionMode={ConnectionMode.Loose}
+        // Встроенное удаление RF (Backspace) обходит нашу историю undo и
+        // isDirty — весь Delete/Backspace обрабатывает useGlobalHotkeys.
+        deleteKeyCode={null}
         fitView
         minZoom={0.2}
         maxZoom={2}

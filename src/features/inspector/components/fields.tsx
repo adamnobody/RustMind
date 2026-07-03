@@ -99,6 +99,34 @@ export function ColorField({
   );
 }
 
+interface TextFieldProps {
+  label: string;
+  value: string;
+  placeholder?: string;
+  onChange: (value: string) => void;
+}
+
+export function TextField({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: TextFieldProps): React.JSX.Element {
+  return (
+    <div className={styles.field}>
+      <span className={styles.fieldLabel}>{label}</span>
+      <input
+        type="text"
+        className={styles.textInput}
+        value={value}
+        placeholder={placeholder}
+        aria-label={label}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
+
 interface NumberFieldProps {
   label: string;
   value: number;

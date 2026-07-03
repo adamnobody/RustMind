@@ -543,3 +543,85 @@ describe('mindMapStore — setNodeStyle (in-memory prune)', () => {
     expect(useMindMapStore.getState().nodes.find((n) => n.id === rootId)!.data.style).toBeUndefined();
   });
 });
+
+describe('mindMapStore — setEdgeStyle / deleteEdges (шаг 15)', () => {
+  /** Корень + потомок (tree-ребро) + free-связь потомок→корень. */
+  function seedGraph(): { treeEdgeId: string; freeEdgeId: string } {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const childId = store.addChildNode(rootId)!;
+    useMindMapStore.getState().onConnect({
+      source: childId,
+      target: rootId,
+      sourceHandle: 'top',
+      targetHandle: 'bottom',
+    });
+    const { edges } = useMindMapStore.getState();
+    return {
+      treeEdgeId: edges.find((e) => e.data?.kind !== 'free')!.id,
+      freeEdgeId: edges.find((e) => e.data?.kind === 'free')!.id,
+    };
+  }
+
+  beforeEach(() => {
+    useMindMapStore.getState().resetDocument();
+  });
+
+  it('применяет не-дефолтные поля и сохраняет kind ребра', () => {
+    const { freeEdgeId } = seedGraph();
+    useMindMapStore.getState().setEdgeStyle(freeEdgeId, { strokeWidth: 4, targetArrow: 'filled' });
+
+    const edge = useMindMapStore.getState().edges.find((e) => e.id === freeEdgeId)!;
+    expect(edge.data?.style).toEqual({ strokeWidth: 4, targetArrow: 'filled' });
+    expect(edge.data?.kind).toBe('free');
+    expect(useMindMapStore.getState().isDirty).toBe(true);
+  });
+
+  it('возврат поля к дефолту удаляет его из style (prune)', () => {
+    const { freeEdgeId } = seedGraph();
+    useMindMapStore.getState().setEdgeStyle(freeEdgeId, { linePattern: 'dashed' });
+    useMindMapStore.getState().setEdgeStyle(freeEdgeId, { linePattern: 'solid' });
+
+    const edge = useMindMapStore.getState().edges.find((e) => e.id === freeEdgeId)!;
+    expect(edge.data?.style).toBeUndefined();
+  });
+
+  it('label: строка сохраняется, undefined убирает подпись', () => {
+    const { treeEdgeId } = seedGraph();
+    useMindMapStore.getState().setEdgeStyle(treeEdgeId, { label: 'зависит от' });
+    expect(
+      useMindMapStore.getState().edges.find((e) => e.id === treeEdgeId)!.data?.style?.label,
+    ).toBe('зависит от');
+
+    useMindMapStore.getState().setEdgeStyle(treeEdgeId, { label: undefined });
+    expect(
+      useMindMapStore.getState().edges.find((e) => e.id === treeEdgeId)!.data?.style,
+    ).toBeUndefined();
+  });
+
+  it('deleteEdges удаляет free-связь и пишет structural-историю', () => {
+    const { freeEdgeId } = seedGraph();
+    const before = useMindMapStore.getState().past.length;
+
+    useMindMapStore.getState().deleteEdges([freeEdgeId]);
+
+    const state = useMindMapStore.getState();
+    expect(state.edges.find((e) => e.id === freeEdgeId)).toBeUndefined();
+    expect(state.past.length).toBe(before + 1);
+    expect(state.past.at(-1)?.category).toBe('structural');
+
+    useMindMapStore.getState().undo();
+    expect(useMindMapStore.getState().edges.find((e) => e.id === freeEdgeId)).toBeDefined();
+  });
+
+  it('deleteEdges НЕ трогает структурные (tree) рёбра и не пишет историю впустую', () => {
+    const { treeEdgeId } = seedGraph();
+    const before = useMindMapStore.getState().past.length;
+
+    useMindMapStore.getState().deleteEdges([treeEdgeId]);
+
+    const state = useMindMapStore.getState();
+    expect(state.edges.find((e) => e.id === treeEdgeId)).toBeDefined();
+    expect(state.past.length).toBe(before);
+  });
+});

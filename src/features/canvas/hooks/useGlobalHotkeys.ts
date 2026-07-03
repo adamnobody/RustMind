@@ -100,6 +100,15 @@ export function useGlobalHotkeys(): void {
               deleteNode(selectedNodeId);
               setSelectedNodeId(null);
             }
+            break;
+          }
+          // Узел не выбран — удаляем выбранные free-связи (deleteEdges сам
+          // пропускает структурные рёбра: они удаляются только с узлом).
+          const { selectedEdgeIds, setSelection } = useUIStore.getState();
+          if (selectedEdgeIds.length > 0) {
+            e.preventDefault();
+            useMindMapStore.getState().deleteEdges(selectedEdgeIds);
+            setSelection([], []);
           }
           break;
         }

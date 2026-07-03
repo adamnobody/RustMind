@@ -11,17 +11,13 @@
     linear-gradient(180deg, var(--rm-canvas-bg), var(--rm-bg));
 }
 
+/* Цвет/толщина/паттерн и подсветка выделения задаются инлайном в MindEdge
+   (инлайн-стиль BaseEdge всё равно перебил бы правила отсюда) — здесь только
+   плавность перехода. */
 .react-flow__edge-path {
-  stroke-width: 2;
   transition:
     stroke var(--rm-transition-fast) var(--rm-ease-out-expo),
     stroke-width var(--rm-transition-fast) var(--rm-ease-out-expo);
-}
-
-.react-flow__edge.selected .react-flow__edge-path,
-.react-flow__edge:focus .react-flow__edge-path {
-  stroke: var(--rm-accent);
-  stroke-width: 2.5;
 }
 
 .react-flow__handle {
