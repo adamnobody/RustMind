@@ -3,102 +3,121 @@
   inset: 0;
   overflow: hidden;
   z-index: 0;
-  background: linear-gradient(180deg, var(--rm-canvas-bg), var(--rm-bg));
+  background: var(--rm-bg);
 
-  /* Темп дрейфа: базовая длительность цикла (умножается на каждое пятно). */
-  --drift: 44s;
+  /* Базовый период вращения слоёв (у каждого слоя свой множитель). */
+  --drift: 70s;
 }
 
 .backdrop[data-anim='lively'] {
-  --drift: 16s;
+  --drift: 24s;
 }
 
-/* --- жидкие цветовые пятна --- */
-.blob {
+/* --- полноэкранная тонированная база: тёмных «дыр» нет в принципе --- */
+.base {
   position: absolute;
-  width: 72vmax;
-  height: 72vmax;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, var(--blob-color) 0%, transparent 68%);
-  filter: blur(70px) saturate(1.15);
-  opacity: 0.5;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--c1) 34%, var(--rm-bg)) 0%,
+    color-mix(in srgb, var(--c2) 26%, var(--rm-bg)) 48%,
+    color-mix(in srgb, var(--c3) 36%, var(--rm-bg)) 100%
+  );
+}
+
+/* --- дрейфующие слои ---------------------------------------------------
+   Каждый слой сильно больше вьюпорта (inset: -40%) и несёт несколько
+   перекрывающихся радиальных градиентов с мягким затуханием до прозрачного.
+   Слой вращается целиком вокруг центра экрана — цвета проносятся сквозь
+   кадр и накладываются на цвета встречного слоя. Никакого filter: blur —
+   мягкость дают сами длинные градиенты (это ещё и дешевле для GPU). */
+.layerA,
+.layerB {
+  position: absolute;
+  inset: -40%;
   will-change: transform;
-  animation-timing-function: ease-in-out;
+  animation-timing-function: linear;
   animation-iteration-count: infinite;
-  animation-direction: alternate;
 }
 
-/* В светлой теме иная физика: размытие о белый фон съедает цвет,
-   поэтому опускаем прозрачность лишь слегка. */
-:global([data-theme='light']) .blob {
-  opacity: 0.42;
-  filter: blur(70px) saturate(1.3);
-}
-
-.blobA {
-  top: -28vmax;
-  left: -18vmax;
-  animation-name: driftA;
+.layerA {
+  background:
+    radial-gradient(44% 40% at 22% 26%, var(--c1), transparent),
+    radial-gradient(50% 46% at 78% 22%, var(--c2), transparent),
+    radial-gradient(52% 50% at 64% 80%, var(--c3), transparent),
+    radial-gradient(40% 38% at 26% 76%, var(--c2), transparent);
+  opacity: 0.6;
+  animation-name: swirl;
   animation-duration: var(--drift);
 }
 
-.blobB {
-  top: -6vmax;
-  right: -24vmax;
-  animation-name: driftB;
-  animation-duration: calc(var(--drift) * 1.35);
+.layerB {
+  background:
+    radial-gradient(48% 46% at 70% 62%, var(--c1), transparent),
+    radial-gradient(42% 42% at 28% 46%, var(--c3), transparent),
+    radial-gradient(54% 52% at 55% 16%, var(--c2), transparent);
+  opacity: 0.55;
+  /* Аддитивное смешение с layerA — в пересечениях цвета «плавятся». */
+  mix-blend-mode: screen;
+  animation-name: swirlReverse, shimmer;
+  animation-duration: calc(var(--drift) * 1.6), calc(var(--drift) * 0.9);
+  animation-timing-function: linear, ease-in-out;
+  animation-direction: normal, alternate;
 }
 
-.blobC {
-  bottom: -30vmax;
-  left: 10vmax;
-  animation-name: driftC;
-  animation-duration: calc(var(--drift) * 1.7);
+/* Светлая тема: screen о белый выбеливает — берём multiply и пастель. */
+:global([data-theme='light']) .layerA {
+  opacity: 0.5;
 }
 
-.backdrop[data-anim='off'] .blob {
+:global([data-theme='light']) .layerB {
+  mix-blend-mode: multiply;
+  opacity: 0.3;
+}
+
+@keyframes swirl {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.18);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes swirlReverse {
+  0% {
+    transform: rotate(0deg) scale(1.1);
+  }
+  50% {
+    transform: rotate(-180deg) scale(0.96);
+  }
+  100% {
+    transform: rotate(-360deg) scale(1.1);
+  }
+}
+
+/* Лёгкое «переливание» тона поверх вращения. */
+@keyframes shimmer {
+  from {
+    filter: hue-rotate(0deg) saturate(1);
+  }
+  to {
+    filter: hue-rotate(28deg) saturate(1.25);
+  }
+}
+
+.backdrop[data-anim='off'] .layerA,
+.backdrop[data-anim='off'] .layerB {
   animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .blob {
+  .layerA,
+  .layerB {
     animation: none !important;
-  }
-}
-
-@keyframes driftA {
-  0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-  }
-  50% {
-    transform: translate(14vmax, 10vmax) scale(1.18) rotate(12deg);
-  }
-  100% {
-    transform: translate(-6vmax, 16vmax) scale(0.94) rotate(-8deg);
-  }
-}
-
-@keyframes driftB {
-  0% {
-    transform: translate(0, 0) scale(1.05);
-  }
-  50% {
-    transform: translate(-16vmax, 12vmax) scale(0.92);
-  }
-  100% {
-    transform: translate(-4vmax, -8vmax) scale(1.22);
-  }
-}
-
-@keyframes driftC {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(12vmax, -14vmax) scale(1.16);
-  }
-  100% {
-    transform: translate(-10vmax, -4vmax) scale(0.9);
   }
 }
 
@@ -117,13 +136,14 @@
   mix-blend-mode: multiply;
 }
 
-/* --- вуаль: мягко подмешивает цвет темы, чтобы контент читался --- */
+/* --- вуаль: мягкое затемнение к центру/низу, чтобы контент читался --- */
 .veil {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--rm-bg) 18%, transparent),
-    color-mix(in srgb, var(--rm-bg) 44%, transparent)
+  background: radial-gradient(
+    120% 90% at 50% 55%,
+    color-mix(in srgb, var(--rm-bg) 34%, transparent) 0%,
+    color-mix(in srgb, var(--rm-bg) 10%, transparent) 60%,
+    transparent 100%
   );
 }
