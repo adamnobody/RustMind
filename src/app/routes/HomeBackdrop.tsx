@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useUIStore } from '../../store/uiStore';
-import { HOME_PALETTES } from './homePalettes';
+import { paletteColors } from './homePalettes';
 import styles from './HomeBackdrop.module.css';
 
 /**
@@ -20,8 +20,11 @@ export function HomeBackdrop(): React.JSX.Element {
   const palette = useUIStore((s) => s.settings.homePalette);
   const animation = useUIStore((s) => s.settings.homeAnimation);
   const grain = useUIStore((s) => s.settings.homeGrain);
+  const theme = useUIStore((s) => s.theme);
 
-  const { colors } = HOME_PALETTES[palette] ?? HOME_PALETTES.iridescent;
+  // Каждая палитра существует в двух вариантах: приглушённом для тёмной темы
+  // и ярком для светлой — тройка выбирается по активной теме.
+  const colors = paletteColors(palette, theme);
 
   return (
     <div

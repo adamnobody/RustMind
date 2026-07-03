@@ -8,7 +8,7 @@ import {
   type HomePalette,
   type Theme,
 } from '../../store/uiStore';
-import { HOME_PALETTES } from './homePalettes';
+import { HOME_PALETTES, paletteColors } from './homePalettes';
 import styles from './HomeAppearanceDialog.module.css';
 
 const themeOptions: { value: Theme; label: string }[] = [
@@ -53,7 +53,10 @@ export function HomeAppearanceDialog({
           <span className={styles.fieldLabel}>Палитра фона</span>
           <div className={styles.palettes} role="radiogroup" aria-label="Палитра фона">
             {paletteOrder.map((key) => {
-              const { label, colors } = HOME_PALETTES[key];
+              const { label } = HOME_PALETTES[key];
+              // Свотч показывает вариант активной темы — переключение темы в
+              // этой же модалке сразу перерисовывает превью палитр.
+              const colors = paletteColors(key, theme);
               const active = settings.homePalette === key;
               return (
                 <button
