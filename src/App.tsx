@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { HomeScreen } from './app/routes/HomeScreen';
 import { EditorScreen } from './app/routes/EditorScreen';
 import { useMindMapStore } from './store/mindMapStore';
+import { translate } from './shared/i18n';
 import './styles/global.css';
 
 type Screen = 'home' | 'editor';
@@ -13,7 +14,7 @@ export function App(): React.JSX.Element {
 
   const goHome = useCallback(() => {
     const { isDirty } = useMindMapStore.getState();
-    if (isDirty && !window.confirm('Есть несохранённые изменения. Выйти в меню?')) {
+    if (isDirty && !window.confirm(translate('dialog.unsavedHome'))) {
       return;
     }
     // Сбрасываем брошенный документ, чтобы устаревший isDirty не «просочился»

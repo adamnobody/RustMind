@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { DEFAULT_LOCALE, type Locale } from '../shared/i18n/locales';
 
 export type Theme = 'dark' | 'light';
 export type NodeFontSize = 's' | 'm' | 'l';
@@ -41,6 +42,8 @@ interface UiState {
   editingNodeId: string | null;
   editingIntent: NodeEditingIntent | null;
   theme: Theme;
+  /** Язык интерфейса. */
+  locale: Locale;
   isSettingsOpen: boolean;
   settings: UiSettings;
 
@@ -70,6 +73,7 @@ interface UiState {
   clearNodeEditing: () => void;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
+  setLocale: (locale: Locale) => void;
   openSettings: () => void;
   closeSettings: () => void;
   toggleSettings: () => void;
@@ -159,6 +163,7 @@ export const useUIStore = create<UiState>()(
       editingNodeId: null,
       editingIntent: null,
       theme: initialTheme,
+      locale: DEFAULT_LOCALE,
       isSettingsOpen: false,
       settings: defaultSettings,
       inspectorOpen: false,
@@ -210,6 +215,7 @@ export const useUIStore = create<UiState>()(
         applyTheme(nextTheme);
         set({ theme: nextTheme });
       },
+      setLocale: (locale) => set({ locale }),
       openSettings: () => set({ isSettingsOpen: true }),
       closeSettings: () => set({ isSettingsOpen: false }),
       toggleSettings: () => set((state) => ({ isSettingsOpen: !state.isSettingsOpen })),
@@ -255,12 +261,15 @@ export const useUIStore = create<UiState>()(
       name: STORAGE_KEY,
       partialize: (state) => ({
         theme: state.theme,
+        locale: state.locale,
         settings: state.settings,
       }),
       // Deep-merge settings: localStorage со старой версией settings иначе
       // целиком заменил бы объект и потерял ключи, добавленные позже.
       merge: (persisted, current) => {
-        const p = persisted as { theme?: Theme; settings?: Partial<UiSettings> } | undefined;
+        const p = persisted as
+          | { theme?: Theme; locale?: Locale; settings?: Partial<UiSettings> }
+          | undefined;
         return {
           ...current,
           ...(p ?? {}),

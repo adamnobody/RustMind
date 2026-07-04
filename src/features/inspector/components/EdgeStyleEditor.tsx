@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useMindMapStore } from '../../../store/mindMapStore';
+import { useT } from '../../../shared/i18n';
 import {
   DEFAULT_EDGE_STYLE,
   type MindEdgeData,
@@ -40,6 +41,7 @@ interface EdgeStyleEditorProps {
 }
 
 export function EdgeStyleEditor({ edgeId, data }: EdgeStyleEditorProps): React.JSX.Element {
+  const t = useT();
   const setEdgeStyle = useMindMapStore((s) => s.setEdgeStyle);
   const style = data?.style;
 
@@ -53,9 +55,9 @@ export function EdgeStyleEditor({ edgeId, data }: EdgeStyleEditorProps): React.J
   return (
     <div className={styles.editor}>
       <TextField
-        label="Текст на связи"
+        label={t('edge.labelText')}
         value={label}
-        placeholder="Подпись…"
+        placeholder={t('edge.labelPlaceholder')}
         // Пустая строка = «подписи нет» — поле удаляется из style, а не хранится пустым.
         onChange={(v) => set({ label: v === '' ? undefined : v })}
       />
@@ -63,7 +65,7 @@ export function EdgeStyleEditor({ edgeId, data }: EdgeStyleEditorProps): React.J
       {label !== '' && (
         <>
           <NumberField
-            label="Размер текста"
+            label={t('edge.textSize')}
             value={style?.labelFontSize ?? DEFAULT_EDGE_STYLE.labelFontSize}
             min={9}
             max={24}
@@ -71,7 +73,7 @@ export function EdgeStyleEditor({ edgeId, data }: EdgeStyleEditorProps): React.J
             onChange={(labelFontSize) => set({ labelFontSize })}
           />
           <ColorField
-            label="Цвет текста"
+            label={t('edge.textColor')}
             value={style?.labelColor}
             fallback={COLOR_SEED.text}
             onChange={(hex) => set({ labelColor: hex })}
@@ -81,14 +83,14 @@ export function EdgeStyleEditor({ edgeId, data }: EdgeStyleEditorProps): React.J
       )}
 
       <SegField
-        label="Линия"
+        label={t('edge.line')}
         value={style?.linePattern ?? DEFAULT_EDGE_STYLE.linePattern}
         options={patternOptions}
         onChange={(linePattern) => set({ linePattern })}
       />
 
       <NumberField
-        label="Толщина"
+        label={t('edge.thickness')}
         value={style?.strokeWidth ?? DEFAULT_EDGE_STYLE.strokeWidth}
         min={1}
         max={8}
@@ -97,7 +99,7 @@ export function EdgeStyleEditor({ edgeId, data }: EdgeStyleEditorProps): React.J
       />
 
       <ColorField
-        label="Цвет линии"
+        label={t('edge.lineColor')}
         value={style?.strokeColor}
         fallback={COLOR_SEED.edge}
         onChange={(hex) => set({ strokeColor: hex })}
@@ -105,14 +107,14 @@ export function EdgeStyleEditor({ edgeId, data }: EdgeStyleEditorProps): React.J
       />
 
       <SegField
-        label="Стрелка в начале"
+        label={t('edge.startArrow')}
         value={style?.sourceArrow ?? DEFAULT_EDGE_STYLE.sourceArrow}
         options={startArrowOptions}
         onChange={(sourceArrow) => set({ sourceArrow })}
       />
 
       <SegField
-        label="Стрелка в конце"
+        label={t('edge.endArrow')}
         value={style?.targetArrow ?? DEFAULT_EDGE_STYLE.targetArrow}
         options={endArrowOptions}
         onChange={(targetArrow) => set({ targetArrow })}

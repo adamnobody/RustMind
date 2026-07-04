@@ -1,5 +1,6 @@
 import { NodeToolbar, Position } from '@xyflow/react';
 import { IconButton } from '../../../shared/ui/IconButton/IconButton';
+import { useT } from '../../../shared/i18n';
 import { useNodeActions } from '../hooks/useNodeActions';
 import styles from './NodeToolbar.module.css';
 
@@ -14,6 +15,7 @@ export function MindNodeToolbar({
   isRoot,
   isVisible,
 }: MindNodeToolbarProps): React.JSX.Element {
+  const t = useT();
   const { addChild, addSibling, remove, canAddSibling, canDelete } = useNodeActions({
     nodeId,
     isRoot,
@@ -21,12 +23,21 @@ export function MindNodeToolbar({
 
   return (
     <NodeToolbar isVisible={isVisible} position={Position.Top} offset={10} className={styles.toolbar}>
-      <IconButton icon="plus" label="Добавить дочерний узел (Tab)" onClick={addChild} />
+      <IconButton icon="plus" label={t('nodeToolbar.addChild')} onClick={addChild} />
       {canAddSibling && (
-        <IconButton icon="plus-sibling" label="Добавить соседний узел (Enter)" onClick={addSibling} />
+        <IconButton
+          icon="plus-sibling"
+          label={t('nodeToolbar.addSibling')}
+          onClick={addSibling}
+        />
       )}
       {canDelete && (
-        <IconButton icon="trash" label="Удалить ветку (Delete)" variant="danger" onClick={remove} />
+        <IconButton
+          icon="trash"
+          label={t('nodeToolbar.deleteBranch')}
+          variant="danger"
+          onClick={remove}
+        />
       )}
     </NodeToolbar>
   );

@@ -7,6 +7,7 @@ import {
   type NodeFontSize,
   type Theme,
 } from '../../../store/uiStore';
+import { useT } from '../../../shared/i18n';
 import styles from './SettingsPanel.module.css';
 
 const nodeFontOptions: { value: NodeFontSize; label: string }[] = [
@@ -15,18 +16,11 @@ const nodeFontOptions: { value: NodeFontSize; label: string }[] = [
   { value: 'l', label: 'L' },
 ];
 
-const themeOptions: { value: Theme; label: string }[] = [
-  { value: 'dark', label: 'Тёмная' },
-  { value: 'light', label: 'Светлая' },
-];
-
-const patternOptions: { value: BackgroundPattern; label: string }[] = [
-  { value: 'dots', label: 'Точки' },
-  { value: 'lines', label: 'Линии' },
-  { value: 'cross', label: 'Кресты' },
-];
+const themeValues: Theme[] = ['dark', 'light'];
+const patternValues: BackgroundPattern[] = ['dots', 'lines', 'cross'];
 
 export function SettingsPanel(): React.JSX.Element {
+  const t = useT();
   const isOpen = useUIStore((s) => s.isSettingsOpen);
   const closeSettings = useUIStore((s) => s.closeSettings);
   const theme = useUIStore((s) => s.theme);
@@ -38,14 +32,22 @@ export function SettingsPanel(): React.JSX.Element {
   const setBackgroundPattern = useUIStore((s) => s.setBackgroundPattern);
   const setBackgroundBrightness = useUIStore((s) => s.setBackgroundBrightness);
 
+  const themeOptions = themeValues.map((value) => ({ value, label: t(`theme.${value}`) }));
+  const patternOptions = patternValues.map((value) => ({ value, label: t(`pattern.${value}`) }));
+
   return (
-    <Drawer isOpen={isOpen} title="Настройки" onClose={closeSettings}>
+    <Drawer isOpen={isOpen} title={t('settings.title')} onClose={closeSettings}>
       <div className={styles.sections}>
         <section className={styles.section}>
-          <h3 className={styles.heading}>Внешний вид</h3>
-          <SegmentedControl label="Тема" value={theme} options={themeOptions} onChange={setTheme} />
+          <h3 className={styles.heading}>{t('settings.appearance')}</h3>
           <SegmentedControl
-            label="Размер шрифта узлов"
+            label={t('settings.theme')}
+            value={theme}
+            options={themeOptions}
+            onChange={setTheme}
+          />
+          <SegmentedControl
+            label={t('settings.nodeFontSize')}
             value={settings.nodeFontSize}
             options={nodeFontOptions}
             onChange={setNodeFontSize}
@@ -53,23 +55,23 @@ export function SettingsPanel(): React.JSX.Element {
         </section>
 
         <section className={styles.section}>
-          <h3 className={styles.heading}>Холст</h3>
+          <h3 className={styles.heading}>{t('settings.canvas')}</h3>
           <Switch
-            label="Показывать фон"
+            label={t('settings.showBackground')}
             checked={settings.showGrid}
             onCheckedChange={(value) => setCanvasOption('showGrid', value)}
           />
           {settings.showGrid && (
             <>
               <SegmentedControl
-                label="Паттерн фона"
+                label={t('settings.bgPattern')}
                 value={settings.backgroundPattern}
                 options={patternOptions}
                 onChange={setBackgroundPattern}
               />
               <div className={styles.rangeField}>
                 <div className={styles.rangeHeader}>
-                  <span className={styles.rangeLabel}>Яркость паттерна</span>
+                  <span className={styles.rangeLabel}>{t('settings.patternBrightness')}</span>
                   <span className={styles.rangeValue}>{settings.backgroundBrightness}%</span>
                 </div>
                 <input
@@ -78,46 +80,44 @@ export function SettingsPanel(): React.JSX.Element {
                   min={4}
                   max={80}
                   value={settings.backgroundBrightness}
-                  aria-label="Яркость паттерна"
+                  aria-label={t('settings.patternBrightness')}
                   onChange={(e) => setBackgroundBrightness(Number(e.target.value))}
                 />
               </div>
             </>
           )}
           <Switch
-            label="Мини-карта"
+            label={t('settings.minimap')}
             checked={settings.showMiniMap}
             onCheckedChange={(value) => setCanvasOption('showMiniMap', value)}
           />
           <Switch
-            label="Кнопки масштаба"
+            label={t('settings.zoomButtons')}
             checked={settings.showControls}
             onCheckedChange={(value) => setCanvasOption('showControls', value)}
           />
         </section>
 
         <section className={styles.section}>
-          <h3 className={styles.heading}>Поведение</h3>
+          <h3 className={styles.heading}>{t('settings.behavior')}</h3>
           <Switch
-            label="Авто-раскладка при изменениях"
-            description="Пересчитывать раскладку при добавлении и удалении узлов."
+            label={t('settings.autoLayout')}
+            description={t('settings.autoLayoutDesc')}
             checked={settings.autoLayoutOnChange}
             onCheckedChange={(value) => setBehaviorOption('autoLayoutOnChange', value)}
           />
           <Switch
-            label="Подтверждать удаление ветки"
-            description="Показывать подтверждение перед удалением ветки."
+            label={t('settings.confirmDelete')}
+            description={t('settings.confirmDeleteDesc')}
             checked={settings.confirmBranchDelete}
             onCheckedChange={(value) => setBehaviorOption('confirmBranchDelete', value)}
           />
         </section>
 
         <section className={styles.about}>
-          <h3 className={styles.heading}>О приложении</h3>
+          <h3 className={styles.heading}>{t('settings.about')}</h3>
           <p className={styles.aboutTitle}>RustMind 0.1.0</p>
-          <p className={styles.aboutText}>
-            Быстрый десктопный редактор интеллект-карт на Tauri, React и React Flow.
-          </p>
+          <p className={styles.aboutText}>{t('settings.aboutText')}</p>
         </section>
       </div>
     </Drawer>

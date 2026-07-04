@@ -25,12 +25,6 @@ export const NODE_COLORS = {
   palette: ['#2563eb', '#dc2626', '#16a34a', '#d97706', '#9333ea', '#0891b2'],
 } as const;
 
-/** Тексты по умолчанию */
-export const DEFAULT_LABELS = {
-  root: 'Главная тема',
-  child: 'Новая идея',
-} as const;
-
 /** Дефолт видимости хэндлов (используется в сторе и сериализаторе) */
 export const DEFAULT_HANDLE_VISIBILITY = 'dashed' as const;
 

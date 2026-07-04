@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { Icon } from '../../../shared/ui/Icon/Icon';
+import { useT } from '../../../shared/i18n';
 import styles from './Inspector.module.css';
 
 /**
@@ -70,6 +71,7 @@ export function ColorField({
   onChange,
   onReset,
 }: ColorFieldProps): React.JSX.Element {
+  const t = useT();
   const overridden = value !== undefined;
   return (
     <div className={styles.field}>
@@ -84,11 +86,11 @@ export function ColorField({
             onChange={(e) => onChange(e.target.value)}
           />
         </span>
-        <span className={styles.colorValue}>{overridden ? value : 'по умолчанию'}</span>
+        <span className={styles.colorValue}>{overridden ? value : t('field.default')}</span>
         <button
           type="button"
           className={styles.resetButton}
-          aria-label={`Сбросить ${label.toLowerCase()}`}
+          aria-label={t('field.reset', { label: label.toLowerCase() })}
           disabled={!overridden}
           onClick={onReset}
         >
@@ -141,6 +143,7 @@ export function FontField({
   fonts,
   onChange,
 }: FontFieldProps): React.JSX.Element {
+  const t = useT();
   // Шрифт из открытого файла может отсутствовать в системе — показываем его
   // в списке, чтобы select не «терял» значение.
   const options = value !== undefined && !fonts.includes(value) ? [value, ...fonts] : fonts;
@@ -154,7 +157,7 @@ export function FontField({
         style={value !== undefined ? { fontFamily: `"${value}"` } : undefined}
         onChange={(e) => onChange(e.target.value === '' ? undefined : e.target.value)}
       >
-        <option value="">По умолчанию</option>
+        <option value="">{t('field.defaultOption')}</option>
         {options.map((font) => (
           <option key={font} value={font} style={{ fontFamily: `"${font}"` }}>
             {font}

@@ -2,6 +2,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { IconButton } from '../../../shared/ui/IconButton/IconButton';
+import { useT } from '../../../shared/i18n';
 import { NodeStyleEditor } from './NodeStyleEditor';
 import { EdgeStyleEditor } from './EdgeStyleEditor';
 import styles from './Inspector.module.css';
@@ -13,6 +14,7 @@ import styles from './Inspector.module.css';
  * uiStore session state only and is never written to the document.
  */
 export function Inspector(): React.JSX.Element | null {
+  const t = useT();
   const { inspectorOpen, selectedNodeIds, selectedEdgeIds, hideInspector } = useUIStore(
     useShallow((s) => ({
       inspectorOpen: s.inspectorOpen,
@@ -37,19 +39,23 @@ export function Inspector(): React.JSX.Element | null {
     return null;
   }
 
-  const title = node ? 'Стиль узла' : edge ? 'Стиль связи' : 'Свойства';
+  const title = node
+    ? t('inspector.nodeStyle')
+    : edge
+      ? t('inspector.edgeStyle')
+      : t('inspector.properties');
 
   return (
     // Keep keystrokes typed into the panel away from the canvas' global node
     // hotkeys (Delete/Tab/printable) which listen on window.
     <aside
       className={styles.panel}
-      aria-label="Свойства"
+      aria-label={t('inspector.properties')}
       onKeyDown={(e) => e.stopPropagation()}
     >
       <header className={styles.header}>
         <h2 className={styles.title}>{title}</h2>
-        <IconButton icon="x" label="Скрыть панель" onClick={hideInspector} />
+        <IconButton icon="x" label={t('inspector.hidePanel')} onClick={hideInspector} />
       </header>
       <div className={styles.body}>
         {node ? (
@@ -57,7 +63,7 @@ export function Inspector(): React.JSX.Element | null {
         ) : edge ? (
           <EdgeStyleEditor edgeId={edge.id} data={edge.data} />
         ) : (
-          <p className={styles.empty}>Выберите узел или связь, чтобы изменить стиль.</p>
+          <p className={styles.empty}>{t('inspector.empty')}</p>
         )}
       </div>
     </aside>

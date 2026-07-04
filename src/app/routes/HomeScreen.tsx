@@ -1,5 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import clsx from 'clsx';
 import { useMindMapStore } from '../../store/mindMapStore';
+import { useUIStore } from '../../store/uiStore';
 import {
   fileService,
   openDocumentFromPath,
@@ -7,10 +9,9 @@ import {
   removeRecentFile,
   type RecentFile,
 } from '../../features/persistence';
-import { Icon } from '../../shared/ui/Icon/Icon';
-import { IconButton } from '../../shared/ui/IconButton/IconButton';
-import { HomeBackdrop } from './HomeBackdrop';
-import { HomeAppearanceDialog } from './HomeAppearanceDialog';
+import { useT, LOCALES, localeTag, type Locale } from '../../shared/i18n';
+import { isEditableTarget } from '../../shared/lib/dom';
+import { AsciiBackdrop } from './AsciiBackdrop';
 import styles from './HomeScreen.module.css';
 
 interface HomeScreenProps {
@@ -18,22 +19,42 @@ interface HomeScreenProps {
   onEnterEditor: () => void;
 }
 
-function formatOpenedAt(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleString('ru-RU', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+/** Цвета ASCII-фона по теме (акцент/база). */
+const ASCII_COLORS: Record<'dark' | 'light', { accent: string; base: string }> = {
+  dark: { accent: '#5fd4ff', base: '#606670' },
+  light: { accent: '#141414', base: '#1a1a1a' },
+};
+
+/** Декоративные ASCII-коннекторы для карточек — детерминированно по пути. */
+const RECENT_ART = ['o─┬─o─*', 'o─O─┬─o', '┌─o──O─┐', 'O─o─┬─o', '*─┬─o─O', 'o──┼──O'];
+function artFor(path: string): string {
+  let h = 0;
+  for (let i = 0; i < path.length; i++) h = (h * 31 + path.charCodeAt(i)) | 0;
+  return RECENT_ART[Math.abs(h) % RECENT_ART.length];
 }
 
 export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Element {
-  // Снимок на маунт: список меняется только действиями на этом же экране,
-  // поэтому обновляем state вручную после удаления записи.
+  const t = useT();
+  const theme = useUIStore((s) => s.theme);
+  const toggleTheme = useUIStore((s) => s.toggleTheme);
+  const locale = useUIStore((s) => s.locale);
+  const setLocale = useUIStore((s) => s.setLocale);
+
+  // Снимок на маунт: список меняется только действиями на этом же экране.
   const [recent, setRecent] = useState<RecentFile[]>(() => getRecentFiles());
-  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [glitching, setGlitching] = useState(false);
+
+  const dateFmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(localeTag(locale), {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    [locale],
+  );
 
   const handleCreate = useCallback(() => {
     useMindMapStore.getState().resetDocument();
@@ -48,9 +69,9 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
       onEnterEditor();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      window.alert(`Ошибка: ${message}`);
+      window.alert(t('dialog.error', { message }));
     }
-  }, [onEnterEditor]);
+  }, [onEnterEditor, t]);
 
   const handleOpenRecent = useCallback(
     async (file: RecentFile) => {
@@ -58,110 +79,216 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
         await openDocumentFromPath(file.path);
         onEnterEditor();
       } catch {
-        // Файл переехал/удалён — сообщаем и убираем мёртвую запись из списка.
-        window.alert(`Не удалось открыть «${file.name}». Файл убран из недавних.`);
+        window.alert(t('home.openFailed', { name: file.name }));
         removeRecentFile(file.path);
         setRecent(getRecentFiles());
       }
     },
-    [onEnterEditor],
+    [onEnterEditor, t],
   );
 
-  const handleRemoveRecent = useCallback((path: string) => {
-    removeRecentFile(path);
-    setRecent(getRecentFiles());
+  const selectLang = useCallback(
+    (code: Locale) => {
+      setLocale(code);
+      setLangOpen(false);
+    },
+    [setLocale],
+  );
+
+  // Периодический глитч вертикального «RUSTMIND» — редко (5–14 с), коротко.
+  useEffect(() => {
+    let onTimer: ReturnType<typeof setTimeout>;
+    let offTimer: ReturnType<typeof setTimeout>;
+    const schedule = (): void => {
+      onTimer = setTimeout(
+        () => {
+          setGlitching(true);
+          offTimer = setTimeout(() => {
+            setGlitching(false);
+            schedule();
+          }, 380);
+        },
+        5000 + Math.random() * 9000,
+      );
+    };
+    schedule();
+    return () => {
+      clearTimeout(onTimer);
+      clearTimeout(offTimer);
+    };
   }, []);
 
+  // Клавиатура: ⏎ — начать, o — открыть, t — тема, l — язык, Esc — закрыть меню.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if (isEditableTarget(e.target)) return;
+      if (e.key === 'Escape') {
+        setLangOpen(false);
+        return;
+      }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      switch (e.code) {
+        case 'Enter':
+        case 'NumpadEnter':
+          e.preventDefault();
+          handleCreate();
+          break;
+        case 'KeyO':
+          e.preventDefault();
+          void handleOpenDialog();
+          break;
+        case 'KeyT':
+          e.preventDefault();
+          toggleTheme();
+          break;
+        case 'KeyL':
+          e.preventDefault();
+          setLangOpen((v) => !v);
+          break;
+        default:
+          break;
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [handleCreate, handleOpenDialog, toggleTheme]);
+
+  const ascii = ASCII_COLORS[theme];
+
   return (
-    <div className={styles.screen}>
-      <HomeBackdrop />
+    <div className={styles.screen} data-theme={theme}>
+      <AsciiBackdrop accent={ascii.accent} base={ascii.base} />
 
-      <button
-        type="button"
-        className={styles.appearanceButton}
-        onClick={() => setAppearanceOpen(true)}
-      >
-        <Icon name="palette" size={16} />
-        Внешний вид
-      </button>
+      {/* Ловец кликов вне меню языка */}
+      <div
+        className={clsx(styles.scrim, langOpen && styles.scrimActive)}
+        onClick={() => setLangOpen(false)}
+      />
 
-      <div className={styles.content}>
-        <header className={styles.hero}>
-          <div className={styles.logo} aria-hidden="true">
-            R
-          </div>
-          <div>
-            <h1 className={styles.title}>RustMind</h1>
-            <p className={styles.subtitle}>Редактор интеллект-карт, схем и блок-схем</p>
-          </div>
-        </header>
-
-        <div className={styles.actions}>
-          <button type="button" className={styles.actionCard} onClick={handleCreate}>
-            <span className={styles.actionIcon}>
-              <Icon name="plus" size={22} />
-            </span>
-            <span className={styles.actionBody}>
-              <span className={styles.actionTitle}>Создать новую карту</span>
-              <span className={styles.actionHint}>Чистый холст с корневой темой</span>
-            </span>
-          </button>
-
+      {/* Сайдбар */}
+      <div className={styles.sidebar}>
+        <div className={styles.diamond} aria-hidden="true">
+          ◆
+        </div>
+        <div className={clsx(styles.logo, glitching && styles.logoGlitch)} aria-hidden="true">
+          {'RUSTMIND'.split('').map((ch, i) => (
+            <span key={i}>{ch}</span>
+          ))}
+        </div>
+        <div className={styles.sideButtons}>
           <button
             type="button"
-            className={styles.actionCard}
+            className={styles.iconBtn}
+            title={t('home.themeTooltip')}
+            aria-label={t('home.themeTooltip')}
+            onClick={toggleTheme}
+          >
+            {theme === 'dark' ? '☀' : '☾'}
+          </button>
+          <button
+            type="button"
+            className={clsx(styles.iconBtn, styles.langBtn, langOpen && styles.langBtnOpen)}
+            title={t('home.langTooltip')}
+            aria-label={t('home.langTooltip')}
+            aria-expanded={langOpen}
+            onClick={() => setLangOpen((v) => !v)}
+          >
+            {locale.toUpperCase()}
+          </button>
+        </div>
+      </div>
+
+      {/* Флайаут выбора языка */}
+      <div
+        className={clsx(styles.langMenu, langOpen && styles.langMenuOpen)}
+        role="menu"
+        aria-label={t('home.langMenuTitle')}
+      >
+        <div className={styles.langTitle}>{t('home.langMenuTitle')}</div>
+        {LOCALES.map((l) => {
+          const active = l.code === locale;
+          return (
+            <button
+              key={l.code}
+              type="button"
+              role="menuitemradio"
+              aria-checked={active}
+              className={clsx(styles.langRow, active && styles.langRowActive)}
+              onClick={() => selectLang(l.code)}
+            >
+              <span className={styles.langTick}>{active ? '›' : ''}</span>
+              <span className={styles.langLabel}>{l.native}</span>
+              <span className={styles.langUp}>{l.code.toUpperCase()}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Контент */}
+      <div className={styles.content}>
+        <div className={styles.spacerTop} />
+
+        <button type="button" className={styles.cta} onClick={handleCreate}>
+          <div className={styles.ctaLine}>
+            <span className={styles.prompt}>&gt;</span> {t('home.newProject')}
+            <span className={styles.cursor}>_</span>
+          </div>
+        </button>
+        {/* Подсказка дублирует клавиши/сайдбар — для мыши кликабельна, но вне
+            tab-порядка и скрыта от скринридеров (иначе — фокус внутри aria-hidden). */}
+        <div className={styles.hint} aria-hidden="true">
+          <button type="button" tabIndex={-1} className={styles.hintItem} onClick={handleCreate}>
+            <span className={styles.hintKey}>⏎</span> {t('home.hintStart')}
+          </button>
+          <span className={styles.hintSep}>·</span>
+          <button
+            type="button"
+            tabIndex={-1}
+            className={styles.hintItem}
             onClick={() => void handleOpenDialog()}
           >
-            <span className={styles.actionIcon}>
-              <Icon name="folder-open" size={22} />
-            </span>
-            <span className={styles.actionBody}>
-              <span className={styles.actionTitle}>Открыть файл…</span>
-              <span className={styles.actionHint}>Документ .rustmind с диска</span>
-            </span>
+            <span className={styles.hintKey}>o</span> {t('home.hintOpen')}
+          </button>
+          <span className={styles.hintSep}>·</span>
+          <button type="button" tabIndex={-1} className={styles.hintItem} onClick={toggleTheme}>
+            <span className={styles.hintKey}>t</span> {t('home.hintTheme')}
+          </button>
+          <span className={styles.hintSep}>·</span>
+          <button
+            type="button"
+            tabIndex={-1}
+            className={styles.hintItem}
+            onClick={() => setLangOpen((v) => !v)}
+          >
+            <span className={styles.hintKey}>l</span> {t('home.hintLang')}
           </button>
         </div>
 
-        <section className={styles.recentSection} aria-label="Недавние файлы">
-          <h2 className={styles.recentHeading}>Недавние</h2>
-          {recent.length === 0 ? (
-            <p className={styles.recentEmpty}>
-              Здесь появятся последние открытые карты.
-            </p>
-          ) : (
-            <ul className={styles.recentList}>
-              {recent.map((file) => (
-                <li key={file.path} className={styles.recentItem}>
-                  <button
-                    type="button"
-                    className={styles.recentButton}
-                    title={file.path}
-                    onClick={() => void handleOpenRecent(file)}
-                  >
-                    <span className={styles.recentIcon}>
-                      <Icon name="file" size={18} />
-                    </span>
-                    <span className={styles.recentBody}>
-                      <span className={styles.recentName}>{file.name}</span>
-                      <span className={styles.recentPath}>{file.path}</span>
-                    </span>
-                    <span className={styles.recentDate}>{formatOpenedAt(file.openedAt)}</span>
-                  </button>
-                  <span className={styles.recentRemove}>
-                    <IconButton
-                      icon="x"
-                      label={`Убрать «${file.name}» из недавних`}
-                      onClick={() => handleRemoveRecent(file.path)}
-                    />
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
+        <div className={styles.spacerMid} />
 
-      <HomeAppearanceDialog isOpen={appearanceOpen} onClose={() => setAppearanceOpen(false)} />
+        <div className={styles.recentLabel}>{t('home.recent')}</div>
+        {recent.length === 0 ? (
+          <div className={styles.recentEmpty}>{t('home.recentEmpty')}</div>
+        ) : (
+          <div className={styles.recentRow}>
+            {recent.slice(0, 4).map((file) => (
+              <button
+                key={file.path}
+                type="button"
+                className={styles.card}
+                title={file.path}
+                onClick={() => void handleOpenRecent(file)}
+              >
+                <div className={styles.cardName}>{file.name}</div>
+                <div className={styles.cardMeta}>{dateFmt.format(new Date(file.openedAt))}</div>
+                <div className={styles.cardArt} aria-hidden="true">
+                  {artFor(file.path)}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

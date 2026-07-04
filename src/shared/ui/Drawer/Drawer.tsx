@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { IconButton } from '../IconButton/IconButton';
+import { useT } from '../../i18n';
 import styles from './Drawer.module.css';
 
 interface DrawerProps {
@@ -10,6 +11,7 @@ interface DrawerProps {
 }
 
 export function Drawer({ isOpen, title, onClose, children }: DrawerProps): React.JSX.Element | null {
+  const t = useT();
   useEffect(() => {
     if (!isOpen) {
       return undefined;
@@ -45,7 +47,7 @@ export function Drawer({ isOpen, title, onClose, children }: DrawerProps): React
             <p className={styles.eyebrow}>RustMind</p>
             <h2 className={styles.title}>{title}</h2>
           </div>
-          <IconButton icon="x" label="Закрыть настройки" onClick={onClose} />
+          <IconButton icon="x" label={t('drawer.closeSettings')} onClick={onClose} />
         </header>
         <div className={styles.content}>{children}</div>
       </aside>

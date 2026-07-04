@@ -68,7 +68,8 @@ Two Zustand stores — never access one from inside the other via hooks; use `ge
 
 - **`ui/Icon/Icon.tsx`** — stroke-based SVG icon system. Add new icons by extending `IconName` union and `ICON_PATHS` record.
 - **`hooks/useHotkeys`** — parses `"mod+shift+s"` style strings; `mod` = Ctrl or Cmd.
-- **`lib/constants.ts`** — `HOTKEYS`, `NODE_COLORS`, `DEFAULT_LABELS`, layout spacing.
+- **`lib/constants.ts`** — `HOTKEYS`, `NODE_COLORS`, layout spacing.
+- **`i18n/`** — app-wide localization (RU/EN/DE/FR). `ru` is the source-of-truth dict; other locales must match its keys (TS-enforced). Active `locale` lives in `uiStore` (persisted). Use `useT()` in components (re-renders on locale change); `translate()` in stores/services/handlers (reads `uiStore.getState().locale`). New-document content defaults (root/child labels, untitled name) are localized at creation via `translate()`; `isDefaultChildLabel()` detects the placeholder label across all locales.
 
 ### Theming
 

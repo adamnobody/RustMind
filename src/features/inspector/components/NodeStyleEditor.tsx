@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { listSystemFonts, FALLBACK_FONTS } from '../../../shared/lib/fonts';
+import { useT, type TranslationKey } from '../../../shared/i18n';
 import {
   DEFAULT_NODE_STYLE,
   DEFAULT_HANDLE_OFFSET,
@@ -12,11 +13,11 @@ import {
 import { ColorField, FontField, NumberField, SegField } from './fields';
 import styles from './Inspector.module.css';
 
-const handleSides: { side: HandleSide; label: string }[] = [
-  { side: 'top', label: 'Верхняя точка' },
-  { side: 'right', label: 'Правая точка' },
-  { side: 'bottom', label: 'Нижняя точка' },
-  { side: 'left', label: 'Левая точка' },
+const handleSides: { side: HandleSide; labelKey: TranslationKey }[] = [
+  { side: 'top', labelKey: 'node.handleTop' },
+  { side: 'right', labelKey: 'node.handleRight' },
+  { side: 'bottom', labelKey: 'node.handleBottom' },
+  { side: 'left', labelKey: 'node.handleLeft' },
 ];
 
 const shapeOptions: { value: NodeShape; label: string }[] = [
@@ -48,6 +49,7 @@ interface NodeStyleEditorProps {
 }
 
 export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.JSX.Element {
+  const t = useT();
   const setNodeStyle = useMindMapStore((s) => s.setNodeStyle);
   const setNodeHandleOffset = useMindMapStore((s) => s.setNodeHandleOffset);
   const style = data.style;
@@ -75,7 +77,7 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
   return (
     <div className={styles.editor}>
       <ColorField
-        label="Цвет фона"
+        label={t('node.bgColor')}
         value={style?.backgroundColor}
         fallback={data.color ?? COLOR_SEED.background}
         onChange={(hex) => set({ backgroundColor: hex })}
@@ -83,14 +85,14 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
       />
 
       <SegField
-        label="Форма"
+        label={t('node.shape')}
         value={style?.shape ?? DEFAULT_NODE_STYLE.shape}
         options={shapeOptions}
         onChange={(shape) => set({ shape })}
       />
 
       <ColorField
-        label="Цвет границы"
+        label={t('node.borderColor')}
         value={style?.borderColor}
         fallback={COLOR_SEED.border}
         onChange={(hex) => set({ borderColor: hex })}
@@ -98,7 +100,7 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
       />
 
       <NumberField
-        label="Толщина границы"
+        label={t('node.borderWidth')}
         value={style?.borderWidth ?? DEFAULT_NODE_STYLE.borderWidth}
         min={0}
         max={8}
@@ -107,14 +109,14 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
       />
 
       <SegField
-        label="Стиль границы"
+        label={t('node.borderStyle')}
         value={style?.borderPattern ?? DEFAULT_NODE_STYLE.borderPattern}
         options={borderOptions}
         onChange={(borderPattern) => set({ borderPattern })}
       />
 
       <NumberField
-        label="Размер шрифта"
+        label={t('node.fontSize')}
         value={style?.fontSize ?? DEFAULT_NODE_STYLE.fontSize}
         min={10}
         max={40}
@@ -123,14 +125,14 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
       />
 
       <FontField
-        label="Шрифт"
+        label={t('node.font')}
         value={style?.fontFamily}
         fonts={fonts}
         onChange={(fontFamily) => set({ fontFamily })}
       />
 
       <ColorField
-        label="Цвет текста"
+        label={t('node.textColor')}
         value={style?.textColor}
         fallback={data.textColor ?? COLOR_SEED.text}
         onChange={(hex) => set({ textColor: hex })}
@@ -139,11 +141,11 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
 
       {/* Смещение хэндлов вдоль своей стороны: 0% — левый/верхний угол,
           50% — центр (дефолт, не хранится), 100% — правый/нижний угол. */}
-      <h3 className={styles.subheading}>Точки соединения</h3>
-      {handleSides.map(({ side, label }) => (
+      <h3 className={styles.subheading}>{t('node.connectionPoints')}</h3>
+      {handleSides.map(({ side, labelKey }) => (
         <NumberField
           key={side}
-          label={label}
+          label={t(labelKey)}
           value={data.handleOffsets?.[side] ?? DEFAULT_HANDLE_OFFSET}
           min={0}
           max={100}

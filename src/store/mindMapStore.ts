@@ -22,7 +22,8 @@ import {
 } from '../features/edges/types';
 import { generateNodeId, generateEdgeId } from '../shared/lib/id';
 import { pruneStyle } from '../shared/lib/style';
-import { DEFAULT_LABELS, NODE_COLORS, DEFAULT_HANDLE_VISIBILITY } from '../shared/lib/constants';
+import { NODE_COLORS, DEFAULT_HANDLE_VISIBILITY } from '../shared/lib/constants';
+import { translate } from '../shared/i18n';
 import { applyLayout } from '../features/layout/applyLayout';
 import { useUIStore } from './uiStore';
 
@@ -56,7 +57,7 @@ function createRootNode(): AppNode {
     type: MIND_NODE_TYPE,
     position: { x: 0, y: 0 },
     data: {
-      label: DEFAULT_LABELS.root,
+      label: translate('label.root'),
       isRoot: true,
       color: NODE_COLORS.root,
     },
@@ -129,7 +130,7 @@ export const useMindMapStore = create<MindMapState>()(
     return {
     nodes: [initialRoot],
     edges: [],
-    documentName: 'Без названия',
+    documentName: translate('doc.untitled'),
     filePath: null,
     isDirty: false,
     layoutType: 'tree-LR',
@@ -180,7 +181,7 @@ export const useMindMapStore = create<MindMapState>()(
         // При drag от хэндла узел появляется в точке отпускания (position),
         // иначе — со смещением вправо от родителя.
         position: position ?? { x: parent.position.x + 200, y: parent.position.y },
-        data: { label: DEFAULT_LABELS.child },
+        data: { label: translate('label.child') },
       };
 
       // Хэндлы ребра: при drag берём фактический хэндл из жеста (handles),
@@ -398,7 +399,7 @@ export const useMindMapStore = create<MindMapState>()(
       set((state) => {
         state.nodes = [root];
         state.edges = [];
-        state.documentName = 'Без названия';
+        state.documentName = translate('doc.untitled');
         state.filePath = null;
         state.isDirty = false;
         state.layoutType = 'tree-LR';

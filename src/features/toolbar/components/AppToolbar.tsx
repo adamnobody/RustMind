@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { IconButton } from '../../../shared/ui/IconButton/IconButton';
+import { useT } from '../../../shared/i18n';
 import type { HandleVisibility } from '../../../store/types';
 import styles from './AppToolbar.module.css';
 
@@ -35,6 +36,7 @@ export function AppToolbar({
   const triggerFitView = useUIStore((s) => s.triggerFitView);
   const inspectorOpen = useUIStore((s) => s.inspectorOpen);
   const toggleInspector = useUIStore((s) => s.toggleInspector);
+  const t = useT();
 
   const handleAutoLayout = useCallback(() => {
     applyAutoLayoutManual();
@@ -59,45 +61,45 @@ export function AppToolbar({
       <div className={styles.actions} aria-label="Actions">
         {onHome && (
           <>
-            <IconButton icon="home" label="Главное меню" onClick={onHome} />
+            <IconButton icon="home" label={t('toolbar.home')} onClick={onHome} />
             <span className={styles.separator} aria-hidden="true" />
           </>
         )}
-        <IconButton icon="file" label="Новый (Ctrl+N)" onClick={onNew} />
-        <IconButton icon="folder-open" label="Открыть (Ctrl+O)" onClick={onOpen} />
-        <IconButton icon="save" label="Сохранить (Ctrl+S)" onClick={onSave} />
-        <IconButton icon="save-as" label="Сохранить как… (Ctrl+Shift+S)" onClick={onSaveAs} />
+        <IconButton icon="file" label={t('toolbar.new')} onClick={onNew} />
+        <IconButton icon="folder-open" label={t('toolbar.open')} onClick={onOpen} />
+        <IconButton icon="save" label={t('toolbar.save')} onClick={onSave} />
+        <IconButton icon="save-as" label={t('toolbar.saveAs')} onClick={onSaveAs} />
         <span className={styles.separator} aria-hidden="true" />
-        <IconButton icon="undo" label="Отменить (Ctrl+Z)" onClick={undo} disabled={!canUndo} />
-        <IconButton icon="redo" label="Вернуть (Ctrl+Shift+Z)" onClick={redo} disabled={!canRedo} />
+        <IconButton icon="undo" label={t('toolbar.undo')} onClick={undo} disabled={!canUndo} />
+        <IconButton icon="redo" label={t('toolbar.redo')} onClick={redo} disabled={!canRedo} />
         <span className={styles.separator} aria-hidden="true" />
-        <IconButton icon="layout" label="Auto-layout (L)" onClick={handleAutoLayout} />
+        <IconButton icon="layout" label={t('toolbar.autoLayout')} onClick={handleAutoLayout} />
         <span className={styles.separator} aria-hidden="true" />
         {/* Temporary handle-visibility switcher — full UI arrives at step 15/16 */}
         <select
           className={styles.handleVisSelect}
           value={projectSettings.handleVisibility}
-          title="Видимость хэндлов соединений"
+          title={t('toolbar.handleVisibility')}
           onChange={(e) =>
             setProjectSettings({ handleVisibility: e.target.value as HandleVisibility })
           }
         >
-          <option value="hidden">Хэндлы: скрыты</option>
-          <option value="dashed">Хэндлы: пунктир</option>
-          <option value="always">Хэндлы: всегда</option>
+          <option value="hidden">{t('toolbar.handlesHidden')}</option>
+          <option value="dashed">{t('toolbar.handlesDashed')}</option>
+          <option value="always">{t('toolbar.handlesAlways')}</option>
         </select>
         <IconButton
           icon="sliders"
-          label="Панель стиля"
+          label={t('toolbar.stylePanel')}
           onClick={toggleInspector}
           active={inspectorOpen}
         />
         <IconButton
           icon={theme === 'dark' ? 'sun' : 'moon'}
-          label={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+          label={theme === 'dark' ? t('toolbar.lightTheme') : t('toolbar.darkTheme')}
           onClick={toggleTheme}
         />
-        <IconButton icon="settings" label="Настройки" onClick={openSettings} />
+        <IconButton icon="settings" label={t('toolbar.settings')} onClick={openSettings} />
       </div>
     </header>
   );

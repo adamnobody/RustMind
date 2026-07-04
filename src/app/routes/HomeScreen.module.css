@@ -1,252 +1,487 @@
+/*
+ * Главное меню — терминальный ASCII-дизайн (RustMind 4e).
+ * Локальная система переменных дизайна, переключается по data-theme на .screen.
+ * Фон рисует AsciiBackdrop (интерактивное ASCII-поле).
+ */
+
 .screen {
+  --bg: #05070a;
+  --sidebar: rgba(5, 8, 10, 0.75);
+  --panel: rgba(6, 10, 12, 0.72);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-soft: rgba(255, 255, 255, 0.12);
+  --text: #eafcff;
+  --text2: #e8f1f5;
+  --muted: rgba(255, 255, 255, 0.42);
+  --faint: rgba(255, 255, 255, 0.35);
+  --icon: #c9d4da;
+  --accent: #5fd4ff;
+  --accent-soft: rgba(95, 212, 255, 0.55);
+  --accent-weak: rgba(95, 212, 255, 0.12);
+  --menu: rgba(8, 12, 15, 0.92);
+
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 100vw;
   height: 100vh;
-  overflow-y: auto;
-  /* фон рисует HomeBackdrop (анимированные пятна + зерно + вуаль) */
-  background: var(--rm-bg);
-}
-
-.content {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: var(--rm-space-8);
-  width: min(640px, calc(100vw - var(--rm-space-8)));
-  padding: var(--rm-space-8) 0;
-}
-
-/* --- кнопка настроек внешнего вида (ghost pill из дизайн-референса) --- */
-.appearanceButton {
-  position: absolute;
-  top: var(--rm-space-6);
-  right: var(--rm-space-6);
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--rm-space-2);
-  padding: 9px 18px;
-  border: 1px solid color-mix(in srgb, var(--rm-text) 28%, transparent);
-  border-radius: var(--rm-radius-full);
-  background: color-mix(in srgb, var(--rm-bg) 35%, transparent);
-  backdrop-filter: blur(8px);
-  color: var(--rm-text);
-  font-size: var(--rm-font-sm);
-  font-weight: var(--rm-font-weight-medium);
-  cursor: pointer;
-  /* терпеливое скольжение — фирменная кривая референса */
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
   transition:
-    border-color 0.8s cubic-bezier(0.19, 1, 0.22, 1),
-    letter-spacing 0.8s cubic-bezier(0.19, 1, 0.22, 1),
-    background-color 0.4s ease;
+    background-color 0.55s ease,
+    background 0.55s ease;
 }
 
-.appearanceButton:hover {
-  border-color: color-mix(in srgb, var(--rm-text) 70%, transparent);
-  letter-spacing: 0.04em;
+.screen[data-theme='light'] {
+  --bg: linear-gradient(
+    135deg,
+    #f4f4f4 0%,
+    #dedede 22%,
+    #c7c7c7 46%,
+    #eaeaea 62%,
+    #d2d2d2 80%,
+    #e8e8e8 100%
+  );
+  --sidebar: rgba(255, 255, 255, 0.85);
+  --panel: rgba(255, 255, 255, 0.78);
+  --border: rgba(12, 30, 42, 0.13);
+  --border-soft: rgba(12, 30, 42, 0.18);
+  --text: #0a1a22;
+  --text2: #12242e;
+  --muted: rgba(12, 30, 42, 0.55);
+  --faint: rgba(12, 30, 42, 0.5);
+  --icon: #3d5560;
+  --accent: #0a86ba;
+  --accent-soft: rgba(10, 134, 186, 0.6);
+  --accent-weak: rgba(10, 134, 186, 0.1);
+  --menu: rgba(255, 255, 255, 0.94);
 }
 
-/* --- hero --- */
-.hero {
+/* Ловец кликов — закрывает меню языка при клике мимо. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.scrimActive {
+  pointer-events: auto;
+}
+
+/* ---------- Сайдбар ---------- */
+.sidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 84px;
+  z-index: 3;
+  box-sizing: border-box;
+  padding: 26px 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--rm-space-4);
+  border-right: 1px solid var(--border);
+  background: var(--sidebar);
+  backdrop-filter: blur(10px);
+  transition:
+    background-color 0.55s ease,
+    border-color 0.55s ease;
+}
+
+.diamond {
+  color: var(--accent);
+  font-size: 20px;
+  transition: color 0.55s ease;
 }
 
 .logo {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--rm-radius-lg);
-  background: linear-gradient(135deg, var(--rm-accent), #7c5cff);
-  color: #fff;
-  font-size: 26px;
-  font-weight: var(--rm-font-weight-bold);
-  box-shadow: var(--rm-shadow-glow);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  transition: color 0.55s ease;
 }
 
-.title {
-  margin: 0;
-  color: var(--rm-text);
-  font-size: 28px;
-  font-weight: var(--rm-font-weight-bold);
-  letter-spacing: -0.02em;
+.logoGlitch {
+  animation:
+    glitchShake 0.38s steps(2, end),
+    glitchColor 0.38s steps(1, end);
 }
 
-.subtitle {
-  margin: var(--rm-space-1) 0 0;
-  color: var(--rm-text-muted);
-  font-size: var(--rm-font-md);
+.sideButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* --- action cards --- */
-.actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--rm-space-4);
-}
-
-.actionCard {
+.iconBtn {
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
-  gap: var(--rm-space-3);
-  padding: var(--rm-space-4);
-  border: 1px solid var(--rm-border);
-  border-radius: var(--rm-radius-lg);
-  background: color-mix(in srgb, var(--rm-surface) 88%, transparent);
+  justify-content: center;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--icon);
+  font-size: 18px;
   cursor: pointer;
-  text-align: left;
   transition:
-    border-color var(--rm-transition) var(--rm-ease-out-expo),
-    transform var(--rm-transition) var(--rm-ease-out-expo),
-    box-shadow var(--rm-transition) var(--rm-ease-out-expo);
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background-color 0.55s ease,
+    transform 0.12s ease;
+}
+.iconBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.iconBtn:active {
+  transform: scale(0.88);
 }
 
-.actionCard:hover {
-  border-color: var(--rm-accent);
-  transform: translateY(-1px);
-  box-shadow: var(--rm-shadow);
+.langBtn {
+  font-size: 13px;
+}
+.langBtnOpen {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
-.actionIcon {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--rm-radius);
-  background: var(--rm-accent-muted);
-  color: var(--rm-accent);
+/* ---------- Флайаут языка ---------- */
+.langMenu {
+  position: absolute;
+  left: 96px;
+  bottom: 30px;
+  z-index: 4;
+  width: 210px;
+  box-sizing: border-box;
+  padding: 10px 8px;
+  background: var(--menu);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  transform-origin: left center;
+  opacity: 0;
+  transform: translateX(-14px) scale(0.96);
+  pointer-events: none;
+  transition:
+    opacity 0.26s ease,
+    transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.3),
+    background-color 0.55s ease,
+    border-color 0.55s ease;
+}
+.langMenuOpen {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
 }
 
-.actionBody {
-  display: grid;
-  gap: 2px;
+.langTitle {
+  padding: 4px 14px 10px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--faint);
+  transition: color 0.55s ease;
 }
 
-.actionTitle {
-  color: var(--rm-text);
-  font-size: var(--rm-font-md);
-  font-weight: var(--rm-font-weight-semibold);
+.langRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text2);
+  font-family: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color 0.55s ease,
+    background-color 0.18s ease;
+}
+.langRow:hover {
+  background: var(--accent-weak);
+}
+.langRowActive {
+  color: var(--accent);
+  background: var(--accent-weak);
+  font-weight: 600;
+}
+.langTick {
+  width: 14px;
+  color: var(--accent);
+}
+.langLabel {
+  flex: 1;
+}
+.langUp {
+  font-size: 11px;
+  color: var(--faint);
 }
 
-.actionHint {
-  color: var(--rm-text-muted);
-  font-size: var(--rm-font-sm);
+/* ---------- Контент ---------- */
+.content {
+  position: absolute;
+  left: 84px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  padding: clamp(32px, 6vw, 90px);
+  display: flex;
+  flex-direction: column;
+}
+.spacerTop {
+  flex: 1;
+}
+.spacerMid {
+  flex: 1.4;
 }
 
-/* --- recent --- */
-.recentSection {
-  display: grid;
-  gap: var(--rm-space-3);
+.cta {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 6px 8px;
+  margin: -6px -8px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.12s ease;
+}
+.cta:hover {
+  box-shadow: 0 0 40px -6px var(--accent-soft);
+}
+.cta:active {
+  transform: scale(0.985);
 }
 
-.recentHeading {
-  margin: 0;
-  color: var(--rm-text-subtle);
-  font-size: var(--rm-font-xs);
-  font-weight: var(--rm-font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.ctaLine {
+  font-size: clamp(26px, 4vw, 42px);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+  transition: color 0.55s ease;
+}
+.prompt {
+  color: var(--accent);
+  transition: color 0.55s ease;
+}
+.cursor {
+  color: var(--accent);
+  animation: blink 1.1s step-end infinite;
+}
+
+.hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-top: 16px;
+  font-size: clamp(12px, 1.1vw, 15px);
+  color: var(--faint);
+  transition: color 0.55s ease;
+}
+.hintItem {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.hintItem:hover {
+  color: var(--accent);
+}
+.hintKey {
+  color: var(--muted);
+}
+.hintSep {
+  color: var(--faint);
+  opacity: 0.6;
+}
+
+.recentLabel {
+  margin-bottom: 14px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--faint);
+  transition: color 0.55s ease;
+}
+
+.recentRow {
+  display: flex;
+  gap: 14px;
+}
+
+.card {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    background-color 0.55s ease;
+}
+.card:hover {
+  border-color: var(--accent-soft);
+  transform: translateY(-3px);
+}
+.card:active {
+  transform: translateY(-1px) scale(0.99);
+}
+.cardName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.55s ease;
+}
+.cardMeta {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.55s ease;
+}
+.cardArt {
+  margin-top: 10px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--accent-soft);
+  transition: color 0.55s ease;
 }
 
 .recentEmpty {
-  margin: 0;
-  padding: var(--rm-space-6);
-  border: 1px dashed var(--rm-border);
-  border-radius: var(--rm-radius-lg);
-  color: var(--rm-text-subtle);
-  font-size: var(--rm-font-sm);
-  text-align: center;
+  font-size: 13px;
+  color: var(--faint);
+  transition: color 0.55s ease;
 }
 
-.recentList {
-  display: grid;
-  gap: var(--rm-space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes glitchShake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(-2px, 1px);
+  }
+  20% {
+    transform: translate(2px, -1px);
+  }
+  30% {
+    transform: translate(-1px, 2px);
+  }
+  40% {
+    transform: translate(2px, 1px);
+  }
+  50% {
+    transform: translate(-2px, -1px);
+  }
+  60% {
+    transform: translate(1px, -2px);
+  }
+  70% {
+    transform: translate(-1px, -1px);
+  }
+  80% {
+    transform: translate(1px, 1px);
+  }
+  90% {
+    transform: translate(-1px, 0);
+  }
+}
+@keyframes glitchColor {
+  0%,
+  100% {
+    text-shadow: none;
+  }
+  10% {
+    text-shadow:
+      -2px 0 #ff3b5c,
+      2px 0 #4be0ff;
+  }
+  20% {
+    text-shadow:
+      2px 0 #ff3b5c,
+      -2px 0 #4be0ff;
+  }
+  30% {
+    text-shadow: none;
+  }
+  40% {
+    text-shadow:
+      -1px 0 #ff3b5c,
+      1px 0 #4be0ff;
+  }
+  50% {
+    text-shadow:
+      2px 0 #ff3b5c,
+      -2px 0 #4be0ff;
+  }
+  60% {
+    text-shadow: none;
+  }
+  70% {
+    text-shadow:
+      -2px 0 #ff3b5c,
+      2px 0 #4be0ff;
+  }
+  80% {
+    text-shadow:
+      1px 0 #ff3b5c,
+      -1px 0 #4be0ff;
+  }
+  90% {
+    text-shadow: none;
+  }
 }
 
-.recentItem {
-  position: relative;
-}
-
-.recentButton {
-  display: flex;
-  align-items: center;
-  gap: var(--rm-space-3);
-  width: 100%;
-  padding: var(--rm-space-3) var(--rm-space-4);
-  border: 1px solid var(--rm-border);
-  border-radius: var(--rm-radius);
-  background: color-mix(in srgb, var(--rm-surface) 72%, transparent);
-  cursor: pointer;
-  text-align: left;
-  transition:
-    border-color var(--rm-transition-fast) var(--rm-ease-out-expo),
-    background-color var(--rm-transition-fast) var(--rm-ease-out-expo);
-}
-
-.recentButton:hover {
-  border-color: var(--rm-border-strong);
-  background: var(--rm-surface-hover);
-}
-
-.recentIcon {
-  flex: none;
-  color: var(--rm-text-subtle);
-}
-
-.recentBody {
-  display: grid;
-  gap: 1px;
-  min-width: 0;
-  flex: 1;
-}
-
-.recentName {
-  color: var(--rm-text);
-  font-size: var(--rm-font-md);
-  font-weight: var(--rm-font-weight-medium);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.recentPath {
-  color: var(--rm-text-subtle);
-  font-size: var(--rm-font-xs);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  direction: rtl; /* обрезаем слева — хвост пути информативнее начала */
-  text-align: left;
-}
-
-.recentDate {
-  flex: none;
-  color: var(--rm-text-muted);
-  font-size: var(--rm-font-xs);
-  font-variant-numeric: tabular-nums;
-  /* не наезжать на кнопку удаления */
-  margin-right: var(--rm-space-6);
-}
-
-.recentRemove {
-  position: absolute;
-  top: 50%;
-  right: var(--rm-space-2);
-  transform: translateY(-50%);
-  opacity: 0;
-  transition: opacity var(--rm-transition-fast) var(--rm-ease-out-expo);
-}
-
-.recentItem:hover .recentRemove,
-.recentRemove:focus-within {
-  opacity: 1;
+@media (prefers-reduced-motion: reduce) {
+  .cursor,
+  .logoGlitch {
+    animation: none;
+  }
 }

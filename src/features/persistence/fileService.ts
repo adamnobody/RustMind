@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
+import { translate } from '../../shared/i18n';
 import { SerializedMindMap, FILE_EXTENSION } from './schema';
 
 const DIALOG_FILTERS = [{ name: 'RustMind Map', extensions: [FILE_EXTENSION] }];
@@ -25,7 +26,7 @@ export const fileService = {
     const content = await invoke<string>('read_file', { path });
     const parsed: unknown = JSON.parse(content);
     if (!isSerializedMindMap(parsed)) {
-      throw new Error('Неверный формат файла');
+      throw new Error(translate('file.invalidFormat'));
     }
     return parsed;
   },

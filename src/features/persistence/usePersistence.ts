@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useMindMapStore } from '../../store/mindMapStore';
 import { useUIStore } from '../../store/uiStore';
+import { translate } from '../../shared/i18n';
 import { fileService } from './fileService';
 import { serializeMindMap, deserializeMindMap } from './serializer';
 import { addRecentFile } from './recentFiles';
@@ -18,7 +19,7 @@ async function withErrorAlert<T>(fn: () => Promise<T>): Promise<T | undefined> {
     return await fn();
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    window.alert(`Ошибка: ${message}`);
+    window.alert(translate('dialog.error', { message }));
     return undefined;
   }
 }
@@ -91,7 +92,7 @@ export function usePersistence(): PersistenceActions {
   const handleOpen = useCallback(async () => {
     const { isDirty } = useMindMapStore.getState();
     if (isDirty) {
-      if (!window.confirm('Есть несохранённые изменения. Открыть другой файл?')) return;
+      if (!window.confirm(translate('dialog.unsavedOpen'))) return;
     }
 
     await withErrorAlert(async () => {
@@ -104,7 +105,7 @@ export function usePersistence(): PersistenceActions {
   const handleNew = useCallback(() => {
     const { isDirty } = useMindMapStore.getState();
     if (isDirty) {
-      if (!window.confirm('Есть несохранённые изменения. Создать новый документ?')) return;
+      if (!window.confirm(translate('dialog.unsavedNew'))) return;
     }
     useMindMapStore.getState().resetDocument();
     setTimeout(triggerFitView, 100);
@@ -130,7 +131,7 @@ export function useWindowCloseGuard(): void {
         // Dirty → block the default close and ask for confirmation.
         // window.confirm is synchronous, so the decision is made within the handler.
         event.preventDefault();
-        if (window.confirm('Есть несохранённые изменения. Всё равно закрыть?')) {
+        if (window.confirm(translate('dialog.unsavedClose'))) {
           // destroy() closes without re-firing onCloseRequested, so the guard
           // can't re-block it (close() would loop back into this handler).
           void getCurrentWindow().destroy();

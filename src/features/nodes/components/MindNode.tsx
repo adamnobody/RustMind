@@ -6,7 +6,7 @@ import { NodeEditor } from './NodeEditor';
 import { MindNodeToolbar } from './NodeToolbar';
 import { useNodeEditing } from '../hooks/useNodeEditing';
 import { DEFAULT_NODE_STYLE, type MindNodeData, type NodeShape } from '../types';
-import { DEFAULT_LABELS } from '../../../shared/lib/constants';
+import { isDefaultChildLabel } from '../../../shared/i18n';
 import styles from './MindNode.module.css';
 
 const shapeClass: Record<NodeShape, string> = {
@@ -69,7 +69,7 @@ function MindNodeComponent({
   }, [startEditing]);
 
   const showToolbar = Boolean(selected) && !isEditing;
-  const isPlaceholderLabel = !isEditing && nodeData.label === DEFAULT_LABELS.child;
+  const isPlaceholderLabel = !isEditing && isDefaultChildLabel(nodeData.label);
   const shape: NodeShape = nodeData.style?.shape ?? DEFAULT_NODE_STYLE.shape;
 
   return (
