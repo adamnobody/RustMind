@@ -8,10 +8,10 @@ export function MiniMap(): React.JSX.Element {
       nodeColor="var(--rm-accent)"
       maskColor="var(--rm-minimap-mask)"
       style={{
-        backgroundColor: 'var(--rm-surface)',
-        border: '1px solid var(--rm-border)',
+        background: 'var(--rm-panel)',
+        border: '1px solid var(--rm-border-soft)',
         borderRadius: 'var(--rm-radius)',
-        boxShadow: 'var(--rm-shadow-sm)',
+        boxShadow: '0 12px 30px rgba(0, 0, 0, 0.35)',
       }}
     />
   );

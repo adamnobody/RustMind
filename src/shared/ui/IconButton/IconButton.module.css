@@ -9,7 +9,7 @@
   border: none;
   border-radius: var(--rm-radius-sm);
   background: transparent;
-  color: var(--rm-text);
+  color: var(--rm-text-muted);
   cursor: pointer;
   transition:
     transform var(--rm-transition-fast) var(--rm-ease-out-expo),
@@ -18,16 +18,22 @@
 }
 
 .button:hover {
-  background-color: var(--rm-surface-hover);
+  background-color: var(--rm-accent-muted);
+  color: var(--rm-accent);
 }
 
 .button:active {
-  transform: scale(0.94);
+  transform: scale(0.88);
 }
 
 .button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.button:disabled:hover {
+  background-color: transparent;
+  color: var(--rm-text-muted);
 }
 
 .active {

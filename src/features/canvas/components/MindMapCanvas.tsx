@@ -18,10 +18,12 @@ import { MindEdge } from '../../edges/components/MindEdge';
 import { MIND_NODE_TYPE } from '../../nodes/types';
 import { MIND_EDGE_TYPE, oppositeHandle } from '../../edges/types';
 
+import { useT } from '../../../shared/i18n';
 import { useGlobalHotkeys } from '../hooks/useGlobalHotkeys';
 import { CanvasBackground } from './CanvasBackground';
 import { CanvasControls } from './CanvasControls';
 import { MiniMap } from './MiniMap';
+import styles from './MindMapCanvas.module.css';
 
 const nodeFontSizeBySetting = {
   s: 'var(--rm-font-sm)',
@@ -71,6 +73,7 @@ function CanvasInner(): React.JSX.Element {
   const editingNodeId = useUIStore((s) => s.editingNodeId);
   const settings = useUIStore((s) => s.settings);
   const isEditing = editingNodeId !== null;
+  const t = useT();
   const canvasStyle = useMemo(
     () =>
       ({
@@ -127,7 +130,7 @@ function CanvasInner(): React.JSX.Element {
   }, [markDirty]);
 
   return (
-    <div data-handle-visibility={handleVisibility} style={{ width: '100%', height: '100%' }}>
+    <div data-handle-visibility={handleVisibility} className={styles.wrapper}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -158,6 +161,11 @@ function CanvasInner(): React.JSX.Element {
         {settings.showControls && <CanvasControls />}
         {settings.showMiniMap && <MiniMap />}
       </ReactFlow>
+      <div className={styles.hint} aria-hidden="true">
+        <span className={styles.prompt}>&gt;</span>
+        {t('canvas.hint')}
+        <span className={styles.cursor}>_</span>
+      </div>
     </div>
   );
 }

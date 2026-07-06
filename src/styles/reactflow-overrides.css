@@ -6,9 +6,11 @@
   --xy-node-border-default: var(--rm-node-border);
   --xy-node-bg-default: var(--rm-node-bg);
 
+  /* Soft cyan glow bloom over the near-black canvas (transparent in light, so the
+     silver-gradient body backdrop shows through). */
   background:
-    radial-gradient(circle at 18% 18%, var(--rm-accent-muted), transparent 26%),
-    linear-gradient(180deg, var(--rm-canvas-bg), var(--rm-bg));
+    radial-gradient(58% 50% at 50% 42%, var(--rm-accent-muted), transparent 70%),
+    var(--rm-canvas-bg);
 }
 
 /* Цвет/толщина/паттерн и подсветка выделения задаются инлайном в MindEdge
@@ -40,17 +42,17 @@
 
 .react-flow__controls {
   overflow: hidden;
-  border: 1px solid var(--rm-border) !important;
+  border: 1px solid var(--rm-border-soft) !important;
   border-radius: var(--rm-radius) !important;
-  background: color-mix(in srgb, var(--rm-surface) 92%, transparent) !important;
-  box-shadow: var(--rm-shadow-sm);
-  backdrop-filter: blur(14px);
+  background: var(--rm-panel) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
 }
 
 .react-flow__controls-button {
   width: 32px !important;
-  height: 32px !important;
-  border-bottom: 1px solid var(--rm-border) !important;
+  height: 30px !important;
+  border-bottom: 1px solid var(--rm-border-soft) !important;
   background: transparent !important;
   color: var(--rm-text-muted) !important;
   transition:
@@ -59,8 +61,8 @@
 }
 
 .react-flow__controls-button:hover {
-  background: var(--rm-surface-hover) !important;
-  color: var(--rm-text) !important;
+  background: var(--rm-accent-muted) !important;
+  color: var(--rm-accent) !important;
 }
 
 .react-flow__controls-button svg {

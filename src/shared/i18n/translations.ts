@@ -124,6 +124,9 @@ const ru = {
   'doc.untitled': 'Без названия',
   'label.root': 'Главная тема',
   'label.child': 'Новая идея',
+
+  // — холст —
+  'canvas.hint': 'перетащи узел · Ctrl+колесо — зум',
 } as const;
 
 export type TranslationKey = keyof typeof ru;
@@ -237,6 +240,8 @@ const en: Record<TranslationKey, string> = {
   'doc.untitled': 'Untitled',
   'label.root': 'Main topic',
   'label.child': 'New idea',
+
+  'canvas.hint': 'drag a node · Ctrl+wheel to zoom',
 };
 
 const de: Record<TranslationKey, string> = {
@@ -348,6 +353,8 @@ const de: Record<TranslationKey, string> = {
   'doc.untitled': 'Ohne Titel',
   'label.root': 'Hauptthema',
   'label.child': 'Neue Idee',
+
+  'canvas.hint': 'Knoten ziehen · Strg+Rad zum Zoomen',
 };
 
 const fr: Record<TranslationKey, string> = {
@@ -459,6 +466,8 @@ const fr: Record<TranslationKey, string> = {
   'doc.untitled': 'Sans titre',
   'label.root': 'Thème principal',
   'label.child': 'Nouvelle idée',
+
+  'canvas.hint': 'glisse un nœud · Ctrl+molette pour zoomer',
 };
 
 export const translations: Record<Locale, Record<TranslationKey, string>> = {

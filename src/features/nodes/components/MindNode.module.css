@@ -34,7 +34,10 @@
   font-size: var(--rm-node-font-size);
   font-weight: var(--rm-font-weight-medium);
   text-align: center;
-  box-shadow: var(--rm-shadow-sm);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    var(--rm-shadow-sm);
   transition:
     border-color var(--rm-transition-fast) var(--rm-ease-out-expo),
     background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
@@ -42,8 +45,10 @@
 }
 
 .node:hover .box {
-  border-color: var(--rm-accent-hover);
-  box-shadow: var(--rm-shadow);
+  border-color: var(--rm-accent-soft);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    var(--rm-shadow);
 }
 
 /* --- Shapes (border-radius / rotation read from node.data.style.shape) --- */
@@ -78,15 +83,24 @@
   width: 100%;
 }
 
-/* --- Root --- */
+/* --- Root — glowing cyan-gradient hero node from the handoff design --- */
 .node.root .box {
   min-width: 172px;
   padding: var(--rm-space-4) var(--rm-space-6);
-  background-color: var(--rm-node-bg-root);
-  border-color: var(--rm-accent);
+  background: var(--rm-node-bg-root);
+  border-color: var(--rm-accent-soft);
   font-size: calc(var(--rm-node-font-size) + 2px);
   font-weight: var(--rm-font-weight-bold);
   letter-spacing: -0.015em;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 14px 40px -8px var(--rm-accent-soft);
+}
+
+.node.root:hover .box {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 18px 46px -8px var(--rm-accent-soft);
 }
 
 /* --- States --- */

@@ -4,7 +4,7 @@
   z-index: 50;
   display: flex;
   justify-content: flex-end;
-  background: color-mix(in srgb, var(--rm-bg) 62%, transparent);
+  background: rgba(3, 5, 8, 0.55);
   backdrop-filter: blur(10px);
   animation: overlayIn var(--rm-transition) var(--rm-ease-out-expo);
 }

@@ -1,0 +1,48 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Terminal-style hint pinned to the bottom-right of the canvas, matching the
+   home screen / handoff aesthetic. Non-interactive so it never blocks the pane. */
+.hint {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--rm-font-sm);
+  color: var(--rm-text-subtle);
+  user-select: none;
+  pointer-events: none;
+  transition: color 0.55s ease;
+}
+
+.prompt {
+  color: var(--rm-accent);
+}
+
+.cursor {
+  color: var(--rm-accent);
+  animation: canvasHintBlink 1.1s step-end infinite;
+}
+
+@keyframes canvasHintBlink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    animation: none;
+  }
+}

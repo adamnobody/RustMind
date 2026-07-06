@@ -25,7 +25,7 @@ body,
     'liga' 1,
     'cv05' 1,
     'tnum' 1;
-  background-color: var(--rm-bg);
+  background: var(--rm-bg);
   color: var(--rm-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

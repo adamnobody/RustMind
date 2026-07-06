@@ -2,10 +2,9 @@
 [data-theme='dark'] {
   color-scheme: dark;
 
-  /* Typography */
+  /* Typography — terminal monospace, matching the home screen / handoff design */
   --rm-font-family:
-    'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    sans-serif;
+    'IBM Plex Mono', ui-monospace, Menlo, Consolas, 'Courier New', monospace;
   --rm-font-xs: 11px;
   --rm-font-sm: 12px;
   --rm-font-md: 14px;
@@ -37,27 +36,32 @@
   --rm-transition: 180ms;
   --rm-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Surfaces */
-  --rm-bg: #080d18;
-  --rm-canvas-bg: #0a1020;
+  /* Surfaces — near-black canvas with translucent, blurred glass chrome/panels */
+  --rm-bg: #05070a;
+  --rm-canvas-bg: #05070a;
   --rm-bg-canvas: var(--rm-canvas-bg);
-  --rm-surface: #111827;
-  --rm-surface-hover: #182235;
-  --rm-surface-elevated: #151f31;
+  --rm-surface: #0a0e12;
+  --rm-surface-hover: rgba(255, 255, 255, 0.06);
+  --rm-surface-elevated: #10161d;
+  /* Blurred glass layers lifted straight from the handoff design */
+  --rm-chrome: rgba(8, 11, 14, 0.85);
+  --rm-panel: rgba(6, 10, 12, 0.72);
 
   /* Text */
-  --rm-text: #f8fafc;
-  --rm-text-muted: #a7b4c7;
-  --rm-text-subtle: #6f7d91;
+  --rm-text: #eafcff;
+  --rm-text-muted: rgba(233, 247, 251, 0.56);
+  --rm-text-subtle: rgba(233, 247, 251, 0.4);
 
   /* Borders */
-  --rm-border: #263247;
-  --rm-border-strong: #3a4861;
+  --rm-border: rgba(255, 255, 255, 0.08);
+  --rm-border-strong: rgba(255, 255, 255, 0.16);
+  --rm-border-soft: rgba(255, 255, 255, 0.12);
 
-  /* Accent */
-  --rm-accent: #5b8cff;
-  --rm-accent-hover: #7ca4ff;
-  --rm-accent-muted: rgba(91, 140, 255, 0.16);
+  /* Accent — cyan */
+  --rm-accent: #5fd4ff;
+  --rm-accent-hover: #8ae1ff;
+  --rm-accent-muted: rgba(95, 212, 255, 0.12);
+  --rm-accent-soft: rgba(95, 212, 255, 0.55);
 
   /* Semantics */
   --rm-danger: #fb7185;
@@ -66,20 +70,21 @@
   --rm-warning: #fbbf24;
 
   /* Nodes and edges */
-  --rm-node-bg: #172033;
-  --rm-node-bg-root: #1e3a8a;
-  --rm-node-border: #30405b;
+  --rm-node-bg: rgba(12, 20, 28, 0.66);
+  --rm-node-grad: linear-gradient(180deg, rgba(95, 212, 255, 0.3), rgba(95, 212, 255, 0.1));
+  --rm-node-bg-root: var(--rm-node-grad);
+  --rm-node-border: rgba(255, 255, 255, 0.12);
   --rm-node-selected: var(--rm-accent);
-  --rm-node-placeholder: #93a4bc;
-  --rm-edge: #66758d;
-  --rm-grid: rgba(148, 163, 184, 0.26);
-  --rm-minimap-mask: rgba(8, 13, 24, 0.62);
+  --rm-node-placeholder: rgba(233, 247, 251, 0.4);
+  --rm-edge: rgba(190, 214, 224, 0.42);
+  --rm-grid: rgba(255, 255, 255, 0.09);
+  --rm-minimap-mask: rgba(5, 7, 10, 0.62);
 
   /* Shadows */
   --rm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
   --rm-shadow: 0 14px 38px rgba(0, 0, 0, 0.34);
   --rm-shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.42);
-  --rm-shadow-glow: 0 0 0 3px rgba(91, 140, 255, 0.26), 0 18px 48px rgba(21, 54, 132, 0.26);
+  --rm-shadow-glow: 0 0 0 3px rgba(95, 212, 255, 0.26), 0 18px 48px -8px rgba(95, 212, 255, 0.35);
 
   /* Node palette presets */
   --rm-node-color-blue: #2563eb;
@@ -122,39 +127,53 @@
 [data-theme='light'] {
   color-scheme: light;
 
-  --rm-bg: #f4f7fb;
-  --rm-canvas-bg: #f8fafc;
+  /* Brushed-silver gradient backdrop; the canvas itself is transparent over it. */
+  --rm-bg: linear-gradient(
+    135deg,
+    #f4f4f4 0%,
+    #dedede 22%,
+    #c7c7c7 46%,
+    #eaeaea 62%,
+    #d2d2d2 80%,
+    #e8e8e8 100%
+  );
+  --rm-canvas-bg: transparent;
   --rm-bg-canvas: var(--rm-canvas-bg);
-  --rm-surface: #ffffff;
-  --rm-surface-hover: #f1f5f9;
+  --rm-surface: rgba(255, 255, 255, 0.92);
+  --rm-surface-hover: rgba(12, 30, 42, 0.06);
   --rm-surface-elevated: #ffffff;
+  --rm-chrome: rgba(255, 255, 255, 0.78);
+  --rm-panel: rgba(255, 255, 255, 0.78);
 
-  --rm-text: #101827;
-  --rm-text-muted: #526071;
-  --rm-text-subtle: #8a96a8;
+  --rm-text: #0a1a22;
+  --rm-text-muted: rgba(12, 30, 42, 0.6);
+  --rm-text-subtle: rgba(12, 30, 42, 0.5);
 
-  --rm-border: #d9e2ee;
-  --rm-border-strong: #bdc9da;
+  --rm-border: rgba(12, 30, 42, 0.14);
+  --rm-border-strong: rgba(12, 30, 42, 0.24);
+  --rm-border-soft: rgba(12, 30, 42, 0.2);
 
-  --rm-accent: #2563eb;
-  --rm-accent-hover: #1d4ed8;
-  --rm-accent-muted: rgba(37, 99, 235, 0.12);
+  --rm-accent: #0a86ba;
+  --rm-accent-hover: #0b93cc;
+  --rm-accent-muted: rgba(10, 134, 186, 0.12);
+  --rm-accent-soft: rgba(10, 134, 186, 0.55);
 
   --rm-danger: #e11d48;
   --rm-danger-muted: rgba(225, 29, 72, 0.1);
   --rm-success: #059669;
   --rm-warning: #d97706;
 
-  --rm-node-bg: #ffffff;
-  --rm-node-bg-root: #eff6ff;
-  --rm-node-border: #d7e0ec;
-  --rm-node-placeholder: #8a96a8;
-  --rm-edge: #8da0b8;
-  --rm-grid: rgba(100, 116, 139, 0.22);
-  --rm-minimap-mask: rgba(226, 232, 240, 0.68);
+  --rm-node-bg: rgba(255, 255, 255, 0.8);
+  --rm-node-grad: linear-gradient(180deg, rgba(10, 134, 186, 0.22), rgba(10, 134, 186, 0.08));
+  --rm-node-bg-root: var(--rm-node-grad);
+  --rm-node-border: rgba(12, 30, 42, 0.16);
+  --rm-node-placeholder: rgba(12, 30, 42, 0.5);
+  --rm-edge: rgba(12, 30, 42, 0.4);
+  --rm-grid: rgba(12, 30, 42, 0.16);
+  --rm-minimap-mask: rgba(226, 232, 240, 0.55);
 
   --rm-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
   --rm-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
   --rm-shadow-lg: 0 24px 70px rgba(15, 23, 42, 0.14);
-  --rm-shadow-glow: 0 0 0 3px rgba(37, 99, 235, 0.18), 0 18px 42px rgba(37, 99, 235, 0.14);
+  --rm-shadow-glow: 0 0 0 3px rgba(10, 134, 186, 0.2), 0 18px 42px -8px rgba(10, 134, 186, 0.28);
 }

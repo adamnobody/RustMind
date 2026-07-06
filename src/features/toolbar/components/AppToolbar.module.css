@@ -5,12 +5,15 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--rm-space-4);
-  height: 64px;
+  height: 56px;
   padding: 0 var(--rm-space-4);
   border-bottom: 1px solid var(--rm-border);
-  background: color-mix(in srgb, var(--rm-surface) 88%, transparent);
-  backdrop-filter: blur(18px);
+  background: var(--rm-chrome);
+  backdrop-filter: blur(14px);
   user-select: none;
+  transition:
+    background-color 0.55s ease,
+    border-color 0.55s ease;
 }
 
 .brand {
@@ -25,15 +28,16 @@
   width: 34px;
   height: 34px;
   place-items: center;
-  border: 1px solid var(--rm-border);
-  border-radius: var(--rm-radius);
-  background:
-    radial-gradient(circle at 30% 25%, var(--rm-accent-hover), transparent 42%),
-    var(--rm-accent);
-  color: var(--rm-text);
+  border-radius: 9px;
+  background: linear-gradient(
+    180deg,
+    var(--rm-accent),
+    color-mix(in oklab, var(--rm-accent), #000 22%)
+  );
+  color: #052330;
   font-size: var(--rm-font-lg);
   font-weight: var(--rm-font-weight-bold);
-  box-shadow: var(--rm-shadow-sm);
+  box-shadow: 0 4px 14px var(--rm-accent-muted);
 }
 
 .document {
@@ -64,27 +68,29 @@
 
 .separator {
   width: 1px;
-  height: 22px;
+  height: 20px;
   margin: 0 var(--rm-space-1);
-  background: var(--rm-border);
+  background: var(--rm-border-soft);
 }
 
-/* Temporary handle-visibility select — replaces at step 15/16 */
+/* Handle-visibility select — glassy chip matching the design's toolbar dropdown */
 .handleVisSelect {
-  height: 30px;
+  height: 32px;
   padding: 0 var(--rm-space-2);
-  border: 1px solid var(--rm-border);
-  border-radius: var(--rm-radius);
-  background: var(--rm-surface);
+  border: 1px solid var(--rm-border-soft);
+  border-radius: var(--rm-radius-sm);
+  background: var(--rm-panel);
   color: var(--rm-text-muted);
-  font-size: var(--rm-font-xs);
+  font-size: var(--rm-font-sm);
   cursor: pointer;
+  outline: none;
   transition:
     border-color var(--rm-transition-fast) var(--rm-ease-out-expo),
-    color var(--rm-transition-fast) var(--rm-ease-out-expo);
+    color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    background-color 0.55s ease;
 }
 
 .handleVisSelect:hover {
-  border-color: var(--rm-border-strong);
+  border-color: var(--rm-accent-soft);
   color: var(--rm-text);
 }
