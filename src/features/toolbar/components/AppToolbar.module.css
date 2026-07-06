@@ -1,12 +1,9 @@
+/* Two-row editor top bar: classic menu bar over a row of colored icon tiles. */
 .toolbar {
   position: relative;
   z-index: 10;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--rm-space-4);
-  height: 56px;
-  padding: 0 var(--rm-space-4);
+  flex-direction: column;
   border-bottom: 1px solid var(--rm-border);
   background: var(--rm-chrome);
   backdrop-filter: blur(14px);
@@ -16,11 +13,22 @@
     border-color 0.55s ease;
 }
 
+/* ── Row 1: menu bar ──────────────────────────────────────────────────────── */
+.menuRow {
+  display: flex;
+  align-items: center;
+  gap: var(--rm-space-4);
+  height: 52px;
+  padding: 0 var(--rm-space-4);
+  border-bottom: 1px solid var(--rm-border-soft);
+}
+
 .brand {
   display: flex;
   align-items: center;
   gap: var(--rm-space-3);
   min-width: 0;
+  margin-right: var(--rm-space-2);
 }
 
 .logo {
@@ -47,7 +55,7 @@
 
 .appName {
   color: var(--rm-text);
-  font-size: var(--rm-font-sm);
+  font-size: var(--rm-font-md);
   font-weight: var(--rm-font-weight-bold);
   letter-spacing: -0.01em;
 }
@@ -60,27 +68,130 @@
   white-space: nowrap;
 }
 
-.actions {
-  display: flex;
-  align-items: center;
-  gap: var(--rm-space-1);
+.spacer {
+  flex: 1;
 }
 
-.separator {
+.themeBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--rm-space-2);
+  height: 34px;
+  padding: 0 var(--rm-space-3);
+  border: none;
+  border-radius: var(--rm-radius-sm);
+  background: transparent;
+  color: var(--rm-text-muted);
+  font-family: inherit;
+  font-size: var(--rm-font-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    color var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.themeBtn:hover {
+  background-color: var(--rm-accent-muted);
+  color: var(--rm-accent);
+}
+
+/* ── Row 2: icon tiles ────────────────────────────────────────────────────── */
+.tileRow {
+  display: flex;
+  align-items: center;
+  gap: var(--rm-space-2);
+  height: 76px;
+  padding: var(--rm-space-2) var(--rm-space-4);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 60px;
+  height: 58px;
+  padding: 6px 8px;
+  border: 1px solid var(--rm-border-soft);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(95, 212, 255, 0.05), rgba(95, 212, 255, 0)),
+    var(--rm-panel);
+  color: var(--rm-text-muted);
+  cursor: pointer;
+  transition:
+    border-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    transform var(--rm-transition-fast) var(--rm-ease-out-expo),
+    background-color 0.55s ease;
+}
+
+.tileLabel {
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--rm-text-muted);
+  white-space: nowrap;
+  transition: color var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.tile:hover {
+  border-color: var(--rm-accent-soft);
+  color: var(--rm-accent);
+  transform: translateY(-1px);
+}
+
+.tile:hover .tileLabel {
+  color: var(--rm-accent);
+}
+
+.tile:active {
+  transform: scale(0.94);
+}
+
+.tile:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tile:disabled:hover {
+  border-color: var(--rm-border-soft);
+  color: var(--rm-text-muted);
+  transform: none;
+}
+
+.tile:disabled:hover .tileLabel {
+  color: var(--rm-text-muted);
+}
+
+.tileActive {
+  border-color: var(--rm-accent-soft);
+  background: var(--rm-accent-muted);
+  color: var(--rm-accent);
+}
+
+.tileActive .tileLabel {
+  color: var(--rm-accent);
+}
+
+.tileSep {
+  align-self: center;
   width: 1px;
-  height: 20px;
-  margin: 0 var(--rm-space-1);
+  height: 40px;
+  margin: 0 var(--rm-space-2);
   background: var(--rm-border-soft);
 }
 
 /* Handle-visibility select — glassy chip matching the design's toolbar dropdown */
 .handleVisSelect {
-  height: 32px;
-  padding: 0 var(--rm-space-2);
+  height: 40px;
+  margin-left: var(--rm-space-2);
+  padding: 0 var(--rm-space-3);
   border: 1px solid var(--rm-border-soft);
   border-radius: var(--rm-radius-sm);
   background: var(--rm-panel);
   color: var(--rm-text-muted);
+  font-family: inherit;
   font-size: var(--rm-font-sm);
   cursor: pointer;
   outline: none;

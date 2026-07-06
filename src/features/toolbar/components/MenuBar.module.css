@@ -1,0 +1,114 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.group {
+  position: relative;
+}
+
+.trigger {
+  height: 34px;
+  padding: 0 var(--rm-space-3);
+  border: none;
+  border-radius: var(--rm-radius-sm);
+  background: transparent;
+  color: var(--rm-text-muted);
+  font-family: inherit;
+  font-size: var(--rm-font-md);
+  cursor: pointer;
+  transition:
+    background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    color var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.trigger:hover,
+.triggerOpen {
+  background-color: var(--rm-accent-muted);
+  color: var(--rm-accent);
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 40;
+  min-width: 224px;
+  padding: 6px;
+  border: 1px solid var(--rm-border-soft);
+  border-radius: var(--rm-radius);
+  background: var(--rm-surface);
+  box-shadow: var(--rm-shadow-lg);
+  backdrop-filter: blur(16px);
+  animation: menuIn var(--rm-transition) var(--rm-ease-out-expo);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--rm-space-2);
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--rm-radius-sm);
+  background: transparent;
+  color: var(--rm-text);
+  font-family: inherit;
+  font-size: var(--rm-font-sm);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    color var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.item:hover:not(:disabled) {
+  background-color: var(--rm-accent-muted);
+  color: var(--rm-accent);
+}
+
+.item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.check {
+  flex: none;
+  width: 15px;
+  color: var(--rm-accent);
+}
+
+.itemLabel {
+  flex: 1;
+}
+
+.hotkey {
+  flex: none;
+  padding-left: var(--rm-space-4);
+  color: var(--rm-text-subtle);
+  font-size: var(--rm-font-xs);
+}
+
+.sep {
+  height: 1px;
+  margin: 5px 6px;
+  background: var(--rm-border-soft);
+}
+
+@keyframes menuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropdown {
+    animation: none;
+  }
+}

@@ -21,6 +21,7 @@ export type IconName =
   | 'grid'
   | 'map'
   | 'sliders'
+  | 'panel'
   // Иконки из шага 1/4, оставим для совместимости в будущем
   | 'zoomIn'
   | 'zoomOut'
@@ -161,6 +162,12 @@ const ICON_PATHS: Record<IconName, React.JSX.Element> = {
       <line x1="2" y1="14" x2="6" y2="14" />
       <line x1="10" y1="8" x2="14" y2="8" />
       <line x1="18" y1="16" x2="22" y2="16" />
+    </>
+  ),
+  panel: (
+    <>
+      <rect x="4" y="5" width="16" height="14" rx="2" />
+      <line x1="9.5" y1="5" x2="9.5" y2="19" />
     </>
   ),
   zoomIn: (
