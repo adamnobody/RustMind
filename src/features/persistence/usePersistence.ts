@@ -116,6 +116,12 @@ export function usePersistence(): PersistenceActions {
 
 export function useWindowCloseGuard(): void {
   useEffect(() => {
+    // Frontend-only режим (npm run dev в браузере): Tauri-рантайма нет,
+    // getCurrentWindow() бросил бы синхронно и уронил весь EditorScreen.
+    if (!('__TAURI_INTERNALS__' in window)) {
+      return;
+    }
+
     let unlisten: (() => void) | undefined;
     let mounted = true;
 

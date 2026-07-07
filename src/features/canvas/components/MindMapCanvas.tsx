@@ -8,6 +8,8 @@ import {
   type EdgeTypes,
   type OnSelectionChangeParams,
   type FinalConnectionState,
+  type Edge,
+  type Connection,
 } from '@xyflow/react';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -17,8 +19,9 @@ import { MindNode } from '../../nodes/components/MindNode';
 import { MindEdge } from '../../edges/components/MindEdge';
 import { MIND_NODE_TYPE } from '../../nodes/types';
 import { MIND_EDGE_TYPE, oppositeHandle } from '../../edges/types';
+import { getLayoutStrategy, isEdgeValidForLayout } from '../../layout/strategies/registry';
 
-import { useT } from '../../../shared/i18n';
+import { useT, translate } from '../../../shared/i18n';
 import { useGlobalHotkeys } from '../hooks/useGlobalHotkeys';
 import { CanvasBackground } from './CanvasBackground';
 import { CanvasControls } from './CanvasControls';
@@ -70,8 +73,11 @@ function CanvasInner(): React.JSX.Element {
 
   const setSelectedNodeId = useUIStore((s) => s.setSelectedNodeId);
   const setSelection = useUIStore((s) => s.setSelection);
+  const setEditingEdgeId = useUIStore((s) => s.setEditingEdgeId);
   const editingNodeId = useUIStore((s) => s.editingNodeId);
+  const notice = useUIStore((s) => s.notice);
   const settings = useUIStore((s) => s.settings);
+  const layoutType = useMindMapStore((s) => s.layoutType);
   const isEditing = editingNodeId !== null;
   const t = useT();
   const canvasStyle = useMemo(
@@ -84,6 +90,40 @@ function CanvasInner(): React.JSX.Element {
 
   const nodeTypes = useMemo<NodeTypes>(() => ({ [MIND_NODE_TYPE]: MindNode }), []);
   const edgeTypes = useMemo<EdgeTypes>(() => ({ [MIND_EDGE_TYPE]: MindEdge }), []);
+
+  const strategy = useMemo(() => getLayoutStrategy(layoutType), [layoutType]);
+
+  // Мягкий вариант ограничений: рёбра, невалидные для ТЕКУЩЕЙ раскладки
+  // (остались после переключения типа), не удаляются — помечаются флагом
+  // data.invalid для визуальной отбраковки в MindEdge. Флаг живёт только в
+  // этом производном массиве и никогда не попадает в стор/файл.
+  const displayEdges = useMemo(() => {
+    if (strategy.edgeConstraint === 'any') return edges;
+    return edges.map((e) =>
+      isEdgeValidForLayout(strategy, e, nodes, edges)
+        ? e
+        : { ...e, data: { ...e.data, invalid: true } },
+    );
+  }, [edges, nodes, strategy]);
+
+  // Жёсткий edgeConstraint на уровне жеста: невалидную связь нельзя даже
+  // «защёлкнуть» — RF подсветит хэндл как запрещённый.
+  const isValidConnection = useCallback(
+    (conn: Edge | Connection) => {
+      if (!conn.source || !conn.target) return false;
+      const { nodes: n, edges: eds } = useMindMapStore.getState();
+      return strategy.canConnect(conn.source, conn.target, { nodes: n, edges: eds });
+    },
+    [strategy],
+  );
+
+  // Двойной клик по ребру — инлайн-редактор подписи (label) на самом ребре.
+  const handleEdgeDoubleClick = useCallback(
+    (_: React.MouseEvent, edge: Edge) => {
+      setEditingEdgeId(edge.id);
+    },
+    [setEditingEdgeId],
+  );
 
   const handleSelectionChange = useCallback(
     ({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
@@ -99,6 +139,16 @@ function CanvasInner(): React.JSX.Element {
   const handleConnectEnd = useCallback(
     (event: MouseEvent | TouchEvent, connectionState: FinalConnectionState) => {
       if (connectionState.isValid || !connectionState.fromNode) return;
+
+      // Отпустили на СУЩЕСТВУЮЩЕМ узле, но isValidConnection забраковал жест —
+      // это заблокированная связь, а не «создать потомка в пустоте». Тост с
+      // причиной и выходим.
+      if (connectionState.toNode) {
+        useUIStore.getState().showNotice(
+          translate(getLayoutStrategy(useMindMapStore.getState().layoutType).blockedReasonKey),
+        );
+        return;
+      }
 
       // Экранные координаты точки отпускания (мышь или касание) →
       // координаты потока, чтобы узел появился ровно там, где отпустили.
@@ -133,11 +183,13 @@ function CanvasInner(): React.JSX.Element {
     <div data-handle-visibility={handleVisibility} className={styles.wrapper}>
       <ReactFlow
         nodes={nodes}
-        edges={edges}
+        edges={displayEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onConnectEnd={handleConnectEnd}
+        onEdgeDoubleClick={handleEdgeDoubleClick}
+        isValidConnection={isValidConnection}
         onNodeDragStart={handleNodeDragStart}
         onNodeDragStop={handleNodeDragStop}
         onSelectionChange={handleSelectionChange}
@@ -166,6 +218,11 @@ function CanvasInner(): React.JSX.Element {
         {t('canvas.hint')}
         <span className={styles.cursor}>_</span>
       </div>
+      {notice && (
+        <div className={styles.notice} role="status">
+          {notice}
+        </div>
+      )}
     </div>
   );
 }

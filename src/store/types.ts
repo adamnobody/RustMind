@@ -7,11 +7,13 @@ import type {
 } from '@xyflow/react';
 import type { HandleSide, MindNodeData, NodeStyle } from '../features/nodes/types';
 import type { EdgeStyle, MindEdgeData } from '../features/edges/types';
+import type { LayoutKind } from '../features/layout/engines/layoutTypes';
 
 export type AppNode = Node<MindNodeData>;
 export type AppEdge = Edge<MindEdgeData>;
 
-export type LayoutType = 'tree-LR' | 'tree-TB' | 'radial';
+/** Тип раскладки документа — см. features/layout (11 видов, дефолт 'free'). */
+export type LayoutType = LayoutKind;
 export type HandleVisibility = 'hidden' | 'dashed' | 'always';
 
 export interface ProjectSettings {

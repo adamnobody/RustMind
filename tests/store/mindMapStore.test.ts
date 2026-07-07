@@ -380,7 +380,7 @@ describe('mindMapStore — projectSettings', () => {
   it('loadDocument восстанавливает projectSettings из payload', () => {
     useMindMapStore.getState().loadDocument({
       documentName: 'Test',
-      layoutType: 'tree-LR',
+      layoutType: 'free',
       nodes: [],
       edges: [],
       projectSettings: { handleVisibility: 'hidden' },
@@ -394,7 +394,7 @@ describe('mindMapStore — projectSettings', () => {
     // Загружаем документ без projectSettings (старый файл)
     useMindMapStore.getState().loadDocument({
       documentName: 'Old',
-      layoutType: 'tree-LR',
+      layoutType: 'free',
       nodes: [],
       edges: [],
     });

@@ -1,5 +1,10 @@
 export type EdgeLinePattern = 'solid' | 'dashed' | 'dotted';
-export type EdgeArrowType = 'none' | 'open' | 'filled';
+/**
+ * Форма наконечника. 'filled' — закрашенный треугольник (он же «triangle» из
+ * спецификации), 'open' — контурный; 'dot' и 'diamond' — расширение поверх
+ * 15A-модели. Существующие значения не переименованы, чтобы не ломать файлы.
+ */
+export type EdgeArrowType = 'none' | 'open' | 'filled' | 'dot' | 'diamond';
 
 /**
  * Per-element edge style override. All fields optional — absent = use default.
@@ -18,6 +23,8 @@ export interface EdgeStyle {
    */
   sourceArrow?: EdgeArrowType;
   targetArrow?: EdgeArrowType;
+  /** Сужение линии к концу (target): рисуется заливкой-«клином» вместо штриха. */
+  taper?: boolean;
   /** Inline label text rendered on the edge path. */
   label?: string;
   /**
@@ -39,6 +46,7 @@ export const DEFAULT_EDGE_STYLE: Required<Omit<EdgeStyle, 'label'>> = {
   strokeColor: 'var(--rm-edge)',
   sourceArrow: 'none',
   targetArrow: 'none',
+  taper: false,
   labelFontSize: 12,
   labelColor: 'var(--rm-text)',
 };
@@ -55,6 +63,12 @@ export type EdgeKind = 'tree' | 'free';
 export interface MindEdgeData {
   kind?: EdgeKind;
   style?: EdgeStyle;
+  /**
+   * Ребро нарушает edgeConstraint ТЕКУЩЕЙ раскладки (осталось после смены
+   * типа). Вычисляется на лету в канвасе и НЕ сериализуется: мягкий вариант —
+   * существующее не рвём, но помечаем; новые такие связи создавать нельзя.
+   */
+  invalid?: boolean;
   [key: string]: unknown;
 }
 

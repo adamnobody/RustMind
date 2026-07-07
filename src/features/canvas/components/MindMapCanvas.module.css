@@ -4,6 +4,37 @@
   height: 100%;
 }
 
+/* Короткий тост (заблокированная связь и т.п.) — по центру внизу холста. */
+.notice {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  z-index: 6;
+  max-width: 70%;
+  padding: 8px 14px;
+  border-radius: var(--rm-radius-sm);
+  border: 1px solid var(--rm-border, rgba(128, 128, 128, 0.35));
+  background: color-mix(in srgb, var(--rm-canvas-bg) 88%, transparent);
+  color: var(--rm-text);
+  font-size: var(--rm-font-sm);
+  text-align: center;
+  pointer-events: none;
+  backdrop-filter: blur(3px);
+  animation: canvasNoticeIn 0.18s ease-out;
+}
+
+@keyframes canvasNoticeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 /* Terminal-style hint pinned to the bottom-right of the canvas, matching the
    home screen / handoff aesthetic. Non-interactive so it never blocks the pane. */
 .hint {

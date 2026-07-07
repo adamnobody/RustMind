@@ -25,6 +25,8 @@ import { pruneStyle } from '../shared/lib/style';
 import { NODE_COLORS, DEFAULT_HANDLE_VISIBILITY } from '../shared/lib/constants';
 import { translate } from '../shared/i18n';
 import { applyLayout } from '../features/layout/applyLayout';
+import { getLayoutStrategy } from '../features/layout/strategies/registry';
+import { DEFAULT_LAYOUT_KIND } from '../features/layout/engines/layoutTypes';
 import { useUIStore } from './uiStore';
 
 /** Максимум записей в истории — защита от роста памяти при долгой сессии. */
@@ -133,7 +135,7 @@ export const useMindMapStore = create<MindMapState>()(
     documentName: translate('doc.untitled'),
     filePath: null,
     isDirty: false,
-    layoutType: 'tree-LR',
+    layoutType: DEFAULT_LAYOUT_KIND,
     projectSettings: { handleVisibility: DEFAULT_HANDLE_VISIBILITY },
 
     past: [],
@@ -172,9 +174,19 @@ export const useMindMapStore = create<MindMapState>()(
       const parent = get().nodes.find((n) => n.id === parentId);
       if (!parent) return null;
 
-      recordHistory('structural');
-
       const newId = generateNodeId();
+
+      // edgeConstraint раскладки действует и на структурные рёбра: новый узел
+      // трактуется предикатом как свежий лист (например, в bubble потомка
+      // можно добавить только к центру). Блокируем ДО записи истории.
+      const { nodes, edges, layoutType } = get();
+      const strategy = getLayoutStrategy(layoutType);
+      if (!strategy.canConnect(parentId, newId, { nodes, edges })) {
+        useUIStore.getState().showNotice(translate(strategy.blockedReasonKey));
+        return null;
+      }
+
+      recordHistory('structural');
       const newNode: AppNode = {
         id: newId,
         type: MIND_NODE_TYPE,
@@ -325,6 +337,21 @@ export const useMindMapStore = create<MindMapState>()(
     },
 
     onConnect: (connection) => {
+      // Жёсткое ограничение раскладки: связь, нарушающая семантику текущего
+      // типа, не создаётся вовсе — с коротким тостом почему. Канвас блокирует
+      // такие жесты ещё в isValidConnection; это — второй рубеж (напр. тесты
+      // и программные вызовы).
+      const { nodes, edges, layoutType } = get();
+      const strategy = getLayoutStrategy(layoutType);
+      if (
+        !connection.source ||
+        !connection.target ||
+        !strategy.canConnect(connection.source, connection.target, { nodes, edges })
+      ) {
+        useUIStore.getState().showNotice(translate(strategy.blockedReasonKey));
+        return;
+      }
+
       // Рисование связи мышью = ассоциативное (free) ребро: хэндлы берутся из
       // жеста (connection.sourceHandle/targetHandle) и фиксируются — layout их
       // не переписывает. Источник такого ребра НЕ становится родителем цели.
@@ -402,7 +429,7 @@ export const useMindMapStore = create<MindMapState>()(
         state.documentName = translate('doc.untitled');
         state.filePath = null;
         state.isDirty = false;
-        state.layoutType = 'tree-LR';
+        state.layoutType = DEFAULT_LAYOUT_KIND;
         state.projectSettings = { handleVisibility: DEFAULT_HANDLE_VISIBILITY };
         state.past = [];
         state.future = [];

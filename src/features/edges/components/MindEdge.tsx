@@ -1,5 +1,14 @@
 import type { CSSProperties } from 'react';
-import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from '@xyflow/react';
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
+  getSmoothStepPath,
+  Position,
+  type EdgeProps,
+} from '@xyflow/react';
+import { useMindMapStore } from '../../../store/mindMapStore';
+import { useUIStore } from '../../../store/uiStore';
 import {
   DEFAULT_EDGE_STYLE,
   type EdgeArrowType,
@@ -37,6 +46,10 @@ function ArrowMarker({
     >
       {type === 'filled' ? (
         <path d="M 1 1.5 L 9 5 L 1 8.5 z" fill={color} />
+      ) : type === 'dot' ? (
+        <circle cx="5" cy="5" r="3.4" fill={color} />
+      ) : type === 'diamond' ? (
+        <path d="M 5 1.2 L 8.8 5 L 5 8.8 L 1.2 5 z" fill={color} />
       ) : (
         <polyline
           points="1.5,1.5 8.5,5 1.5,8.5"
@@ -63,6 +76,60 @@ function dashArrayFor(pattern: EdgeLinePattern, strokeWidth: number): string | u
   }
 }
 
+/** Контрольная точка кубической Безье — та же логика, что в getBezierPath RF. */
+function controlPoint(x: number, y: number, pos: Position, x2: number, y2: number): [number, number] {
+  const offset = (distance: number): number =>
+    distance >= 0 ? 0.5 * distance : 25 * Math.sqrt(-distance) * 0.25;
+  switch (pos) {
+    case Position.Left:
+      return [x - offset(x - x2), y];
+    case Position.Right:
+      return [x + offset(x2 - x), y];
+    case Position.Top:
+      return [x, y - offset(y - y2)];
+    default:
+      return [x, y + offset(y2 - y)];
+  }
+}
+
+/**
+ * «Клин» сужения: сэмплируем ту же кубическую Безье, что рисует BaseEdge, и
+ * строим замкнутый контур с шириной от полной у истока до ~15% у цели.
+ * Возвращает d для <path fill>.
+ */
+function taperedPathD(
+  sx: number,
+  sy: number,
+  sp: Position,
+  tx: number,
+  ty: number,
+  tp: Position,
+  width: number,
+): string {
+  const [c1x, c1y] = controlPoint(sx, sy, sp, tx, ty);
+  const [c2x, c2y] = controlPoint(tx, ty, tp, sx, sy);
+  const SAMPLES = 24;
+  const left: string[] = [];
+  const right: string[] = [];
+  for (let i = 0; i <= SAMPLES; i++) {
+    const t = i / SAMPLES;
+    const mt = 1 - t;
+    // Точка и производная кубической Безье.
+    const x = mt ** 3 * sx + 3 * mt ** 2 * t * c1x + 3 * mt * t ** 2 * c2x + t ** 3 * tx;
+    const y = mt ** 3 * sy + 3 * mt ** 2 * t * c1y + 3 * mt * t ** 2 * c2y + t ** 3 * ty;
+    const dx = 3 * mt ** 2 * (c1x - sx) + 6 * mt * t * (c2x - c1x) + 3 * t ** 2 * (tx - c2x);
+    const dy = 3 * mt ** 2 * (c1y - sy) + 6 * mt * t * (c2y - c1y) + 3 * t ** 2 * (ty - c2y);
+    const len = Math.hypot(dx, dy) || 1;
+    // Нормаль к касательной; полуширина линейно сужается к цели.
+    const half = (width * (1 - 0.85 * t)) / 2 + 0.3;
+    const nx = (-dy / len) * half;
+    const ny = (dx / len) * half;
+    left.push(`${(x + nx).toFixed(2)},${(y + ny).toFixed(2)}`);
+    right.push(`${(x - nx).toFixed(2)},${(y - ny).toFixed(2)}`);
+  }
+  return `M ${left.join(' L ')} L ${right.reverse().join(' L ')} Z`;
+}
+
 export function MindEdge({
   id,
   sourceX,
@@ -74,31 +141,58 @@ export function MindEdge({
   selected,
   data,
 }: EdgeProps): React.JSX.Element {
-  const [edgePath, labelX, labelY] = getBezierPath({
+  // Блок-структура и блок-схема рисуются ортогонально (углы 90°) — тип пути
+  // определяет активная раскладка, а не само ребро.
+  const orthogonal = useMindMapStore((s) => s.layoutType === 'block' || s.layoutType === 'flowchart');
+  const editing = useUIStore((s) => s.editingEdgeId === id);
+  const setEditingEdgeId = useUIStore((s) => s.setEditingEdgeId);
+
+  const pathParams = {
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
-  });
+  };
+  const [edgePath, labelX, labelY] = orthogonal
+    ? getSmoothStepPath({ ...pathParams, borderRadius: 4 })
+    : getBezierPath(pathParams);
 
-  const style = { ...DEFAULT_EDGE_STYLE, ...(data as MindEdgeData | undefined)?.style };
+  const edgeData = data as MindEdgeData | undefined;
+  const style = { ...DEFAULT_EDGE_STYLE, ...edgeData?.style };
+  const invalid = edgeData?.invalid === true;
 
   // Подсветка выделения — здесь, а не в CSS: BaseEdge пишет stroke инлайном,
   // и правило вида `.selected .react-flow__edge-path` его не перебило бы.
-  const stroke = selected ? 'var(--rm-accent)' : style.strokeColor;
+  // Невалидное для текущей раскладки ребро — приглушённое, цветом опасности.
+  const stroke = selected
+    ? 'var(--rm-accent)'
+    : invalid
+      ? 'var(--rm-danger, #dc2626)'
+      : style.strokeColor;
   const strokeWidth = selected ? style.strokeWidth + 0.5 : style.strokeWidth;
 
   const markerStartId = `rm-arrow-s-${id}`;
   const markerEndId = `rm-arrow-e-${id}`;
   const { sourceArrow, targetArrow } = style;
 
+  // Сужение реализовано заливкой-«клином» поверх невидимого базового пути
+  // (он остаётся для интеракции и маркеров); в ортогональном режиме taper
+  // неприменим — там путь ломаный, рисуем обычный штрих.
+  const taper = style.taper && !orthogonal;
+
   const pathStyle: CSSProperties = {
-    stroke,
+    stroke: taper ? 'transparent' : stroke,
     strokeWidth,
-    strokeDasharray: dashArrayFor(style.linePattern, style.strokeWidth),
+    strokeDasharray: taper ? undefined : dashArrayFor(style.linePattern, style.strokeWidth),
     strokeLinecap: style.linePattern === 'dotted' ? 'round' : undefined,
+    opacity: invalid ? 0.55 : undefined,
+  };
+
+  const commitLabel = (value: string): void => {
+    useMindMapStore.getState().setEdgeStyle(id, { label: value === '' ? undefined : value });
+    setEditingEdgeId(null);
   };
 
   return (
@@ -119,21 +213,72 @@ export function MindEdge({
         markerEnd={targetArrow !== 'none' ? `url(#${markerEndId})` : undefined}
         style={pathStyle}
       />
-      {style.label !== undefined && style.label !== '' && (
+      {taper && (
+        <path
+          d={taperedPathD(
+            sourceX,
+            sourceY,
+            sourcePosition,
+            targetX,
+            targetY,
+            targetPosition,
+            strokeWidth,
+          )}
+          fill={stroke}
+          opacity={invalid ? 0.55 : undefined}
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
+      {invalid && !taper && (
+        // Поверх обычного штриха — пунктирная «штриховка» как маркер нарушения,
+        // даже если сам паттерн ребра solid.
+        <path
+          d={edgePath}
+          fill="none"
+          stroke="var(--rm-canvas-bg, #fff)"
+          strokeWidth={Math.max(1, strokeWidth - 1)}
+          strokeDasharray="4 8"
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
+      {editing ? (
         <EdgeLabelRenderer>
-          {/* pointer-events: none — клики проходят сквозь подпись к самому ребру
-              (interactionWidth), так что подпись не мешает выделению. */}
-          <div
-            className={styles.label}
+          <input
+            className={styles.labelInput}
             style={{
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
               fontSize: style.labelFontSize,
-              color: style.labelColor,
             }}
-          >
-            {style.label}
-          </div>
+            defaultValue={style.label ?? ''}
+            autoFocus
+            // nodrag/nopan — классы RF: не таскать канвас при выделении текста.
+            data-testid="edge-label-input"
+            onBlur={(e) => commitLabel(e.target.value)}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === 'Enter') commitLabel((e.target as HTMLInputElement).value);
+              if (e.key === 'Escape') setEditingEdgeId(null);
+            }}
+          />
         </EdgeLabelRenderer>
+      ) : (
+        style.label !== undefined &&
+        style.label !== '' && (
+          <EdgeLabelRenderer>
+            {/* pointer-events: none — клики проходят сквозь подпись к самому ребру
+              (interactionWidth), так что подпись не мешает выделению. */}
+            <div
+              className={styles.label}
+              style={{
+                transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+                fontSize: style.labelFontSize,
+                color: style.labelColor,
+              }}
+            >
+              {style.label}
+            </div>
+          </EdgeLabelRenderer>
+        )
       )}
     </>
   );

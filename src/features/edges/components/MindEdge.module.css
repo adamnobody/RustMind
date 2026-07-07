@@ -1,3 +1,21 @@
+/* Инлайн-редактор подписи (двойной клик по ребру). pointer-events включены —
+   в отличие от статичной подписи, сюда нужен фокус и ввод. */
+.labelInput {
+  position: absolute;
+  pointer-events: all;
+  width: 160px;
+  padding: 2px 8px;
+  border: 1px solid var(--rm-accent);
+  border-radius: var(--rm-radius-sm);
+  background: var(--rm-canvas-bg);
+  color: var(--rm-text);
+  font: inherit;
+  line-height: var(--rm-line-tight);
+  text-align: center;
+  outline: none;
+  z-index: 10;
+}
+
 .label {
   position: absolute;
   pointer-events: none;

@@ -1,4 +1,9 @@
-export const FILE_VERSION = 2;
+/**
+ * v3: EdgeStyle расширен (sourceArrow/targetArrow: +dot/diamond; taper),
+ * layoutType — новый набор LayoutKind (старые 'tree-LR'/'tree-TB'/'radial'
+ * мапятся при загрузке). Все новые поля опциональны — файлы v1/v2 читаются.
+ */
+export const FILE_VERSION = 3;
 export const FILE_EXTENSION = 'rustmind';
 
 interface SerializedNodeStyle {
@@ -18,6 +23,7 @@ interface SerializedEdgeStyle {
   strokeColor?: string;
   sourceArrow?: string;
   targetArrow?: string;
+  taper?: boolean;
   label?: string;
   labelFontSize?: number;
   labelColor?: string;

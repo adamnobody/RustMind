@@ -3,10 +3,26 @@ import clsx from 'clsx';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { Icon, type IconName } from '../../../shared/ui/Icon/Icon';
-import { useT } from '../../../shared/i18n';
+import { useT, type TranslationKey } from '../../../shared/i18n';
 import type { HandleVisibility } from '../../../store/types';
+import { LAYOUT_KINDS, type LayoutKind } from '../../layout/engines/layoutTypes';
 import { MenuBar, type MenuDef } from './MenuBar';
 import styles from './AppToolbar.module.css';
+
+/** Локализованные названия раскладок для переключателя. */
+const LAYOUT_LABEL_KEYS: Record<LayoutKind, TranslationKey> = {
+  free: 'layout.free',
+  hierarchy: 'layout.hierarchy',
+  block: 'layout.block',
+  fishbone: 'layout.fishbone',
+  network: 'layout.network',
+  bubble: 'layout.bubble',
+  bridge: 'layout.bridge',
+  multiflow: 'layout.multiflow',
+  dialogue: 'layout.dialogue',
+  tree: 'layout.tree',
+  flowchart: 'layout.flowchart',
+};
 
 interface AppToolbarProps {
   onNew?: () => void;
@@ -52,6 +68,8 @@ export function AppToolbar({
 }: AppToolbarProps): React.JSX.Element {
   const documentName = useMindMapStore((s) => s.documentName);
   const isDirty = useMindMapStore((s) => s.isDirty);
+  const layoutType = useMindMapStore((s) => s.layoutType);
+  const setLayoutType = useMindMapStore((s) => s.setLayoutType);
   const applyAutoLayoutManual = useMindMapStore((s) => s.applyAutoLayoutManual);
   const undo = useMindMapStore((s) => s.undo);
   const redo = useMindMapStore((s) => s.redo);
@@ -69,10 +87,22 @@ export function AppToolbar({
   const setCanvasOption = useUIStore((s) => s.setCanvasOption);
   const t = useT();
 
+  // «Перестроить раскладку»: форс-пересборка текущего типа — способ вернуть
+  // форму после ручного растаскивания узлов (nodeConstraint мягкий).
   const handleAutoLayout = useCallback(() => {
     applyAutoLayoutManual();
     setTimeout(triggerFitView, 50);
   }, [applyAutoLayoutManual, triggerFitView]);
+
+  // Смена типа раскладки = пересборка по правилам нового типа (setLayoutType
+  // сам вызывает applyAutoLayout); данные нод и рёбер не теряются.
+  const handleLayoutKindChange = useCallback(
+    (kind: LayoutKind) => {
+      setLayoutType(kind);
+      setTimeout(triggerFitView, 50);
+    },
+    [setLayoutType, triggerFitView],
+  );
 
   const menus: MenuDef[] = [
     {
@@ -202,6 +232,29 @@ export function AppToolbar({
           onClick={redo}
           disabled={!canRedo}
         />
+
+        <span className={styles.tileSep} aria-hidden="true" />
+
+        <ToolTile
+          icon="layout"
+          label={t('tile.rebuild')}
+          title={t('toolbar.rebuildLayout')}
+          onClick={handleAutoLayout}
+        />
+
+        <select
+          className={styles.handleVisSelect}
+          value={layoutType}
+          title={t('toolbar.layoutKind')}
+          aria-label={t('toolbar.layoutKind')}
+          onChange={(e) => handleLayoutKindChange(e.target.value as LayoutKind)}
+        >
+          {LAYOUT_KINDS.map((kind) => (
+            <option key={kind} value={kind}>
+              {t(LAYOUT_LABEL_KEYS[kind])}
+            </option>
+          ))}
+        </select>
 
         <span className={styles.tileSep} aria-hidden="true" />
 

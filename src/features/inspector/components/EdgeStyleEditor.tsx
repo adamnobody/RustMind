@@ -7,6 +7,7 @@ import {
   type EdgeArrowType,
   type EdgeLinePattern,
 } from '../../edges/types';
+import { Switch } from '../../../shared/ui/Switch/Switch';
 import { ColorField, NumberField, SegField, TextField } from './fields';
 import styles from './Inspector.module.css';
 
@@ -20,12 +21,16 @@ const startArrowOptions: { value: EdgeArrowType; label: string }[] = [
   { value: 'none', label: '—' },
   { value: 'open', label: '◁' },
   { value: 'filled', label: '◀' },
+  { value: 'dot', label: '●' },
+  { value: 'diamond', label: '◆' },
 ];
 
 const endArrowOptions: { value: EdgeArrowType; label: string }[] = [
   { value: 'none', label: '—' },
   { value: 'open', label: '▷' },
   { value: 'filled', label: '▶' },
+  { value: 'dot', label: '●' },
+  { value: 'diamond', label: '◆' },
 ];
 
 // Стартовые значения нативного color-input, когда переопределения ещё нет
@@ -118,6 +123,12 @@ export function EdgeStyleEditor({ edgeId, data }: EdgeStyleEditorProps): React.J
         value={style?.targetArrow ?? DEFAULT_EDGE_STYLE.targetArrow}
         options={endArrowOptions}
         onChange={(targetArrow) => set({ targetArrow })}
+      />
+
+      <Switch
+        label={t('edge.taper')}
+        checked={style?.taper ?? DEFAULT_EDGE_STYLE.taper}
+        onCheckedChange={(taper) => set({ taper })}
       />
     </div>
   );

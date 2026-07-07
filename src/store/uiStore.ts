@@ -41,6 +41,10 @@ interface UiState {
   selectedEdgeIds: string[];
   editingNodeId: string | null;
   editingIntent: NodeEditingIntent | null;
+  /** Ребро, чья подпись редактируется инлайн (двойной клик). Session-only. */
+  editingEdgeId: string | null;
+  /** Короткое всплывающее уведомление (например, «связь запрещена»). */
+  notice: string | null;
   theme: Theme;
   /** Язык интерфейса. */
   locale: Locale;
@@ -71,6 +75,9 @@ interface UiState {
   setEditingNodeId: (id: string | null, intent?: NodeEditingIntent) => void;
   startNodeEditing: (id: string, intent?: NodeEditingIntent) => void;
   clearNodeEditing: () => void;
+  setEditingEdgeId: (id: string | null) => void;
+  /** Показать тост; сам гаснет через пару секунд. */
+  showNotice: (message: string) => void;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   setLocale: (locale: Locale) => void;
@@ -162,6 +169,8 @@ export const useUIStore = create<UiState>()(
       selectedEdgeIds: [],
       editingNodeId: null,
       editingIntent: null,
+      editingEdgeId: null,
+      notice: null,
       theme: initialTheme,
       locale: DEFAULT_LOCALE,
       isSettingsOpen: false,
@@ -206,6 +215,17 @@ export const useUIStore = create<UiState>()(
           editingNodeId: null,
           editingIntent: null,
         }),
+      setEditingEdgeId: (id) => set({ editingEdgeId: id }),
+      showNotice: (message) => {
+        set({ notice: message });
+        // Гасим только СВОЁ сообщение: если за это время показали новое,
+        // таймер устаревшего не должен его стереть.
+        setTimeout(() => {
+          if (get().notice === message) {
+            set({ notice: null });
+          }
+        }, 2600);
+      },
       setTheme: (theme) => {
         applyTheme(theme);
         set({ theme });

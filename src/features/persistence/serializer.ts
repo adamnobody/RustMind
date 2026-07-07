@@ -5,12 +5,17 @@ import type { SerializedMindMap } from './schema';
 import { FILE_VERSION } from './schema';
 import { DEFAULT_HANDLE_VISIBILITY } from '../../shared/lib/constants';
 import { pruneStyle } from '../../shared/lib/style';
+import { coerceLayoutKind } from '../layout/engines/layoutTypes';
 
-const VALID_LAYOUT_TYPES: LayoutType[] = ['tree-LR', 'tree-TB', 'radial'];
 const VALID_HANDLE_VISIBILITIES: HandleVisibility[] = ['hidden', 'dashed', 'always'];
 
+/**
+ * Единая точка миграции layoutType: известные новые значения — как есть,
+ * legacy ('tree-LR'/'tree-TB' → 'hierarchy', 'radial' → 'tree') — мапятся,
+ * неизвестное — дефолт 'free'. Позиции узлов при этом не пересчитываются.
+ */
 function coerceLayoutType(value: string): LayoutType {
-  return VALID_LAYOUT_TYPES.includes(value as LayoutType) ? (value as LayoutType) : 'tree-LR';
+  return coerceLayoutKind(value);
 }
 
 function coerceHandleVisibility(value: string | undefined): HandleVisibility {

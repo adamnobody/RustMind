@@ -25,13 +25,13 @@ describe('serializer round-trip', () => {
     const nodes: AppNode[] = [makeNode('root', true), makeNode('child1'), makeNode('child2')];
     const edges: AppEdge[] = [makeEdge('root', 'child1'), makeEdge('root', 'child2')];
 
-    const serialized = serializeMindMap('Test Map', 'tree-LR', nodes, edges, defaultProjectSettings);
+    const serialized = serializeMindMap('Test Map', 'hierarchy', nodes, edges, defaultProjectSettings);
     const restored = deserializeMindMap(serialized);
 
     expect(restored.nodes).toHaveLength(3);
     expect(restored.edges).toHaveLength(2);
     expect(restored.documentName).toBe('Test Map');
-    expect(restored.layoutType).toBe('tree-LR');
+    expect(restored.layoutType).toBe('hierarchy');
 
     for (let i = 0; i < nodes.length; i++) {
       expect(restored.nodes[i].id).toBe(nodes[i].id);
@@ -55,11 +55,32 @@ describe('serializer round-trip', () => {
     expect(second.version).toBe(FILE_VERSION);
   });
 
-  it('coerceLayoutType заменяет неизвестный тип на tree-LR', () => {
+  it('coerceLayoutType заменяет неизвестный тип на free (дефолт)', () => {
     const nodes: AppNode[] = [makeNode('root', true)];
     const serialized = serializeMindMap('Doc', 'unknown-layout', nodes, [], defaultProjectSettings);
     const restored = deserializeMindMap(serialized);
-    expect(restored.layoutType).toBe('tree-LR');
+    expect(restored.layoutType).toBe('free');
+  });
+
+  it('миграция legacy layoutType: tree-LR/tree-TB → hierarchy, radial → tree', () => {
+    const nodes: AppNode[] = [makeNode('root', true)];
+    const expectations: Array<[string, string]> = [
+      ['tree-LR', 'hierarchy'],
+      ['tree-TB', 'hierarchy'],
+      ['radial', 'tree'],
+    ];
+    for (const [legacy, expected] of expectations) {
+      const serialized = serializeMindMap('Doc', legacy, nodes, [], defaultProjectSettings);
+      expect(deserializeMindMap(serialized).layoutType).toBe(expected);
+    }
+  });
+
+  it('новые LayoutKind переживают round-trip как есть', () => {
+    const nodes: AppNode[] = [makeNode('root', true)];
+    for (const kind of ['free', 'fishbone', 'flowchart', 'bubble']) {
+      const serialized = serializeMindMap('Doc', kind, nodes, [], defaultProjectSettings);
+      expect(deserializeMindMap(serialized).layoutType).toBe(kind);
+    }
   });
 
   it('handleOffsets переживают round-trip; отсутствие — не материализуется', () => {
@@ -280,6 +301,41 @@ describe('style and projectSettings', () => {
       sourceArrow: 'filled',
       label: 'connects to',
     });
+  });
+
+  it('EdgeStyle: новые стрелки (dot/diamond) и taper переживают round-trip', () => {
+    const nodes = [makeNode('a', true), makeNode('b')];
+    const edge: AppEdge = {
+      id: 'e1',
+      source: 'a',
+      target: 'b',
+      data: {
+        kind: 'free',
+        style: { sourceArrow: 'dot', targetArrow: 'diamond', taper: true },
+      },
+    };
+    const serialized = serializeMindMap('Doc', 'free', nodes, [edge], defaultProjectSettings);
+    // JSON-цикл — как при реальной записи на диск.
+    const restored = deserializeMindMap(
+      JSON.parse(JSON.stringify(serialized)) as SerializedMindMap,
+    );
+    expect(restored.edges[0].data?.style).toEqual({
+      sourceArrow: 'dot',
+      targetArrow: 'diamond',
+      taper: true,
+    });
+  });
+
+  it('EdgeStyle: taper=false (дефолт) НЕ пишется в файл', () => {
+    const nodes = [makeNode('a', true), makeNode('b')];
+    const edge: AppEdge = {
+      id: 'e1',
+      source: 'a',
+      target: 'b',
+      data: { kind: 'free', style: { taper: false, sourceArrow: 'dot' } },
+    };
+    const serialized = serializeMindMap('Doc', 'free', nodes, [edge], defaultProjectSettings);
+    expect(serialized.edges[0].data?.style).toEqual({ sourceArrow: 'dot' });
   });
 
   it('EdgeStyle: стиль текста ребра (labelFontSize/labelColor) переживает round-trip', () => {
@@ -565,7 +621,7 @@ describe('isDirty tracking', () => {
 
     const payload = {
       documentName: 'Loaded',
-      layoutType: 'tree-LR' as const,
+      layoutType: 'free' as const,
       nodes: [makeNode('root', true)],
       edges: [],
     };
