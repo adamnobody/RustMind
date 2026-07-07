@@ -4,9 +4,32 @@
  * — 'network' (force-directed, хранит собственные мягкие позиции, допускает
  * произвольные связи и циклы). См. features/layout/strategies.
  */
-export type LayoutKind = 'hierarchy' | 'fishbone' | 'network' | 'bubble' | 'tree';
+export type LayoutKind =
+  | 'hierarchy'
+  | 'right'
+  | 'left'
+  | 'both'
+  | 'tree'
+  | 'org'
+  | 'logic'
+  | 'fishbone'
+  | 'timeline'
+  | 'bubble'
+  | 'network';
 
-export const LAYOUT_KINDS: LayoutKind[] = ['hierarchy', 'fishbone', 'network', 'bubble', 'tree'];
+export const LAYOUT_KINDS: LayoutKind[] = [
+  'hierarchy',
+  'right',
+  'left',
+  'both',
+  'tree',
+  'org',
+  'logic',
+  'fishbone',
+  'timeline',
+  'bubble',
+  'network',
+];
 
 export const DEFAULT_LAYOUT_KIND: LayoutKind = 'hierarchy';
 

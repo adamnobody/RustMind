@@ -12,10 +12,16 @@ import styles from './AppToolbar.module.css';
 /** Локализованные названия раскладок для переключателя. */
 const LAYOUT_LABEL_KEYS: Record<LayoutKind, TranslationKey> = {
   hierarchy: 'layout.hierarchy',
-  fishbone: 'layout.fishbone',
-  network: 'layout.network',
-  bubble: 'layout.bubble',
+  right: 'layout.right',
+  left: 'layout.left',
+  both: 'layout.both',
   tree: 'layout.tree',
+  org: 'layout.org',
+  logic: 'layout.logic',
+  fishbone: 'layout.fishbone',
+  timeline: 'layout.timeline',
+  bubble: 'layout.bubble',
+  network: 'layout.network',
 };
 
 interface AppToolbarProps {

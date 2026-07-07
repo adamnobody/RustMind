@@ -2,10 +2,16 @@ import type { AppNode, AppEdge } from '../../../store/types';
 import type { LayoutKind } from '../engines/layoutTypes';
 import type { LayoutStrategy } from './types';
 import { hierarchyStrategy } from './hierarchy';
+import { rightStrategy } from './right';
+import { leftStrategy } from './left';
+import { bothStrategy } from './both';
+import { orgStrategy } from './org';
+import { logicStrategy } from './logic';
 import { fishboneStrategy } from './fishbone';
 import { networkStrategy } from './network';
 import { bubbleStrategy } from './bubble';
 import { radialTreeStrategy } from './radialTree';
+import { timelineStrategy } from './timeline';
 
 /**
  * Реестр стратегий по ключу LayoutKind. Каждая стратегия изолирована в своём
@@ -14,10 +20,16 @@ import { radialTreeStrategy } from './radialTree';
  */
 export const LAYOUT_STRATEGIES: Record<LayoutKind, LayoutStrategy> = {
   hierarchy: hierarchyStrategy,
-  fishbone: fishboneStrategy,
-  network: networkStrategy,
-  bubble: bubbleStrategy,
+  right: rightStrategy,
+  left: leftStrategy,
+  both: bothStrategy,
   tree: radialTreeStrategy,
+  org: orgStrategy,
+  logic: logicStrategy,
+  fishbone: fishboneStrategy,
+  timeline: timelineStrategy,
+  bubble: bubbleStrategy,
+  network: networkStrategy,
 };
 
 export function getLayoutStrategy(kind: LayoutKind): LayoutStrategy {
