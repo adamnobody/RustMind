@@ -74,6 +74,21 @@ export interface MindMapState {
     handles?: { sourceHandle?: string; targetHandle?: string },
   ) => string | null;
   addSiblingNode: (siblingId: string) => string | null;
+  /**
+   * Реприкрепление в структуре (drag = XMind-модель): переносит nodeId под
+   * newParentId, вставляя его в позицию index среди новых сиблингов (конец,
+   * если не задан). Отклоняется, если newParentId — потомок nodeId (или сам
+   * nodeId — цикл), если nodeId — корень, или если canConnect текущей
+   * раскладки запрещает связь. Возвращает true при успехе.
+   * `skipHistory` — канвас уже снял снимок на старте drag (pushHistory); без
+   * этого флага здесь появилась бы вторая запись undo на один жест.
+   */
+  moveNode: (
+    nodeId: string,
+    newParentId: string,
+    index?: number,
+    options?: { skipHistory?: boolean },
+  ) => boolean;
   updateNodeLabel: (id: string, label: string) => void;
   updateNodeData: (id: string, data: Partial<MindNodeData>) => void;
   /**
@@ -112,7 +127,8 @@ export interface MindMapState {
   setLayoutType: (type: LayoutType) => void;
   applyAutoLayout: () => void;
   applyAutoLayoutManual: () => void;
-  applyAutoLayoutIfEnabled: () => void;
+  /** Пересчёт позиций после структурного изменения — только для 'derived' раскладок (не network). */
+  recomputeIfDerived: () => void;
 
   loadDocument: (payload: LoadDocumentPayload) => void;
   resetDocument: () => void;

@@ -1,18 +1,25 @@
 import type { AppNode, AppEdge } from '../../../store/types';
 import type { LayoutKind } from '../engines/layoutTypes';
 import type { TranslationKey } from '../../../shared/i18n/translations';
+import type { EdgeRouting } from '../../edges/lib/routing';
 
 /**
  * Декларации ограничений раскладки (БЛОК 0):
- * - nodeConstraint — всегда мягкий: drag разрешён при любой раскладке, форма
- *   не удерживается силой и восстанавливается пересборкой. 'free' означает,
- *   что у раскладки вообще нет собственной формы (позиции как есть).
+ * - nodeConstraint — всегда мягкий: drag разрешён (реинтерпретируется как
+ *   reparent/reorder структуры), форма не удерживается силой и восстанавливается
+ *   пересборкой после любого структурного изменения.
  * - edgeConstraint — жёсткий: 'typed' раскладка блокирует СОЗДАНИЕ рёбер,
  *   нарушающих семантику типа (предикат canConnect). Существующие невалидные
  *   рёбра не удаляются — только помечаются визуально.
  */
-export type NodeConstraint = 'free' | 'soft';
+export type NodeConstraint = 'soft';
 export type EdgeConstraint = 'any' | 'typed';
+/**
+ * 'derived' — позиции ВСЕГДА пересчитываются движком из структуры дерева,
+ * пользователь их не задаёт. 'stored' — только у network: позиции мягкие,
+ * хранятся как есть (force-sim), свободный drag.
+ */
+export type PositionMode = 'derived' | 'stored';
 
 export interface ConnectContext {
   nodes: AppNode[];
@@ -23,6 +30,15 @@ export interface LayoutStrategy {
   kind: LayoutKind;
   nodeConstraint: NodeConstraint;
   edgeConstraint: EdgeConstraint;
+  positionMode: PositionMode;
+  /**
+   * Предпочтительный роутинг рёбер этой раскладки (только рендер, не данные):
+   * - 'orthogonal' — H/V сегменты, углы 90°, порты на обращённых сторонах;
+   * - 'bezier' — кривая с выходом перпендикулярно стороне, кривизна ∝ расстоянию;
+   * - 'radial' — порт вдоль радиального луча, почти прямые «спицы»;
+   * - 'straight' — прямая под углом ветви (fishbone).
+   */
+  edgeRouting: EdgeRouting;
   /** Ключ i18n с короткой причиной запрета связи (тост при блокировке). */
   blockedReasonKey: TranslationKey;
   /**

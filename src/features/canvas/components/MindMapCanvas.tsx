@@ -10,6 +10,7 @@ import {
   type FinalConnectionState,
   type Edge,
   type Connection,
+  type Node as RFNode,
 } from '@xyflow/react';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -20,6 +21,7 @@ import { MindEdge } from '../../edges/components/MindEdge';
 import { MIND_NODE_TYPE } from '../../nodes/types';
 import { MIND_EDGE_TYPE, oppositeHandle } from '../../edges/types';
 import { getLayoutStrategy, isEdgeValidForLayout } from '../../layout/strategies/registry';
+import { resolveDropTarget } from '../lib/dropTarget';
 
 import { useT, translate } from '../../../shared/i18n';
 import { useGlobalHotkeys } from '../hooks/useGlobalHotkeys';
@@ -54,6 +56,8 @@ function CanvasInner(): React.JSX.Element {
     onEdgesChange,
     onConnect,
     addChildNode,
+    moveNode,
+    applyAutoLayout,
     pushHistory,
     markDirty,
   } = useMindMapStore(
@@ -64,6 +68,8 @@ function CanvasInner(): React.JSX.Element {
       onEdgesChange: s.onEdgesChange,
       onConnect: s.onConnect,
       addChildNode: s.addChildNode,
+      moveNode: s.moveNode,
+      applyAutoLayout: s.applyAutoLayout,
       pushHistory: s.pushHistory,
       markDirty: s.markDirty,
     })),
@@ -175,9 +181,49 @@ function CanvasInner(): React.JSX.Element {
     pushHistory();
   }, [pushHistory]);
 
-  const handleNodeDragStop = useCallback(() => {
-    markDirty();
-  }, [markDirty]);
+  // Точка ссылки для drop-резолвера — центр перетаскиваемого узла в flow-
+  // координатах (RF уже обновил node.position во время drag).
+  const dragPoint = (node: RFNode): { x: number; y: number } => {
+    const width = node.measured?.width ?? 0;
+    const height = node.measured?.height ?? 0;
+    return { x: node.position.x + width / 2, y: node.position.y + height / 2 };
+  };
+
+  // XMind-модель: во время drag узла (для derived-раскладок — не network)
+  // подсвечиваем, куда он встанет при отпускании — будущий родитель (reparent)
+  // или группа сиблингов (reorder). Ничего не сохраняется, чисто визуально.
+  const handleNodeDrag = useCallback((_event: unknown, node: RFNode) => {
+    const { layoutType } = useMindMapStore.getState();
+    if (getLayoutStrategy(layoutType).positionMode !== 'derived') return;
+    const { nodes: n, edges: e } = useMindMapStore.getState();
+    const resolution = resolveDropTarget(node.id, dragPoint(node), n, e);
+    useUIStore.getState().setDragIndicator(resolution.kind === 'none' ? null : resolution);
+  }, []);
+
+  // Drop = переприкрепление в структуре, никогда свободное перемещение (кроме
+  // network — там drag остаётся свободным, позиции хранятся как есть).
+  const handleNodeDragStop = useCallback(
+    (_event: unknown, node: RFNode) => {
+      useUIStore.getState().setDragIndicator(null);
+      const { layoutType } = useMindMapStore.getState();
+      if (getLayoutStrategy(layoutType).positionMode === 'derived') {
+        const { nodes: n, edges: e } = useMindMapStore.getState();
+        const resolution = resolveDropTarget(node.id, dragPoint(node), n, e);
+        // pushHistory на старте drag уже снял снимок — здесь своей записи не нужно.
+        if (resolution.kind === 'reparent') {
+          moveNode(node.id, resolution.parentId, undefined, { skipHistory: true });
+        } else if (resolution.kind === 'reorder') {
+          moveNode(node.id, resolution.parentId, resolution.index, { skipHistory: true });
+        } else {
+          // Никуда не попали — узел щёлкает на вычисленную позицию, улететь
+          // в пустоту нельзя.
+          applyAutoLayout();
+        }
+      }
+      markDirty();
+    },
+    [moveNode, applyAutoLayout, markDirty],
+  );
 
   return (
     <div data-handle-visibility={handleVisibility} className={styles.wrapper}>
@@ -191,6 +237,7 @@ function CanvasInner(): React.JSX.Element {
         onEdgeDoubleClick={handleEdgeDoubleClick}
         isValidConnection={isValidConnection}
         onNodeDragStart={handleNodeDragStart}
+        onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
         onSelectionChange={handleSelectionChange}
         onPaneClick={() => setSelectedNodeId(null)}

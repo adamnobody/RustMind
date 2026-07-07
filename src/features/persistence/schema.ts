@@ -1,9 +1,14 @@
 /**
  * v3: EdgeStyle расширен (sourceArrow/targetArrow: +dot/diamond; taper),
  * layoutType — новый набор LayoutKind (старые 'tree-LR'/'tree-TB'/'radial'
- * мапятся при загрузке). Все новые поля опциональны — файлы v1/v2 читаются.
+ * мапятся при загрузке).
+ * v4: structure-driven модель — позиции больше не источник истины (кроме
+ * network). data.order — порядок среди сиблингов; часть layoutType-набора
+ * упразднена (free/block/bridge/multiflow/dialogue/flowchart — мапятся на
+ * ближайший из оставшихся при загрузке). Все новые поля опциональны —
+ * файлы v1–v3 читаются, normalizeStructure чинит недостающую структуру.
  */
-export const FILE_VERSION = 3;
+export const FILE_VERSION = 4;
 export const FILE_EXTENSION = 'rustmind';
 
 interface SerializedNodeStyle {
@@ -42,6 +47,8 @@ export interface SerializedNode {
     style?: SerializedNodeStyle;
     /** Смещения хэндлов (проценты); хранятся только отклонения от центра. */
     handleOffsets?: Record<string, number>;
+    /** Порядок среди сиблингов (v4+). Отсутствие — normalizeStructure забэкфиллит. */
+    order?: number;
   };
 }
 

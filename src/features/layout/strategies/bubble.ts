@@ -9,6 +9,8 @@ export const bubbleStrategy: LayoutStrategy = {
   kind: 'bubble',
   nodeConstraint: 'soft',
   edgeConstraint: 'typed',
+  positionMode: 'derived',
+  edgeRouting: 'radial',
   blockedReasonKey: 'constraint.bubble',
   canConnect: (sourceId, targetId, ctx) => {
     if (sourceId === targetId) return false;

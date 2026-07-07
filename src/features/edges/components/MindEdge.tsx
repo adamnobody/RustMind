@@ -2,13 +2,20 @@ import type { CSSProperties } from 'react';
 import {
   BaseEdge,
   EdgeLabelRenderer,
-  getBezierPath,
-  getSmoothStepPath,
-  Position,
+  useInternalNode,
   type EdgeProps,
+  type InternalNode,
 } from '@xyflow/react';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
+import { getLayoutStrategy } from '../../layout/strategies/registry';
+import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../../shared/lib/constants';
+import {
+  routeEdge,
+  type CubicControls,
+  type Point,
+  type Rect,
+} from '../lib/routing';
 import {
   DEFAULT_EDGE_STYLE,
   type EdgeArrowType,
@@ -76,38 +83,25 @@ function dashArrayFor(pattern: EdgeLinePattern, strokeWidth: number): string | u
   }
 }
 
-/** Контрольная точка кубической Безье — та же логика, что в getBezierPath RF. */
-function controlPoint(x: number, y: number, pos: Position, x2: number, y2: number): [number, number] {
-  const offset = (distance: number): number =>
-    distance >= 0 ? 0.5 * distance : 25 * Math.sqrt(-distance) * 0.25;
-  switch (pos) {
-    case Position.Left:
-      return [x - offset(x - x2), y];
-    case Position.Right:
-      return [x + offset(x2 - x), y];
-    case Position.Top:
-      return [x, y - offset(y - y2)];
-    default:
-      return [x, y + offset(y2 - y)];
-  }
+/**
+ * Прямоугольник ноды в координатах потока. Fallback, если нода ещё не
+ * измерена/не найдена: нулевой rect в точке хэндла (portToward выродится в
+ * саму точку — ребро рисуется от неё, как раньше).
+ */
+function nodeRect(node: InternalNode | undefined, fx: number, fy: number): Rect {
+  if (!node) return { x: fx, y: fy, width: 0, height: 0 };
+  const fallback = node.data?.isRoot ? ROOT_NODE_SIZE : DEFAULT_NODE_SIZE;
+  const width = node.measured?.width ?? fallback.width;
+  const height = node.measured?.height ?? fallback.height;
+  return { x: node.internals.positionAbsolute.x, y: node.internals.positionAbsolute.y, width, height };
 }
 
 /**
- * «Клин» сужения: сэмплируем ту же кубическую Безье, что рисует BaseEdge, и
- * строим замкнутый контур с шириной от полной у истока до ~15% у цели.
- * Возвращает d для <path fill>.
+ * «Клин» сужения: сэмплируем ТУ ЖЕ кубическую Безье, что нарисована путём
+ * (для straight контрольные точки лежат на прямой), и строим замкнутый контур
+ * с шириной от полной у истока до ~15% у цели. Возвращает d для <path fill>.
  */
-function taperedPathD(
-  sx: number,
-  sy: number,
-  sp: Position,
-  tx: number,
-  ty: number,
-  tp: Position,
-  width: number,
-): string {
-  const [c1x, c1y] = controlPoint(sx, sy, sp, tx, ty);
-  const [c2x, c2y] = controlPoint(tx, ty, tp, sx, sy);
+function taperedPathD(sp: Point, c: CubicControls, tp: Point, width: number): string {
   const SAMPLES = 24;
   const left: string[] = [];
   const right: string[] = [];
@@ -115,10 +109,10 @@ function taperedPathD(
     const t = i / SAMPLES;
     const mt = 1 - t;
     // Точка и производная кубической Безье.
-    const x = mt ** 3 * sx + 3 * mt ** 2 * t * c1x + 3 * mt * t ** 2 * c2x + t ** 3 * tx;
-    const y = mt ** 3 * sy + 3 * mt ** 2 * t * c1y + 3 * mt * t ** 2 * c2y + t ** 3 * ty;
-    const dx = 3 * mt ** 2 * (c1x - sx) + 6 * mt * t * (c2x - c1x) + 3 * t ** 2 * (tx - c2x);
-    const dy = 3 * mt ** 2 * (c1y - sy) + 6 * mt * t * (c2y - c1y) + 3 * t ** 2 * (ty - c2y);
+    const x = mt ** 3 * sp.x + 3 * mt ** 2 * t * c.c1x + 3 * mt * t ** 2 * c.c2x + t ** 3 * tp.x;
+    const y = mt ** 3 * sp.y + 3 * mt ** 2 * t * c.c1y + 3 * mt * t ** 2 * c.c2y + t ** 3 * tp.y;
+    const dx = 3 * mt ** 2 * (c.c1x - sp.x) + 6 * mt * t * (c.c2x - c.c1x) + 3 * t ** 2 * (tp.x - c.c2x);
+    const dy = 3 * mt ** 2 * (c.c1y - sp.y) + 6 * mt * t * (c.c2y - c.c1y) + 3 * t ** 2 * (tp.y - c.c2y);
     const len = Math.hypot(dx, dy) || 1;
     // Нормаль к касательной; полуширина линейно сужается к цели.
     const half = (width * (1 - 0.85 * t)) / 2 + 0.3;
@@ -132,32 +126,31 @@ function taperedPathD(
 
 export function MindEdge({
   id,
+  source,
+  target,
   sourceX,
   sourceY,
   targetX,
   targetY,
-  sourcePosition,
-  targetPosition,
   selected,
   data,
 }: EdgeProps): React.JSX.Element {
-  // Блок-структура и блок-схема рисуются ортогонально (углы 90°) — тип пути
-  // определяет активная раскладка, а не само ребро.
-  const orthogonal = useMindMapStore((s) => s.layoutType === 'block' || s.layoutType === 'flowchart');
+  // Роутинг объявляет стратегия раскладки (только рендер, данные не трогаем):
+  // порты выбираются динамически по взаимному положению нод — точка на границе
+  // прямоугольника, обращённая к другому концу, а не фиксированный хэндл.
+  const routing = useMindMapStore((s) => getLayoutStrategy(s.layoutType).edgeRouting);
   const editing = useUIStore((s) => s.editingEdgeId === id);
   const setEditingEdgeId = useUIStore((s) => s.setEditingEdgeId);
 
-  const pathParams = {
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-  };
-  const [edgePath, labelX, labelY] = orthogonal
-    ? getSmoothStepPath({ ...pathParams, borderRadius: 4 })
-    : getBezierPath(pathParams);
+  const sourceNode = useInternalNode(source);
+  const targetNode = useInternalNode(target);
+
+  const routed = routeEdge(
+    nodeRect(sourceNode, sourceX, sourceY),
+    nodeRect(targetNode, targetX, targetY),
+    routing,
+  );
+  const { path: edgePath, labelX, labelY } = routed;
 
   const edgeData = data as MindEdgeData | undefined;
   const style = { ...DEFAULT_EDGE_STYLE, ...edgeData?.style };
@@ -179,8 +172,8 @@ export function MindEdge({
 
   // Сужение реализовано заливкой-«клином» поверх невидимого базового пути
   // (он остаётся для интеракции и маркеров); в ортогональном режиме taper
-  // неприменим — там путь ломаный, рисуем обычный штрих.
-  const taper = style.taper && !orthogonal;
+  // неприменим — там путь ломаный (curve отсутствует), рисуем обычный штрих.
+  const taper = style.taper && routed.curve !== undefined;
 
   const pathStyle: CSSProperties = {
     stroke: taper ? 'transparent' : stroke,
@@ -213,17 +206,9 @@ export function MindEdge({
         markerEnd={targetArrow !== 'none' ? `url(#${markerEndId})` : undefined}
         style={pathStyle}
       />
-      {taper && (
+      {taper && routed.curve && (
         <path
-          d={taperedPathD(
-            sourceX,
-            sourceY,
-            sourcePosition,
-            targetX,
-            targetY,
-            targetPosition,
-            strokeWidth,
-          )}
+          d={taperedPathD(routed.source, routed.curve, routed.target, strokeWidth)}
           fill={stroke}
           opacity={invalid ? 0.55 : undefined}
           style={{ pointerEvents: 'none' }}

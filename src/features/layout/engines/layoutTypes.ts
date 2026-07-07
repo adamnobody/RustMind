@@ -1,47 +1,30 @@
 /**
- * Тип раскладки документа. 'free' — нулевой режим: позиции как есть, любые
- * связи (текущее поведение приложения, сохранённое как один из режимов).
- * Остальные — типизированные mind-map-раскладки со своими ограничениями
- * (см. features/layout/strategies).
+ * Тип раскладки документа. Позиции узлов всегда вычисляются движком раскладки
+ * из структуры дерева — пользователь редактирует только структуру. Исключение
+ * — 'network' (force-directed, хранит собственные мягкие позиции, допускает
+ * произвольные связи и циклы). См. features/layout/strategies.
  */
-export type LayoutKind =
-  | 'free'
-  | 'hierarchy'
-  | 'block'
-  | 'fishbone'
-  | 'network'
-  | 'bubble'
-  | 'bridge'
-  | 'multiflow'
-  | 'dialogue'
-  | 'tree'
-  | 'flowchart';
+export type LayoutKind = 'hierarchy' | 'fishbone' | 'network' | 'bubble' | 'tree';
 
-export const LAYOUT_KINDS: LayoutKind[] = [
-  'free',
-  'hierarchy',
-  'block',
-  'fishbone',
-  'network',
-  'bubble',
-  'bridge',
-  'multiflow',
-  'dialogue',
-  'tree',
-  'flowchart',
-];
+export const LAYOUT_KINDS: LayoutKind[] = ['hierarchy', 'fishbone', 'network', 'bubble', 'tree'];
 
-export const DEFAULT_LAYOUT_KIND: LayoutKind = 'free';
+export const DEFAULT_LAYOUT_KIND: LayoutKind = 'hierarchy';
 
 /**
- * Значения layoutType из файлов до версии 3. Старые файлы открываются без
- * ошибок: значение мапится на ближайший новый тип, позиции узлов при этом
- * не трогаются (пересчёт — только по явной пересборке).
+ * Значения layoutType из файлов до версии 4 (включая уже удалённые типы
+ * 'free'/'block'/'bridge'/'multiflow'/'dialogue'/'flowchart'). Старые файлы
+ * открываются без ошибок: значение мапится на ближайший из оставшихся типов.
  */
 export const LEGACY_LAYOUT_MAP: Record<string, LayoutKind> = {
   'tree-LR': 'hierarchy',
   'tree-TB': 'hierarchy',
   radial: 'tree',
+  free: 'hierarchy',
+  block: 'hierarchy',
+  bridge: 'hierarchy',
+  multiflow: 'hierarchy',
+  dialogue: 'hierarchy',
+  flowchart: 'hierarchy',
 };
 
 export function coerceLayoutKind(value: string): LayoutKind {

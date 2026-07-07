@@ -16,12 +16,22 @@ export interface NodeEditingIntent {
   initialValue?: string;
 }
 
+/**
+ * Транзиентный индикатор drop-цели во время drag (XMind-модель): куда встанет
+ * перетаскиваемый узел, если отпустить сейчас. Никогда не сериализуется и не
+ * попадает в историю — только для подсветки будущего родителя в MindNode.
+ */
+export interface DragIndicator {
+  kind: 'reparent' | 'reorder';
+  parentId: string;
+  index?: number;
+}
+
 interface UiSettings {
   nodeFontSize: NodeFontSize;
   showGrid: boolean;
   showMiniMap: boolean;
   showControls: boolean;
-  autoLayoutOnChange: boolean;
   confirmBranchDelete: boolean;
   /** Паттерн фона холста (когда showGrid включён). */
   backgroundPattern: BackgroundPattern;
@@ -64,6 +74,10 @@ interface UiState {
   /** fitView callback registered by the canvas component. Not persisted. */
   _fitViewFn: (() => void) | null;
 
+  /** Текущая drop-цель во время drag узла (see DragIndicator). Session-only. */
+  dragIndicator: DragIndicator | null;
+  setDragIndicator: (indicator: DragIndicator | null) => void;
+
   setSelectedNodeId: (id: string | null) => void;
   /** Authoritative selection setter called by the canvas; syncs inspector auto-open. */
   setSelection: (nodeIds: string[], edgeIds: string[]) => void;
@@ -94,10 +108,7 @@ interface UiState {
   setHomePalette: (palette: HomePalette) => void;
   setHomeAnimation: (animation: HomeAnimation) => void;
   setHomeGrain: (enabled: boolean) => void;
-  setBehaviorOption: (
-    key: 'autoLayoutOnChange' | 'confirmBranchDelete',
-    value: boolean,
-  ) => void;
+  setBehaviorOption: (key: 'confirmBranchDelete', value: boolean) => void;
   registerFitView: (fn: () => void) => void;
   triggerFitView: () => void;
 }
@@ -109,7 +120,6 @@ const defaultSettings: UiSettings = {
   showGrid: true,
   showMiniMap: true,
   showControls: true,
-  autoLayoutOnChange: false,
   confirmBranchDelete: false,
   backgroundPattern: 'dots',
   // 26 ≈ прежняя захардкоженная альфа сетки (rgba …, 0.26)
@@ -178,6 +188,8 @@ export const useUIStore = create<UiState>()(
       inspectorOpen: false,
       inspectorManuallyHidden: false,
       _fitViewFn: null,
+      dragIndicator: null,
+      setDragIndicator: (indicator) => set({ dragIndicator: indicator }),
 
       setSelectedNodeId: (id) => get().setSelection(id ? [id] : [], []),
       setSelection: (nodeIds, edgeIds) =>

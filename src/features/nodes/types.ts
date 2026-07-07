@@ -50,6 +50,12 @@ export interface MindNodeData {
   note?: string;
   style?: NodeStyle;
   handleOffsets?: HandleOffsets;
+  /**
+   * Порядок среди сиблингов (структурная модель раскладки). Опционально на
+   * границе типов/сериализации, но после normalizeStructure у каждого узла в
+   * рантайме есть конкретное значение — не хранится только для network.
+   */
+  order?: number;
   [key: string]: unknown; // требование @xyflow/react v12 для Record-совместимости
 }
 

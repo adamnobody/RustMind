@@ -1,17 +1,11 @@
 import type { AppNode, AppEdge } from '../../../store/types';
 import type { LayoutKind } from '../engines/layoutTypes';
 import type { LayoutStrategy } from './types';
-import { freeStrategy } from './free';
 import { hierarchyStrategy } from './hierarchy';
-import { blockStrategy } from './block';
 import { fishboneStrategy } from './fishbone';
 import { networkStrategy } from './network';
 import { bubbleStrategy } from './bubble';
-import { bridgeStrategy } from './bridge';
-import { multiflowStrategy } from './multiflow';
-import { dialogueStrategy } from './dialogue';
 import { radialTreeStrategy } from './radialTree';
-import { flowchartStrategy } from './flowchart';
 
 /**
  * Реестр стратегий по ключу LayoutKind. Каждая стратегия изолирована в своём
@@ -19,21 +13,15 @@ import { flowchartStrategy } from './flowchart';
  * canConnect) — см. strategies/types.ts.
  */
 export const LAYOUT_STRATEGIES: Record<LayoutKind, LayoutStrategy> = {
-  free: freeStrategy,
   hierarchy: hierarchyStrategy,
-  block: blockStrategy,
   fishbone: fishboneStrategy,
   network: networkStrategy,
   bubble: bubbleStrategy,
-  bridge: bridgeStrategy,
-  multiflow: multiflowStrategy,
-  dialogue: dialogueStrategy,
   tree: radialTreeStrategy,
-  flowchart: flowchartStrategy,
 };
 
 export function getLayoutStrategy(kind: LayoutKind): LayoutStrategy {
-  return LAYOUT_STRATEGIES[kind] ?? freeStrategy;
+  return LAYOUT_STRATEGIES[kind] ?? hierarchyStrategy;
 }
 
 /**

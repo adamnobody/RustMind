@@ -267,6 +267,11 @@ describe('mindMapStore — fitView при undo/redo по категории', ()
 describe('mindMapStore — onConnect', () => {
   beforeEach(() => {
     useMindMapStore.getState().resetDocument();
+    // Дефолт 'hierarchy' типизирован (canConnectAsTree) — эти тесты проверяют
+    // общий механизм free-связей независимо от семантики раскладки, поэтому
+    // переключаемся на network (edgeConstraint: 'any') напрямую, в обход
+    // setLayoutType (чтобы не плодить лишнюю запись истории 'layout').
+    useMindMapStore.setState({ layoutType: 'network' });
   });
 
   it('onConnect создаёт free-ребро с sourceHandle/targetHandle', () => {
@@ -380,7 +385,7 @@ describe('mindMapStore — projectSettings', () => {
   it('loadDocument восстанавливает projectSettings из payload', () => {
     useMindMapStore.getState().loadDocument({
       documentName: 'Test',
-      layoutType: 'free',
+      layoutType: 'hierarchy',
       nodes: [],
       edges: [],
       projectSettings: { handleVisibility: 'hidden' },
@@ -394,7 +399,7 @@ describe('mindMapStore — projectSettings', () => {
     // Загружаем документ без projectSettings (старый файл)
     useMindMapStore.getState().loadDocument({
       documentName: 'Old',
-      layoutType: 'free',
+      layoutType: 'hierarchy',
       nodes: [],
       edges: [],
     });
@@ -405,6 +410,9 @@ describe('mindMapStore — projectSettings', () => {
 describe('mindMapStore — хэндлы рёбер', () => {
   beforeEach(() => {
     useMindMapStore.getState().resetDocument();
+    // network: edgeConstraint 'any' — нужен для onConnect(child→root) в третьем
+    // тесте; остальным двум тестам блока тип раскладки не важен.
+    useMindMapStore.setState({ layoutType: 'network' });
   });
 
   it('addChildNode с handles сохраняет переданный хэндл (drag-в-пустоту)', () => {
@@ -618,6 +626,9 @@ describe('mindMapStore — setEdgeStyle / deleteEdges (шаг 15)', () => {
 
   beforeEach(() => {
     useMindMapStore.getState().resetDocument();
+    // network: edgeConstraint 'any' — seedGraph рисует free-связь child→root,
+    // которую hierarchy (canConnectAsTree) блокирует (root не может быть целью).
+    useMindMapStore.setState({ layoutType: 'network' });
   });
 
   it('применяет не-дефолтные поля и сохраняет kind ребра', () => {
@@ -676,5 +687,134 @@ describe('mindMapStore — setEdgeStyle / deleteEdges (шаг 15)', () => {
     const state = useMindMapStore.getState();
     expect(state.edges.find((e) => e.id === treeEdgeId)).toBeDefined();
     expect(state.past.length).toBe(before);
+  });
+});
+
+describe('mindMapStore — структурная модель (Tab/Enter, moveNode)', () => {
+  beforeEach(() => {
+    useMindMapStore.getState().resetDocument();
+  });
+
+  it('Tab (addChildNode) даёт валидную конечную позицию, не (0,0), после пересчёта', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const childId = store.addChildNode(rootId)!;
+
+    const node = useMindMapStore.getState().nodes.find((n) => n.id === childId)!;
+    expect(Number.isFinite(node.position.x)).toBe(true);
+    expect(Number.isFinite(node.position.y)).toBe(true);
+    expect(node.position).not.toEqual({ x: 0, y: 0 });
+  });
+
+  it('Enter (addSiblingNode) даёт валидную конечную позицию и order сразу после текущего', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const firstId = store.addChildNode(rootId)!;
+    const siblingId = useMindMapStore.getState().addSiblingNode(firstId)!;
+
+    const state = useMindMapStore.getState();
+    const sibling = state.nodes.find((n) => n.id === siblingId)!;
+    const first = state.nodes.find((n) => n.id === firstId)!;
+    expect(Number.isFinite(sibling.position.x)).toBe(true);
+    expect(Number.isFinite(sibling.position.y)).toBe(true);
+    expect(sibling.data.order).toBe((first.data.order ?? 0) + 1);
+  });
+
+  it('несколько Tab подряд на одном родителе не перекрываются (разные order/позиции)', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const ids = [
+      store.addChildNode(rootId)!,
+      useMindMapStore.getState().addChildNode(rootId)!,
+      useMindMapStore.getState().addChildNode(rootId)!,
+    ];
+
+    const nodes = useMindMapStore.getState().nodes.filter((n) => ids.includes(n.id));
+    const orders = nodes.map((n) => n.data.order);
+    expect(new Set(orders).size).toBe(3); // все order разные
+    const positions = nodes.map((n) => `${n.position.x},${n.position.y}`);
+    expect(new Set(positions).size).toBe(3); // никто не наложился
+  });
+
+  it('moveNode реприкрепляет узел к новому родителю и пересчитывает позиции', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const aId = store.addChildNode(rootId)!;
+    const bId = useMindMapStore.getState().addChildNode(rootId)!;
+
+    const ok = useMindMapStore.getState().moveNode(bId, aId);
+    expect(ok).toBe(true);
+
+    const state = useMindMapStore.getState();
+    expect(state.getParentId(bId)).toBe(aId);
+    const b = state.nodes.find((n) => n.id === bId)!;
+    expect(Number.isFinite(b.position.x)).toBe(true);
+    expect(Number.isFinite(b.position.y)).toBe(true);
+  });
+
+  it('moveNode отклоняет цикл: нельзя прикрепить узел к собственному потомку', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const parentId = store.addChildNode(rootId)!;
+    const childId = useMindMapStore.getState().addChildNode(parentId)!;
+
+    const ok = useMindMapStore.getState().moveNode(parentId, childId);
+    expect(ok).toBe(false);
+    // Структура не изменилась.
+    expect(useMindMapStore.getState().getParentId(parentId)).toBe(rootId);
+  });
+
+  it('moveNode отклоняет прикрепление узла к самому себе', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const aId = store.addChildNode(rootId)!;
+    expect(useMindMapStore.getState().moveNode(aId, aId)).toBe(false);
+  });
+
+  it('moveNode отклоняет реприкрепление корня', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const aId = store.addChildNode(rootId)!;
+    expect(useMindMapStore.getState().moveNode(rootId, aId)).toBe(false);
+  });
+
+  it('moveNode внутри того же родителя переставляет order (reorder)', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const aId = store.addChildNode(rootId)!;
+    const bId = useMindMapStore.getState().addChildNode(rootId)!;
+
+    // A и B — сиблинги корня; A изначально раньше B (order 0 < 1).
+    useMindMapStore.getState().moveNode(aId, rootId, 1); // A встаёт после B
+    const state = useMindMapStore.getState();
+    const a = state.nodes.find((n) => n.id === aId)!;
+    const b = state.nodes.find((n) => n.id === bId)!;
+    expect(b.data.order).toBeLessThan(a.data.order!);
+  });
+
+  it('moveNode с skipHistory не добавляет отдельную запись истории (drag = один снапшот)', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const aId = store.addChildNode(rootId)!;
+    const bId = useMindMapStore.getState().addChildNode(rootId)!;
+
+    useMindMapStore.getState().pushHistory(); // как handleNodeDragStart
+    const before = useMindMapStore.getState().past.length;
+    useMindMapStore.getState().moveNode(bId, aId, undefined, { skipHistory: true });
+    expect(useMindMapStore.getState().past.length).toBe(before);
+  });
+
+  it('network: позиции мягкие (drag/force-sim), моveNode не требуется — force-layout допускает циклы', () => {
+    useMindMapStore.setState({ layoutType: 'network' });
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const aId = store.addChildNode(rootId)!;
+
+    // network canConnect всегда true — цикл A→root разрешён.
+    useMindMapStore.getState().onConnect({ source: aId, target: rootId });
+    const edge = useMindMapStore
+      .getState()
+      .edges.find((e) => e.source === aId && e.target === rootId);
+    expect(edge).toBeDefined();
   });
 });

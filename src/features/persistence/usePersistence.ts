@@ -34,8 +34,9 @@ export async function openDocumentFromPath(path: string): Promise<void> {
   const payload = deserializeMindMap(data);
 
   const state = useMindMapStore.getState();
-  // Сохранённые позиции — источник истины: НЕ пересчитываем раскладку на
-  // открытии (это затирало бы ручное размещение и ломалось бы на free-рёбрах).
+  // Структура уже нормализована десериализатором (normalizeStructure);
+  // loadDocument пересчитывает позиции derived-раскладок один раз (network —
+  // хранит позиции как есть).
   state.loadDocument(payload);
   state.setFilePath(path);
   addRecentFile(path, payload.documentName);

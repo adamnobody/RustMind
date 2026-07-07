@@ -17,13 +17,15 @@ export const fishboneStrategy: LayoutStrategy = {
   kind: 'fishbone',
   nodeConstraint: 'soft',
   edgeConstraint: 'typed',
+  positionMode: 'derived',
+  edgeRouting: 'straight',
   blockedReasonKey: 'constraint.fishbone',
   canConnect: canConnectAsTree,
   layout: (nodes, edges) => {
     const root = findRoot(nodes);
     if (!root) return nodes;
 
-    const children = treeChildrenMap(edges);
+    const children = treeChildrenMap(nodes, edges);
     const categories = children.get(root.id) ?? [];
     const positions = new Map<string, { x: number; y: number }>();
 

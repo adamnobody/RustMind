@@ -55,19 +55,25 @@ describe('serializer round-trip', () => {
     expect(second.version).toBe(FILE_VERSION);
   });
 
-  it('coerceLayoutType заменяет неизвестный тип на free (дефолт)', () => {
+  it('coerceLayoutType заменяет неизвестный тип на hierarchy (дефолт)', () => {
     const nodes: AppNode[] = [makeNode('root', true)];
     const serialized = serializeMindMap('Doc', 'unknown-layout', nodes, [], defaultProjectSettings);
     const restored = deserializeMindMap(serialized);
-    expect(restored.layoutType).toBe('free');
+    expect(restored.layoutType).toBe('hierarchy');
   });
 
-  it('миграция legacy layoutType: tree-LR/tree-TB → hierarchy, radial → tree', () => {
+  it('миграция legacy layoutType: tree-LR/tree-TB → hierarchy, radial → tree, упразднённые → hierarchy', () => {
     const nodes: AppNode[] = [makeNode('root', true)];
     const expectations: Array<[string, string]> = [
       ['tree-LR', 'hierarchy'],
       ['tree-TB', 'hierarchy'],
       ['radial', 'tree'],
+      ['free', 'hierarchy'],
+      ['block', 'hierarchy'],
+      ['bridge', 'hierarchy'],
+      ['multiflow', 'hierarchy'],
+      ['dialogue', 'hierarchy'],
+      ['flowchart', 'hierarchy'],
     ];
     for (const [legacy, expected] of expectations) {
       const serialized = serializeMindMap('Doc', legacy, nodes, [], defaultProjectSettings);
@@ -77,7 +83,7 @@ describe('serializer round-trip', () => {
 
   it('новые LayoutKind переживают round-trip как есть', () => {
     const nodes: AppNode[] = [makeNode('root', true)];
-    for (const kind of ['free', 'fishbone', 'flowchart', 'bubble']) {
+    for (const kind of ['hierarchy', 'fishbone', 'tree', 'bubble', 'network']) {
       const serialized = serializeMindMap('Doc', kind, nodes, [], defaultProjectSettings);
       expect(deserializeMindMap(serialized).layoutType).toBe(kind);
     }
@@ -248,9 +254,13 @@ describe('style and projectSettings', () => {
     };
     const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [freeEdge], defaultProjectSettings);
     const restored = deserializeMindMap(serialized);
-    expect(restored.edges[0].data?.kind).toBe('free');
-    expect(restored.edges[0].sourceHandle).toBe('bottom');
-    expect(restored.edges[0].targetHandle).toBe('right');
+    // b не связан с корнем ни одним structural-ребром — normalizeStructure
+    // дотягивает синтетическое tree-ребро a→b; ищем по id, а не [0], т.к.
+    // порядок рёбер после нормализации не гарантирован.
+    const restoredFree = restored.edges.find((e) => e.id === 'e1')!;
+    expect(restoredFree.data?.kind).toBe('free');
+    expect(restoredFree.sourceHandle).toBe('bottom');
+    expect(restoredFree.targetHandle).toBe('right');
   });
 
   it('projectSettings.handleVisibility переживает round-trip', () => {
@@ -314,12 +324,14 @@ describe('style and projectSettings', () => {
         style: { sourceArrow: 'dot', targetArrow: 'diamond', taper: true },
       },
     };
-    const serialized = serializeMindMap('Doc', 'free', nodes, [edge], defaultProjectSettings);
+    const serialized = serializeMindMap('Doc', 'hierarchy', nodes, [edge], defaultProjectSettings);
     // JSON-цикл — как при реальной записи на диск.
     const restored = deserializeMindMap(
       JSON.parse(JSON.stringify(serialized)) as SerializedMindMap,
     );
-    expect(restored.edges[0].data?.style).toEqual({
+    // b получает синтетическое structural-ребро от normalizeStructure — ищем
+    // по id, порядок рёбер после нормализации не гарантирован.
+    expect(restored.edges.find((e) => e.id === 'e1')!.data?.style).toEqual({
       sourceArrow: 'dot',
       targetArrow: 'diamond',
       taper: true,
@@ -334,7 +346,7 @@ describe('style and projectSettings', () => {
       target: 'b',
       data: { kind: 'free', style: { taper: false, sourceArrow: 'dot' } },
     };
-    const serialized = serializeMindMap('Doc', 'free', nodes, [edge], defaultProjectSettings);
+    const serialized = serializeMindMap('Doc', 'hierarchy', nodes, [edge], defaultProjectSettings);
     expect(serialized.edges[0].data?.style).toEqual({ sourceArrow: 'dot' });
   });
 
@@ -575,10 +587,13 @@ describe('style and projectSettings', () => {
     };
     const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [edge], defaultProjectSettings);
     const restored = deserializeMindMap(serialized);
-    expect(restored.edges[0].data?.kind).toBe('free');
-    expect(restored.edges[0].sourceHandle).toBe('bottom');
-    expect(restored.edges[0].targetHandle).toBe('top');
-    expect(restored.edges[0].data?.style).toEqual({
+    // b не связан с корнем ни одним structural-ребром — normalizeStructure
+    // дотягивает синтетическое tree-ребро a→b; ищем исходное по id.
+    const restoredEdge = restored.edges.find((e) => e.id === 'e1')!;
+    expect(restoredEdge.data?.kind).toBe('free');
+    expect(restoredEdge.sourceHandle).toBe('bottom');
+    expect(restoredEdge.targetHandle).toBe('top');
+    expect(restoredEdge.data?.style).toEqual({
       linePattern: 'dotted',
       strokeWidth: 4,
       targetArrow: 'open',
@@ -621,7 +636,7 @@ describe('isDirty tracking', () => {
 
     const payload = {
       documentName: 'Loaded',
-      layoutType: 'free' as const,
+      layoutType: 'hierarchy' as const,
       nodes: [makeNode('root', true)],
       edges: [],
     };

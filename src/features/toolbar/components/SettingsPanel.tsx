@@ -101,12 +101,6 @@ export function SettingsPanel(): React.JSX.Element {
         <section className={styles.section}>
           <h3 className={styles.heading}>{t('settings.behavior')}</h3>
           <Switch
-            label={t('settings.autoLayout')}
-            description={t('settings.autoLayoutDesc')}
-            checked={settings.autoLayoutOnChange}
-            onCheckedChange={(value) => setBehaviorOption('autoLayoutOnChange', value)}
-          />
-          <Switch
             label={t('settings.confirmDelete')}
             description={t('settings.confirmDeleteDesc')}
             checked={settings.confirmBranchDelete}

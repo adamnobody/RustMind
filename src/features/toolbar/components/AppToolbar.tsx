@@ -11,17 +11,11 @@ import styles from './AppToolbar.module.css';
 
 /** Локализованные названия раскладок для переключателя. */
 const LAYOUT_LABEL_KEYS: Record<LayoutKind, TranslationKey> = {
-  free: 'layout.free',
   hierarchy: 'layout.hierarchy',
-  block: 'layout.block',
   fishbone: 'layout.fishbone',
   network: 'layout.network',
   bubble: 'layout.bubble',
-  bridge: 'layout.bridge',
-  multiflow: 'layout.multiflow',
-  dialogue: 'layout.dialogue',
   tree: 'layout.tree',
-  flowchart: 'layout.flowchart',
 };
 
 interface AppToolbarProps {
@@ -87,6 +81,11 @@ export function AppToolbar({
   const setCanvasOption = useUIStore((s) => s.setCanvasOption);
   const t = useT();
 
+  // Позиции derived-раскладок всегда пересчитаны из структуры — ручная
+  // пересборка нужна только network (форс-симуляция), там нет «правильной»
+  // формы, которую можно потерять и вернуть заново.
+  const isNetwork = layoutType === 'network';
+
   // «Перестроить раскладку»: форс-пересборка текущего типа — способ вернуть
   // форму после ручного растаскивания узлов (nodeConstraint мягкий).
   const handleAutoLayout = useCallback(() => {
@@ -135,8 +134,12 @@ export function AppToolbar({
           disabled: !canRedo,
           onSelect: redo,
         },
-        { kind: 'separator' },
-        { kind: 'action', label: t('mi.autoLayout'), hotkey: 'L', onSelect: handleAutoLayout },
+        ...(isNetwork
+          ? ([
+              { kind: 'separator' },
+              { kind: 'action', label: t('mi.autoLayout'), hotkey: 'L', onSelect: handleAutoLayout },
+            ] as const)
+          : []),
       ],
     },
     {
@@ -235,12 +238,14 @@ export function AppToolbar({
 
         <span className={styles.tileSep} aria-hidden="true" />
 
-        <ToolTile
-          icon="layout"
-          label={t('tile.rebuild')}
-          title={t('toolbar.rebuildLayout')}
-          onClick={handleAutoLayout}
-        />
+        {isNetwork && (
+          <ToolTile
+            icon="layout"
+            label={t('tile.rebuild')}
+            title={t('toolbar.rebuildLayout')}
+            onClick={handleAutoLayout}
+          />
+        )}
 
         <select
           className={styles.handleVisSelect}

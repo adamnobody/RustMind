@@ -14,6 +14,8 @@ export const networkStrategy: LayoutStrategy = {
   kind: 'network',
   nodeConstraint: 'soft',
   edgeConstraint: 'any',
+  positionMode: 'stored',
+  edgeRouting: 'radial',
   blockedReasonKey: 'constraint.free',
   canConnect: () => true,
   layout: (nodes, edges) => {

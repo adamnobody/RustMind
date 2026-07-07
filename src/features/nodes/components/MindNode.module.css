@@ -120,6 +120,13 @@
   font-style: italic;
 }
 
+/* Drop-цель во время drag (XMind-модель) — будущий родитель узла. */
+.dropTarget .box {
+  border-color: var(--rm-accent) !important;
+  border-style: dashed !important;
+  box-shadow: var(--rm-shadow-glow) !important;
+}
+
 .label {
   display: block;
   word-break: break-word;

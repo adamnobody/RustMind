@@ -17,8 +17,14 @@ export function nodeSize(node: AppNode): { width: number; height: number } {
   };
 }
 
-/** Дети по СТРУКТУРНЫМ рёбрам (free-связи иерархию не формируют). */
-export function treeChildrenMap(edges: AppEdge[]): Map<string, string[]> {
+/**
+ * Дети по СТРУКТУРНЫМ рёбрам (free-связи иерархию не формируют), отсортированы
+ * по data.order каждого ребёнка (стабильно; отсутствие order — в конец, в
+ * исходном порядке). Единственный choke point сиблингового порядка — все
+ * раскладки, читающие детей отсюда, получают порядок drag-переставления даром.
+ */
+export function treeChildrenMap(nodes: AppNode[], edges: AppEdge[]): Map<string, string[]> {
+  const orderOf = new Map(nodes.map((n) => [n.id, n.data.order]));
   const map = new Map<string, string[]>();
   for (const e of edges) {
     if (!isTreeEdge(e)) continue;
@@ -28,6 +34,9 @@ export function treeChildrenMap(edges: AppEdge[]): Map<string, string[]> {
     } else {
       map.set(e.source, [e.target]);
     }
+  }
+  for (const list of map.values()) {
+    list.sort((a, b) => (orderOf.get(a) ?? Number.MAX_SAFE_INTEGER) - (orderOf.get(b) ?? Number.MAX_SAFE_INTEGER));
   }
   return map;
 }
@@ -91,7 +100,7 @@ export function hasDirectedPath(from: string, to: string, edges: AppEdge[]): boo
 export function bfsOrder(nodes: AppNode[], edges: AppEdge[]): AppNode[] {
   if (nodes.length === 0) return [];
   const byId = new Map(nodes.map((n) => [n.id, n]));
-  const children = treeChildrenMap(edges);
+  const children = treeChildrenMap(nodes, edges);
   const root = findRoot(nodes);
   const result: AppNode[] = [];
   const seen = new Set<string>();

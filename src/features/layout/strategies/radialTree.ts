@@ -12,12 +12,14 @@ export const radialTreeStrategy: LayoutStrategy = {
   kind: 'tree',
   nodeConstraint: 'soft',
   edgeConstraint: 'typed',
+  positionMode: 'derived',
+  edgeRouting: 'radial',
   blockedReasonKey: 'constraint.tree',
   canConnect: canConnectAsTree,
   layout: (nodes, edges) => {
     const root = findRoot(nodes);
     if (!root) return nodes;
-    const children = treeChildrenMap(edges);
+    const children = treeChildrenMap(nodes, edges);
     const positions = new Map<string, { x: number; y: number }>();
     positions.set(root.id, { x: 0, y: 0 });
 

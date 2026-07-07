@@ -27,6 +27,8 @@ import { translate } from '../shared/i18n';
 import { applyLayout } from '../features/layout/applyLayout';
 import { getLayoutStrategy } from '../features/layout/strategies/registry';
 import { DEFAULT_LAYOUT_KIND } from '../features/layout/engines/layoutTypes';
+import { treeParentOf, isTreeAncestorOrSelf } from '../features/layout/strategies/shared';
+import { normalizeStructure } from '../features/layout/strategies/normalize';
 import { useUIStore } from './uiStore';
 
 /** Максимум записей в истории — защита от роста памяти при долгой сессии. */
@@ -62,8 +64,25 @@ function createRootNode(): AppNode {
       label: translate('label.root'),
       isRoot: true,
       color: NODE_COLORS.root,
+      order: 0,
     },
   };
+}
+
+/** Сиблинги узла (по структурному ребру родителя), отсортированные по order. */
+function siblingsOf(parentId: string, nodes: AppNode[], edges: AppEdge[]): AppNode[] {
+  return nodes
+    .filter((n) => treeParentOf(n.id, edges) === parentId)
+    .sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
+}
+
+/** Переиндексирует order сиблингов контактно 0..k-1, в переданном порядке. */
+function reindexSiblings(nodes: AppNode[], orderedIds: string[]): void {
+  const orderById = new Map(orderedIds.map((id, i) => [id, i]));
+  for (const node of nodes) {
+    const order = orderById.get(node.id);
+    if (order !== undefined) node.data.order = order;
+  }
 }
 
 function createEdge(
@@ -187,13 +206,16 @@ export const useMindMapStore = create<MindMapState>()(
       }
 
       recordHistory('structural');
+      const siblingOrders = siblingsOf(parentId, nodes, edges).map((n) => n.data.order ?? 0);
+      const nextOrder = siblingOrders.length > 0 ? Math.max(...siblingOrders) + 1 : 0;
       const newNode: AppNode = {
         id: newId,
         type: MIND_NODE_TYPE,
-        // При drag от хэндла узел появляется в точке отпускания (position),
-        // иначе — со смещением вправо от родителя.
+        // Позиция — плейсхолдер: для derived-раскладок её тут же перепишет
+        // recomputeIfDerived; для network (drag от хэндла в пустоту) это и есть
+        // финальная точка, иначе — смещение вправо от родителя.
         position: position ?? { x: parent.position.x + 200, y: parent.position.y },
-        data: { label: translate('label.child') },
+        data: { label: translate('label.child'), order: nextOrder },
       };
 
       // Хэндлы ребра: при drag берём фактический хэндл из жеста (handles),
@@ -208,15 +230,131 @@ export const useMindMapStore = create<MindMapState>()(
         state.isDirty = true;
       });
 
-      // Если auto-layout включён — узел сразу пересчитается на своё место.
-      get().applyAutoLayoutIfEnabled();
+      // Структура изменилась — derived-раскладки пересчитывают позиции сразу.
+      get().recomputeIfDerived();
       return newId;
     },
 
     addSiblingNode: (siblingId) => {
       const parentId = get().getParentId(siblingId);
       if (!parentId) return null;
-      return get().addChildNode(parentId);
+      const parent = get().nodes.find((n) => n.id === parentId);
+      if (!parent) return null;
+
+      const newId = generateNodeId();
+      const { nodes, edges, layoutType } = get();
+      const strategy = getLayoutStrategy(layoutType);
+      if (!strategy.canConnect(parentId, newId, { nodes, edges })) {
+        useUIStore.getState().showNotice(translate(strategy.blockedReasonKey));
+        return null;
+      }
+
+      recordHistory('structural');
+
+      // Вставляем сразу после siblingId среди сиблингов родителя — остальные
+      // сдвигаем контактной переиндексацией 0..k.
+      const siblings = siblingsOf(parentId, nodes, edges);
+      const insertAt = siblings.findIndex((n) => n.id === siblingId);
+      const orderedIds = siblings.map((n) => n.id);
+      orderedIds.splice(insertAt === -1 ? orderedIds.length : insertAt + 1, 0, newId);
+
+      const newNode: AppNode = {
+        id: newId,
+        type: MIND_NODE_TYPE,
+        position: { x: parent.position.x + 200, y: parent.position.y },
+        data: { label: translate('label.child') },
+      };
+
+      set((state) => {
+        state.nodes.push(newNode);
+        state.edges.push(
+          createEdge(
+            parentId,
+            newId,
+            'tree',
+            DEFAULT_TREE_EDGE_HANDLES.sourceHandle,
+            DEFAULT_TREE_EDGE_HANDLES.targetHandle,
+          ),
+        );
+        reindexSiblings(state.nodes, orderedIds);
+        state.isDirty = true;
+      });
+
+      get().recomputeIfDerived();
+      return newId;
+    },
+
+    moveNode: (nodeId, newParentId, index, options) => {
+      const { nodes, edges, layoutType } = get();
+      const strategy = getLayoutStrategy(layoutType);
+      const oldParentId = treeParentOf(nodeId, edges);
+
+      // Корень нельзя реприкрепить; нельзя прикрепить узел к самому себе или к
+      // собственному потомку (цикл) — isTreeAncestorOrSelf покрывает оба случая.
+      if (
+        oldParentId === null ||
+        nodeId === newParentId ||
+        isTreeAncestorOrSelf(nodeId, newParentId, edges)
+      ) {
+        useUIStore.getState().showNotice(translate(strategy.blockedReasonKey));
+        return false;
+      }
+
+      // canConnect проверяем как «можно ли создать ребро newParentId→nodeId»,
+      // исключив из контекста ТЕКУЩЕЕ структурное ребро узла — иначе древесный
+      // предикат забраковал бы любой reparent («у цели уже есть родитель»,
+      // а этот родитель — как раз то ребро, которое мы заменяем.
+      const others = edges.filter((e) => !(e.target === nodeId && isTreeEdge(e)));
+      if (!strategy.canConnect(newParentId, nodeId, { nodes, edges: others })) {
+        useUIStore.getState().showNotice(translate(strategy.blockedReasonKey));
+        return false;
+      }
+
+      if (oldParentId === newParentId) {
+        // Тот же родитель — просто переставляем внутри той же группы сиблингов.
+        const siblings = siblingsOf(newParentId, nodes, edges).map((n) => n.id);
+        const withoutNode = siblings.filter((id) => id !== nodeId);
+        const at = index === undefined ? withoutNode.length : Math.min(Math.max(index, 0), withoutNode.length);
+        withoutNode.splice(at, 0, nodeId);
+
+        if (!options?.skipHistory) recordHistory('structural');
+        set((state) => {
+          reindexSiblings(state.nodes, withoutNode);
+          state.isDirty = true;
+        });
+        get().recomputeIfDerived();
+        return true;
+      }
+
+      if (!options?.skipHistory) recordHistory('structural');
+
+      const oldSiblingsAfter = siblingsOf(oldParentId, nodes, edges)
+        .map((n) => n.id)
+        .filter((id) => id !== nodeId);
+      const newSiblings = siblingsOf(newParentId, nodes, edges).map((n) => n.id);
+      const at = index === undefined ? newSiblings.length : Math.min(Math.max(index, 0), newSiblings.length);
+      newSiblings.splice(at, 0, nodeId);
+
+      set((state) => {
+        // Единственное входящее структурное ребро узла — заменяем целиком
+        // (новый id/source), сохраняя дефолтные хэндлы reparent-жеста.
+        state.edges = state.edges.filter((e) => !(e.target === nodeId && isTreeEdge(e)));
+        state.edges.push(
+          createEdge(
+            newParentId,
+            nodeId,
+            'tree',
+            DEFAULT_TREE_EDGE_HANDLES.sourceHandle,
+            DEFAULT_TREE_EDGE_HANDLES.targetHandle,
+          ),
+        );
+        reindexSiblings(state.nodes, oldSiblingsAfter);
+        reindexSiblings(state.nodes, newSiblings);
+        state.isDirty = true;
+      });
+
+      get().recomputeIfDerived();
+      return true;
     },
 
     updateNodeLabel: (id, label) => {
@@ -313,15 +451,23 @@ export const useMindMapStore = create<MindMapState>()(
       const node = get().nodes.find((n) => n.id === id);
       if (!node || node.data.isRoot) return;
 
+      const parentId = treeParentOf(id, get().edges);
+
       recordHistory('structural');
 
       const toDelete = new Set([id, ...get().getDescendantIds(id)]);
+      const remainingSiblings = parentId
+        ? siblingsOf(parentId, get().nodes, get().edges)
+            .map((n) => n.id)
+            .filter((sid) => !toDelete.has(sid))
+        : [];
       set((state) => {
         state.nodes = state.nodes.filter((n) => !toDelete.has(n.id));
         state.edges = state.edges.filter((e) => !toDelete.has(e.source) && !toDelete.has(e.target));
+        reindexSiblings(state.nodes, remainingSiblings);
         state.isDirty = true;
       });
-      get().applyAutoLayoutIfEnabled();
+      get().recomputeIfDerived();
     },
 
     onNodesChange: (changes) => {
@@ -395,9 +541,12 @@ export const useMindMapStore = create<MindMapState>()(
       });
     },
 
-    applyAutoLayoutIfEnabled: () => {
-      const { autoLayoutOnChange } = useUIStore.getState().settings;
-      if (autoLayoutOnChange) {
+    // Структурная модель: позиции 'derived'-раскладок пересчитываются ПОСЛЕ
+    // КАЖДОГО структурного изменения — это не опция, а инвариант. Только
+    // network ('stored') хранит позиции как есть (drag/force-sim).
+    recomputeIfDerived: () => {
+      const strategy = getLayoutStrategy(get().layoutType);
+      if (strategy.positionMode === 'derived') {
         get().applyAutoLayout();
       }
     },
@@ -406,9 +555,18 @@ export const useMindMapStore = create<MindMapState>()(
       // Открытие документа сбрасывает историю: снимки из прошлого документа
       // относятся к другому дереву, их откат был бы бессмысленным/опасным.
       resetCoalesce();
+      // normalizeStructure — идемпотентный защитный слой (сериализатор уже
+      // нормализует структуру при десериализации); здесь — единственная точка
+      // пересчёта ПОЗИЦИЙ для derived-раскладок, чтобы не пересчитывать дважды.
+      const normalized = normalizeStructure(payload.nodes, payload.edges, payload.layoutType);
+      const strategy = getLayoutStrategy(payload.layoutType);
+      const positioned =
+        strategy.positionMode === 'derived'
+          ? applyLayout(normalized.nodes, normalized.edges, payload.layoutType)
+          : normalized;
       set((state) => {
-        state.nodes = payload.nodes;
-        state.edges = payload.edges;
+        state.nodes = positioned.nodes;
+        state.edges = positioned.edges;
         state.documentName = payload.documentName;
         state.layoutType = payload.layoutType;
         state.projectSettings = payload.projectSettings ?? { handleVisibility: DEFAULT_HANDLE_VISIBILITY };

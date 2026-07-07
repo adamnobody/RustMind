@@ -7,6 +7,7 @@ import { MindNodeToolbar } from './NodeToolbar';
 import { useNodeEditing } from '../hooks/useNodeEditing';
 import { DEFAULT_NODE_STYLE, type MindNodeData, type NodeShape } from '../types';
 import { isDefaultChildLabel } from '../../../shared/i18n';
+import { useUIStore } from '../../../store/uiStore';
 import styles from './MindNode.module.css';
 
 const shapeClass: Record<NodeShape, string> = {
@@ -44,6 +45,9 @@ function MindNodeComponent({
 }: NodeProps): React.JSX.Element {
   const isRoot = Boolean(data.isRoot);
   const nodeData = data as unknown as MindNodeData;
+  // Подсветка будущего родителя во время drag (XMind-модель) — и для reparent
+  // (курсор над этим узлом), и для reorder (курсор рядом, в его группе сиблингов).
+  const isDropTarget = useUIStore((s) => s.dragIndicator?.parentId === id);
 
   // Смещение хэндлов меняет их DOM-позиции — просим RF перемерить узел,
   // иначе рёбра продолжат целиться в старые точки до первого drag.
@@ -74,7 +78,12 @@ function MindNodeComponent({
 
   return (
     <div
-      className={clsx(styles.node, isRoot && styles.root, selected && styles.selected)}
+      className={clsx(
+        styles.node,
+        isRoot && styles.root,
+        selected && styles.selected,
+        isDropTarget && styles.dropTarget,
+      )}
       onDoubleClick={handleDoubleClick}
     >
       <MindNodeToolbar nodeId={id} isRoot={isRoot} isVisible={showToolbar} />

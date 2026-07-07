@@ -6,13 +6,15 @@ import { FILE_VERSION } from './schema';
 import { DEFAULT_HANDLE_VISIBILITY } from '../../shared/lib/constants';
 import { pruneStyle } from '../../shared/lib/style';
 import { coerceLayoutKind } from '../layout/engines/layoutTypes';
+import { normalizeStructure } from '../layout/strategies/normalize';
 
 const VALID_HANDLE_VISIBILITIES: HandleVisibility[] = ['hidden', 'dashed', 'always'];
 
 /**
  * Единая точка миграции layoutType: известные новые значения — как есть,
- * legacy ('tree-LR'/'tree-TB' → 'hierarchy', 'radial' → 'tree') — мапятся,
- * неизвестное — дефолт 'free'. Позиции узлов при этом не пересчитываются.
+ * legacy ('tree-LR'/'tree-TB' → 'hierarchy', 'radial' → 'tree', а также
+ * упразднённые free/block/bridge/multiflow/dialogue/flowchart) — мапятся,
+ * неизвестное — дефолт 'hierarchy'.
  */
 function coerceLayoutType(value: string): LayoutType {
   return coerceLayoutKind(value);
@@ -50,6 +52,7 @@ export function serializeMindMap(
         style: pruneStyle(n.data.style, DEFAULT_NODE_STYLE),
         // Стор хранит только отклонения от центра — пишем как есть.
         handleOffsets: n.data.handleOffsets,
+        order: n.data.order,
       },
     })),
     edges: edges.map((e) => {
@@ -77,43 +80,53 @@ export function serializeMindMap(
 export function deserializeMindMap(serialized: SerializedMindMap): LoadDocumentPayload {
   const layoutType = coerceLayoutType(serialized.layoutType);
 
+  const nodes: AppNode[] = serialized.nodes.map((n) => ({
+    id: n.id,
+    type: 'mindNode' as const,
+    position: n.position,
+    data: {
+      label: n.data.label,
+      color: n.data.color,
+      textColor: n.data.textColor,
+      collapsed: n.data.collapsed,
+      isRoot: n.data.isRoot,
+      note: n.data.note,
+      // Serialized style uses string for union fields; cast to domain type.
+      style: n.data.style as NodeStyle | undefined,
+      handleOffsets: n.data.handleOffsets as HandleOffsets | undefined,
+      order: n.data.order,
+    },
+  }));
+
+  const edges: AppEdge[] = serialized.edges.map((e) => {
+    // Миграция: ребро без kind → 'tree'. Только явное 'free' остаётся free.
+    const kind: EdgeKind = e.data?.kind === 'free' ? 'free' : 'tree';
+    // Backfill ТОЛЬКО для старых файлов: структурное ребро без хэндлов уехало
+    // бы в 'top' (первый хэндл в DOM). Ставим фиксированный дефолт. Рёбра, у
+    // которых хэндлы есть, не трогаем — сохранённый хэндл свят.
+    const needsBackfill = kind === 'tree' && (!e.sourceHandle || !e.targetHandle);
+    return {
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      sourceHandle: e.sourceHandle ?? (needsBackfill ? DEFAULT_TREE_EDGE_HANDLES.sourceHandle : undefined),
+      targetHandle: e.targetHandle ?? (needsBackfill ? DEFAULT_TREE_EDGE_HANDLES.targetHandle : undefined),
+      data: { kind, style: e.data?.style as EdgeStyle | undefined },
+    };
+  });
+
+  // Инварианты структурной модели (один корень, один родитель на некорневой
+  // узел, контактный order) — здесь, а не в сторе: loadDocument получает уже
+  // валидную структуру и делает единственный пересчёт ПОЗИЦИЙ для derived.
+  const normalized = normalizeStructure(nodes, edges, layoutType);
+
   return {
     documentName: serialized.documentName,
     layoutType,
     projectSettings: {
       handleVisibility: coerceHandleVisibility(serialized.projectSettings?.handleVisibility),
     },
-    nodes: serialized.nodes.map((n) => ({
-      id: n.id,
-      type: 'mindNode' as const,
-      position: n.position,
-      data: {
-        label: n.data.label,
-        color: n.data.color,
-        textColor: n.data.textColor,
-        collapsed: n.data.collapsed,
-        isRoot: n.data.isRoot,
-        note: n.data.note,
-        // Serialized style uses string for union fields; cast to domain type.
-        style: n.data.style as NodeStyle | undefined,
-        handleOffsets: n.data.handleOffsets as HandleOffsets | undefined,
-      },
-    })),
-    edges: serialized.edges.map((e) => {
-      // Миграция: ребро без kind → 'tree'. Только явное 'free' остаётся free.
-      const kind: EdgeKind = e.data?.kind === 'free' ? 'free' : 'tree';
-      // Backfill ТОЛЬКО для старых файлов: структурное ребро без хэндлов уехало
-      // бы в 'top' (первый хэндл в DOM). Ставим фиксированный дефолт. Рёбра, у
-      // которых хэндлы есть, не трогаем — сохранённый хэндл свят.
-      const needsBackfill = kind === 'tree' && (!e.sourceHandle || !e.targetHandle);
-      return {
-        id: e.id,
-        source: e.source,
-        target: e.target,
-        sourceHandle: e.sourceHandle ?? (needsBackfill ? DEFAULT_TREE_EDGE_HANDLES.sourceHandle : undefined),
-        targetHandle: e.targetHandle ?? (needsBackfill ? DEFAULT_TREE_EDGE_HANDLES.targetHandle : undefined),
-        data: { kind, style: e.data?.style as EdgeStyle | undefined },
-      };
-    }),
+    nodes: normalized.nodes,
+    edges: normalized.edges,
   };
 }
