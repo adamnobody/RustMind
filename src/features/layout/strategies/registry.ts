@@ -12,6 +12,7 @@ import { networkStrategy } from './network';
 import { bubbleStrategy } from './bubble';
 import { radialTreeStrategy } from './radialTree';
 import { timelineStrategy } from './timeline';
+import { freeStrategy } from './free';
 
 /**
  * Реестр стратегий по ключу LayoutKind. Каждая стратегия изолирована в своём
@@ -30,6 +31,7 @@ export const LAYOUT_STRATEGIES: Record<LayoutKind, LayoutStrategy> = {
   timeline: timelineStrategy,
   bubble: bubbleStrategy,
   network: networkStrategy,
+  free: freeStrategy,
 };
 
 export function getLayoutStrategy(kind: LayoutKind): LayoutStrategy {

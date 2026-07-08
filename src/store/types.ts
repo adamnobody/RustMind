@@ -12,7 +12,7 @@ import type { LayoutKind } from '../features/layout/engines/layoutTypes';
 export type AppNode = Node<MindNodeData>;
 export type AppEdge = Edge<MindEdgeData>;
 
-/** Тип раскладки документа — см. features/layout (11 видов, дефолт 'free'). */
+/** Тип раскладки документа — см. features/layout (12 видов, дефолт 'hierarchy'). */
 export type LayoutType = LayoutKind;
 export type HandleVisibility = 'hidden' | 'dashed' | 'always';
 

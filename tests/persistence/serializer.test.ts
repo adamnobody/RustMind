@@ -68,7 +68,6 @@ describe('serializer round-trip', () => {
       ['tree-LR', 'hierarchy'],
       ['tree-TB', 'hierarchy'],
       ['radial', 'tree'],
-      ['free', 'hierarchy'],
       ['block', 'hierarchy'],
       ['bridge', 'hierarchy'],
       ['multiflow', 'hierarchy'],
@@ -83,7 +82,7 @@ describe('serializer round-trip', () => {
 
   it('новые LayoutKind переживают round-trip как есть', () => {
     const nodes: AppNode[] = [makeNode('root', true)];
-    for (const kind of ['hierarchy', 'fishbone', 'tree', 'bubble', 'network']) {
+    for (const kind of ['hierarchy', 'fishbone', 'tree', 'bubble', 'network', 'free']) {
       const serialized = serializeMindMap('Doc', kind, nodes, [], defaultProjectSettings);
       expect(deserializeMindMap(serialized).layoutType).toBe(kind);
     }

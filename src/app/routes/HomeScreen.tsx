@@ -58,6 +58,7 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
 
   const handleCreate = useCallback(() => {
     useMindMapStore.getState().resetDocument();
+    useUIStore.getState().openLayoutPicker();
     onEnterEditor();
   }, [onEnterEditor]);
 

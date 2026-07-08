@@ -59,6 +59,8 @@ interface UiState {
   /** Язык интерфейса. */
   locale: Locale;
   isSettingsOpen: boolean;
+  /** Диалог выбора типа карты — открывается для нового документа и по кнопке в тулбаре. */
+  isLayoutPickerOpen: boolean;
   settings: UiSettings;
 
   /**
@@ -98,6 +100,8 @@ interface UiState {
   openSettings: () => void;
   closeSettings: () => void;
   toggleSettings: () => void;
+  openLayoutPicker: () => void;
+  closeLayoutPicker: () => void;
   setNodeFontSize: (size: NodeFontSize) => void;
   setCanvasOption: (
     key: 'showGrid' | 'showMiniMap' | 'showControls',
@@ -184,6 +188,7 @@ export const useUIStore = create<UiState>()(
       theme: initialTheme,
       locale: DEFAULT_LOCALE,
       isSettingsOpen: false,
+      isLayoutPickerOpen: false,
       settings: defaultSettings,
       inspectorOpen: false,
       inspectorManuallyHidden: false,
@@ -251,6 +256,8 @@ export const useUIStore = create<UiState>()(
       openSettings: () => set({ isSettingsOpen: true }),
       closeSettings: () => set({ isSettingsOpen: false }),
       toggleSettings: () => set((state) => ({ isSettingsOpen: !state.isSettingsOpen })),
+      openLayoutPicker: () => set({ isLayoutPickerOpen: true }),
+      closeLayoutPicker: () => set({ isLayoutPickerOpen: false }),
       setNodeFontSize: (size) =>
         set((state) => ({
           settings: { ...state.settings, nodeFontSize: size },

@@ -3,26 +3,11 @@ import clsx from 'clsx';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { Icon, type IconName } from '../../../shared/ui/Icon/Icon';
-import { useT, type TranslationKey } from '../../../shared/i18n';
+import { useT } from '../../../shared/i18n';
 import type { HandleVisibility } from '../../../store/types';
-import { LAYOUT_KINDS, type LayoutKind } from '../../layout/engines/layoutTypes';
+import { LAYOUT_LABEL_KEYS } from '../../layout/lib/layoutLabels';
 import { MenuBar, type MenuDef } from './MenuBar';
 import styles from './AppToolbar.module.css';
-
-/** Локализованные названия раскладок для переключателя. */
-const LAYOUT_LABEL_KEYS: Record<LayoutKind, TranslationKey> = {
-  hierarchy: 'layout.hierarchy',
-  right: 'layout.right',
-  left: 'layout.left',
-  both: 'layout.both',
-  tree: 'layout.tree',
-  org: 'layout.org',
-  logic: 'layout.logic',
-  fishbone: 'layout.fishbone',
-  timeline: 'layout.timeline',
-  bubble: 'layout.bubble',
-  network: 'layout.network',
-};
 
 interface AppToolbarProps {
   onNew?: () => void;
@@ -69,7 +54,6 @@ export function AppToolbar({
   const documentName = useMindMapStore((s) => s.documentName);
   const isDirty = useMindMapStore((s) => s.isDirty);
   const layoutType = useMindMapStore((s) => s.layoutType);
-  const setLayoutType = useMindMapStore((s) => s.setLayoutType);
   const applyAutoLayoutManual = useMindMapStore((s) => s.applyAutoLayoutManual);
   const undo = useMindMapStore((s) => s.undo);
   const redo = useMindMapStore((s) => s.redo);
@@ -80,6 +64,7 @@ export function AppToolbar({
   const theme = useUIStore((s) => s.theme);
   const toggleTheme = useUIStore((s) => s.toggleTheme);
   const openSettings = useUIStore((s) => s.openSettings);
+  const openLayoutPicker = useUIStore((s) => s.openLayoutPicker);
   const triggerFitView = useUIStore((s) => s.triggerFitView);
   const inspectorOpen = useUIStore((s) => s.inspectorOpen);
   const toggleInspector = useUIStore((s) => s.toggleInspector);
@@ -98,16 +83,6 @@ export function AppToolbar({
     applyAutoLayoutManual();
     setTimeout(triggerFitView, 50);
   }, [applyAutoLayoutManual, triggerFitView]);
-
-  // Смена типа раскладки = пересборка по правилам нового типа (setLayoutType
-  // сам вызывает applyAutoLayout); данные нод и рёбер не теряются.
-  const handleLayoutKindChange = useCallback(
-    (kind: LayoutKind) => {
-      setLayoutType(kind);
-      setTimeout(triggerFitView, 50);
-    },
-    [setLayoutType, triggerFitView],
-  );
 
   const menus: MenuDef[] = [
     {
@@ -211,6 +186,12 @@ export function AppToolbar({
 
       {/* Строка 2 — цветные плитки-иконки */}
       <div className={styles.tileRow}>
+        {onHome && (
+          <>
+            <ToolTile icon="home" label={t('tile.home')} title={t('toolbar.home')} onClick={onHome} />
+            <span className={styles.tileSep} aria-hidden="true" />
+          </>
+        )}
         <ToolTile icon="file" label={t('tile.new')} title={t('toolbar.new')} onClick={onNew} />
         <ToolTile
           icon="folder-open"
@@ -253,19 +234,12 @@ export function AppToolbar({
           />
         )}
 
-        <select
-          className={styles.handleVisSelect}
-          value={layoutType}
-          title={t('toolbar.layoutKind')}
-          aria-label={t('toolbar.layoutKind')}
-          onChange={(e) => handleLayoutKindChange(e.target.value as LayoutKind)}
-        >
-          {LAYOUT_KINDS.map((kind) => (
-            <option key={kind} value={kind}>
-              {t(LAYOUT_LABEL_KEYS[kind])}
-            </option>
-          ))}
-        </select>
+        <ToolTile
+          icon="map"
+          label={t(LAYOUT_LABEL_KEYS[layoutType])}
+          title={t('toolbar.changeLayoutType')}
+          onClick={openLayoutPicker}
+        />
 
         <span className={styles.tileSep} aria-hidden="true" />
 

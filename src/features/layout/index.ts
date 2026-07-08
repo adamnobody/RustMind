@@ -4,3 +4,5 @@ export * from './lib/layoutTree';
 export * from './applyLayout';
 export * from './strategies/types';
 export * from './strategies/registry';
+export * from './lib/layoutLabels';
+export * from './components/LayoutTypeDialog';

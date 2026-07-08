@@ -16,15 +16,18 @@ export interface NormalizedStructure {
  * ребром — так у каждого некорневого узла гарантированно есть ровно один
  * родитель. Каждому узлу назначается стабильный контактный order среди
  * сиблингов (сид — существующий data.order, иначе исходный порядок массива).
- * Free-связи не трогаются. Для 'network' — no-op: там нет древесной семантики
- * (произвольные/циклические связи разрешены, позиции хранятся как есть).
+ * Free-связи не трогаются. Для 'network' и 'free' — no-op: там нет древесной
+ * семантики (произвольные/циклические связи разрешены, позиции хранятся как
+ * есть).
  */
 export function normalizeStructure(
   nodes: AppNode[],
   edges: AppEdge[],
   layoutKind: LayoutKind,
 ): NormalizedStructure {
-  if (nodes.length === 0 || layoutKind === 'network') return { nodes, edges };
+  if (nodes.length === 0 || layoutKind === 'network' || layoutKind === 'free') {
+    return { nodes, edges };
+  }
 
   const rootCandidates = nodes.filter((n) => n.data.isRoot);
   const rootId = (rootCandidates[0] ?? nodes[0]).id;

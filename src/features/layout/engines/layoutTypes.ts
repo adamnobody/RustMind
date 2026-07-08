@@ -15,7 +15,8 @@ export type LayoutKind =
   | 'fishbone'
   | 'timeline'
   | 'bubble'
-  | 'network';
+  | 'network'
+  | 'free';
 
 export const LAYOUT_KINDS: LayoutKind[] = [
   'hierarchy',
@@ -29,20 +30,21 @@ export const LAYOUT_KINDS: LayoutKind[] = [
   'timeline',
   'bubble',
   'network',
+  'free',
 ];
 
 export const DEFAULT_LAYOUT_KIND: LayoutKind = 'hierarchy';
 
 /**
  * Значения layoutType из файлов до версии 4 (включая уже удалённые типы
- * 'free'/'block'/'bridge'/'multiflow'/'dialogue'/'flowchart'). Старые файлы
- * открываются без ошибок: значение мапится на ближайший из оставшихся типов.
+ * 'block'/'bridge'/'multiflow'/'dialogue'/'flowchart' — 'free' восстановлен и
+ * больше не легаси). Старые файлы открываются без ошибок: значение мапится на
+ * ближайший из оставшихся типов.
  */
 export const LEGACY_LAYOUT_MAP: Record<string, LayoutKind> = {
   'tree-LR': 'hierarchy',
   'tree-TB': 'hierarchy',
   radial: 'tree',
-  free: 'hierarchy',
   block: 'hierarchy',
   bridge: 'hierarchy',
   multiflow: 'hierarchy',

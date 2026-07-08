@@ -1,6 +1,7 @@
 import { MindMapCanvas } from '../../features/canvas';
 import { AppToolbar, SettingsPanel } from '../../features/toolbar';
 import { Inspector } from '../../features/inspector';
+import { LayoutTypeDialog } from '../../features/layout';
 import { usePersistence, useWindowCloseGuard } from '../../features/persistence';
 import { KeyboardProvider } from '../providers/KeyboardProvider';
 import styles from './EditorScreen.module.css';
@@ -36,6 +37,7 @@ export function EditorScreen({ onGoHome }: EditorScreenProps = {}): React.JSX.El
           <Inspector />
         </div>
         <SettingsPanel />
+        <LayoutTypeDialog />
       </div>
     </KeyboardProvider>
   );
