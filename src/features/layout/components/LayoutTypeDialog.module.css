@@ -32,6 +32,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--rm-space-4);
+  padding-bottom: var(--rm-space-4);
+  border-bottom: 1px solid var(--rm-border);
 }
 
 .headerText {
@@ -41,10 +43,17 @@
 }
 
 .title {
+  display: flex;
+  align-items: center;
+  gap: var(--rm-space-2);
   color: var(--rm-text);
   font-size: var(--rm-font-xl);
   font-weight: var(--rm-font-weight-bold);
   letter-spacing: -0.015em;
+}
+
+.titlePrompt {
+  color: var(--rm-accent);
 }
 
 .subtitle {
@@ -69,21 +78,19 @@
   gap: var(--rm-space-2);
   padding: var(--rm-space-3);
   border: 1px solid var(--rm-border-soft);
-  border-radius: var(--rm-radius);
-  background: color-mix(in srgb, var(--rm-surface-hover) 45%, transparent);
+  border-radius: var(--rm-radius-sm);
+  background: color-mix(in srgb, var(--rm-surface) 65%, transparent);
   color: inherit;
   font-family: inherit;
   text-align: left;
   cursor: pointer;
   transition:
     border-color var(--rm-transition-fast) var(--rm-ease-out-expo),
-    background-color var(--rm-transition-fast) var(--rm-ease-out-expo),
-    transform var(--rm-transition-fast) var(--rm-ease-out-expo);
+    background-color var(--rm-transition-fast) var(--rm-ease-out-expo);
 }
 
 .card:hover {
-  border-color: var(--rm-accent-soft);
-  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--rm-surface-hover) 60%, var(--rm-surface));
 }
 
 .card:active {
@@ -97,22 +104,47 @@
 
 .badge {
   position: absolute;
-  top: var(--rm-space-2);
-  right: var(--rm-space-2);
-  padding: 2px 7px;
-  border-radius: var(--rm-radius-full);
-  background: var(--rm-accent);
-  color: #052330;
-  font-size: 9.5px;
+  top: -11px;
+  right: 14px;
+  padding: 2px 8px;
+  border: 1px solid var(--rm-accent);
+  border-radius: var(--rm-radius-sm);
+  background: var(--rm-surface-elevated);
+  color: var(--rm-accent);
+  font-size: 10px;
   font-weight: var(--rm-font-weight-bold);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: var(--rm-space-2);
+  border: 1px solid var(--rm-border);
   border-radius: var(--rm-radius-sm);
-  background: color-mix(in srgb, var(--rm-bg) 40%, transparent);
+  background: color-mix(in srgb, var(--rm-bg) 55%, transparent);
   overflow: hidden;
+  box-sizing: border-box;
+}
+
+.previewFree {
+  border-style: dashed;
+  border-color: var(--rm-border-strong);
+}
+
+.cardLabelRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.cardChevron {
+  color: var(--rm-accent);
+  font-family: var(--rm-font-family);
+  font-size: var(--rm-font-sm);
 }
 
 .cardLabel {
@@ -127,43 +159,35 @@
   line-height: var(--rm-line);
 }
 
-/* ── mini-preview SVG primitives ─────────────────────────────────────────── */
-.pvSvg {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 120 / 84;
+/* ── ASCII mini-preview ──────────────────────────────────────────────────── */
+.asciiArt {
+  margin: 0;
+  color: var(--rm-text-muted);
+  font-family: var(--rm-font-family);
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0.3px;
+  white-space: pre;
 }
 
-.pvNode {
-  fill: var(--rm-panel);
-  stroke: var(--rm-text-muted);
-  stroke-width: 2;
+.asciiRoot {
+  color: var(--rm-accent);
+  font-weight: var(--rm-font-weight-bold);
 }
 
-.pvNodeRoot {
-  fill: var(--rm-accent);
-  stroke: var(--rm-accent);
+/* ── footer keyboard hints ───────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  gap: var(--rm-space-4);
+  padding-top: var(--rm-space-3);
+  border-top: 1px solid var(--rm-border);
+  color: var(--rm-text-subtle);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
 }
 
-.pvEdge {
-  stroke: var(--rm-border-strong);
-  stroke-width: 2;
-  fill: none;
-}
-
-.pvEdgeDashed {
-  stroke: var(--rm-border-strong);
-  stroke-width: 2;
-  stroke-dasharray: 3 4;
-  fill: none;
-}
-
-.pvDashRect {
-  fill: none;
-  stroke: var(--rm-accent-soft);
-  stroke-width: 2;
-  stroke-dasharray: 5 5;
+.hintKey {
+  color: var(--rm-accent);
 }
 
 @keyframes fadeIn {

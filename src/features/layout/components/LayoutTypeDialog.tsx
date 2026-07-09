@@ -25,7 +25,7 @@ export function LayoutTypeDialog(): React.JSX.Element | null {
   useEffect(() => {
     if (!isOpen) return undefined;
     const onKeyDown = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') closeLayoutPicker();
+      if (e.key === 'Escape' || e.key === 'Enter') closeLayoutPicker();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -56,7 +56,10 @@ export function LayoutTypeDialog(): React.JSX.Element | null {
       >
         <header className={styles.header}>
           <div className={styles.headerText}>
-            <h2 className={styles.title}>{t('layoutPicker.title')}</h2>
+            <h2 className={styles.title}>
+              <span className={styles.titlePrompt}>&gt;</span>
+              <span>{t('layoutPicker.title')}</span>
+            </h2>
             <p className={styles.subtitle}>{t('layoutPicker.subtitle')}</p>
           </div>
           <IconButton icon="x" label={t('drawer.closeSettings')} onClick={closeLayoutPicker} />
@@ -73,13 +76,27 @@ export function LayoutTypeDialog(): React.JSX.Element | null {
                 onClick={() => handlePick(kind)}
               >
                 {active && <span className={styles.badge}>{t('layoutPicker.current')}</span>}
-                <div className={styles.preview}>{LAYOUT_PREVIEWS[kind]}</div>
-                <div className={styles.cardLabel}>{t(LAYOUT_LABEL_KEYS[kind])}</div>
+                <div className={clsx(styles.preview, kind === 'free' && styles.previewFree)}>
+                  {LAYOUT_PREVIEWS[kind]}
+                </div>
+                <div className={styles.cardLabelRow}>
+                  <span className={styles.cardChevron}>&gt;</span>
+                  <span className={styles.cardLabel}>{t(LAYOUT_LABEL_KEYS[kind])}</span>
+                </div>
                 <div className={styles.cardDesc}>{t(LAYOUT_DESC_KEYS[kind])}</div>
               </button>
             );
           })}
         </div>
+
+        <footer className={styles.footer}>
+          <span>
+            <span className={styles.hintKey}>↵</span> {t('layoutPicker.hintSelect')}
+          </span>
+          <span>
+            <span className={styles.hintKey}>esc</span> {t('layoutPicker.hintClose')}
+          </span>
+        </footer>
       </div>
     </div>
   );
