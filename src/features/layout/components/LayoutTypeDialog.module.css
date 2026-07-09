@@ -67,8 +67,8 @@
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: var(--rm-space-3);
   overflow-y: auto;
-  padding: 2px;
-  margin: -2px;
+  padding: 16px 2px 2px;
+  margin: -16px -2px -2px;
 }
 
 .card {
