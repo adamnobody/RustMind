@@ -10,7 +10,7 @@ export const freeStrategy: LayoutStrategy = {
   nodeConstraint: 'soft',
   edgeConstraint: 'any',
   positionMode: 'stored',
-  edgeRouting: 'bezier',
+  edgeRouting: 'fixed',
   blockedReasonKey: 'constraint.free',
   canConnect: () => true,
   layout: (nodes) => nodes,

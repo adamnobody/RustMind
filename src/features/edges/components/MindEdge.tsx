@@ -12,8 +12,10 @@ import { getLayoutStrategy } from '../../layout/strategies/registry';
 import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../../shared/lib/constants';
 import {
   routeEdge,
+  routeFixed,
   type CubicControls,
   type Point,
+  type PortSide,
   type Rect,
 } from '../lib/routing';
 import {
@@ -130,14 +132,17 @@ export function MindEdge({
   target,
   sourceX,
   sourceY,
+  sourcePosition,
   targetX,
   targetY,
+  targetPosition,
   selected,
   data,
 }: EdgeProps): React.JSX.Element {
   // Роутинг объявляет стратегия раскладки (только рендер, данные не трогаем):
-  // порты выбираются динамически по взаимному положению нод — точка на границе
-  // прямоугольника, обращённая к другому концу, а не фиксированный хэндл.
+  // 'fixed' — порт берётся с реального хэндла ребра как есть (для free, где
+  // позиция ноды не связана со стороной подключения); остальные режимы
+  // выбирают порт динамически по взаимному положению нод.
   const routing = useMindMapStore((s) => getLayoutStrategy(s.layoutType).edgeRouting);
   const editing = useUIStore((s) => s.editingEdgeId === id);
   const setEditingEdgeId = useUIStore((s) => s.setEditingEdgeId);
@@ -145,11 +150,17 @@ export function MindEdge({
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
 
-  const routed = routeEdge(
-    nodeRect(sourceNode, sourceX, sourceY),
-    nodeRect(targetNode, targetX, targetY),
-    routing,
-  );
+  const routed =
+    routing === 'fixed'
+      ? routeFixed(
+          { x: sourceX, y: sourceY, side: sourcePosition as PortSide },
+          { x: targetX, y: targetY, side: targetPosition as PortSide },
+        )
+      : routeEdge(
+          nodeRect(sourceNode, sourceX, sourceY),
+          nodeRect(targetNode, targetX, targetY),
+          routing,
+        );
   const { path: edgePath, labelX, labelY } = routed;
 
   const edgeData = data as MindEdgeData | undefined;

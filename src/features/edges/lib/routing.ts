@@ -6,7 +6,7 @@
  * стора/React — модуль тестируется как есть.
  */
 
-export type EdgeRouting = 'orthogonal' | 'bezier' | 'radial' | 'straight';
+export type EdgeRouting = 'orthogonal' | 'bezier' | 'radial' | 'straight' | 'fixed';
 
 export interface Point {
   x: number;
@@ -107,9 +107,7 @@ function cubicMidpoint(sp: Point, c: CubicControls, tp: Point): Point {
  * НАПРАВЛЕНИЮ ПОРТА (выход перпендикулярно стороне ноды), кривизна
  * пропорциональна расстоянию с разумным максимумом.
  */
-function routeBezier(sourceRect: Rect, targetRect: Rect): RoutedEdge {
-  const sp = portToward(sourceRect, rectCenter(targetRect));
-  const tp = portToward(targetRect, rectCenter(sourceRect));
+function bezierFromPorts(sp: Port, tp: Port): RoutedEdge {
   const dist = Math.hypot(tp.x - sp.x, tp.y - sp.y);
   const off = bezierOffset(dist);
   const sn = SIDE_NORMALS[sp.side];
@@ -122,6 +120,23 @@ function routeBezier(sourceRect: Rect, targetRect: Rect): RoutedEdge {
   };
   const mid = cubicMidpoint(sp, curve, tp);
   return { path: cubicPath(sp, curve, tp), labelX: mid.x, labelY: mid.y, source: sp, target: tp, curve };
+}
+
+function routeBezier(sourceRect: Rect, targetRect: Rect): RoutedEdge {
+  const sp = portToward(sourceRect, rectCenter(targetRect));
+  const tp = portToward(targetRect, rectCenter(sourceRect));
+  return bezierFromPorts(sp, tp);
+}
+
+/**
+ * fixed: НЕ пересчитывает порт геометрией — берёт точку и сторону РЕАЛЬНОГО
+ * хэндла ребра как есть (включая per-node handleOffsets). Нужен для раскладок,
+ * где позиция ноды никак не связана со стороной подключения (free): порт
+ * должен оставаться там, где его поставил пользователь/раскладка, а не
+ * «соскальзывать» к грани, обращённой на текущего соседа.
+ */
+export function routeFixed(sp: Port, tp: Port): RoutedEdge {
+  return bezierFromPorts(sp, tp);
 }
 
 /**
