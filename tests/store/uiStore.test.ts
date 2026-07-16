@@ -144,26 +144,22 @@ describe('uiStore — внешний вид холста (шаг 16)', () => {
 });
 
 describe('uiStore — внешний вид главного меню', () => {
-  it('дефолты: перелив, спокойная анимация, зерно включено', () => {
+  it('дефолты: акцент #5fd4ff, шрифт IBM Plex Mono', () => {
     const { settings } = useUIStore.getState();
-    expect(settings.homePalette).toBe('iridescent');
-    expect(settings.homeAnimation).toBe('calm');
-    expect(settings.homeGrain).toBe(true);
+    expect(settings.homeAccent).toBe('#5fd4ff');
+    expect(settings.homeFont).toBe('IBM Plex Mono');
   });
 
-  it('сеттеры обновляют палитру, анимацию и зерно', () => {
-    useUIStore.getState().setHomePalette('ocean');
-    useUIStore.getState().setHomeAnimation('lively');
-    useUIStore.getState().setHomeGrain(false);
+  it('сеттеры обновляют акцент и шрифт', () => {
+    useUIStore.getState().setHomeAccent('#ff8c50');
+    useUIStore.getState().setHomeFont('Fira Code');
 
     const { settings } = useUIStore.getState();
-    expect(settings.homePalette).toBe('ocean');
-    expect(settings.homeAnimation).toBe('lively');
-    expect(settings.homeGrain).toBe(false);
+    expect(settings.homeAccent).toBe('#ff8c50');
+    expect(settings.homeFont).toBe('Fira Code');
 
     // вернуть дефолты (store — синглтон)
-    useUIStore.getState().setHomePalette('iridescent');
-    useUIStore.getState().setHomeAnimation('calm');
-    useUIStore.getState().setHomeGrain(true);
+    useUIStore.getState().setHomeAccent('#5fd4ff');
+    useUIStore.getState().setHomeFont('IBM Plex Mono');
   });
 });

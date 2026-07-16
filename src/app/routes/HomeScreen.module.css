@@ -16,8 +16,8 @@
   --faint: rgba(255, 255, 255, 0.35);
   --icon: #c9d4da;
   --accent: #5fd4ff;
-  --accent-soft: rgba(95, 212, 255, 0.55);
-  --accent-weak: rgba(95, 212, 255, 0.12);
+  --accent-soft: color-mix(in srgb, var(--accent) 55%, transparent);
+  --accent-weak: color-mix(in srgb, var(--accent) 12%, transparent);
   --menu: rgba(8, 12, 15, 0.92);
 
   position: relative;
@@ -52,8 +52,8 @@
   --faint: rgba(12, 30, 42, 0.5);
   --icon: #3d5560;
   --accent: #0a86ba;
-  --accent-soft: rgba(10, 134, 186, 0.6);
-  --accent-weak: rgba(10, 134, 186, 0.1);
+  --accent-soft: color-mix(in srgb, var(--accent) 55%, transparent);
+  --accent-weak: color-mix(in srgb, var(--accent) 12%, transparent);
   --menu: rgba(255, 255, 255, 0.94);
 }
 
@@ -149,7 +149,7 @@
 .langBtn {
   font-size: 13px;
 }
-.langBtnOpen {
+.iconBtnActive {
   border-color: var(--accent);
   color: var(--accent);
 }

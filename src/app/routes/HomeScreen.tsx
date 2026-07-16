@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import clsx from 'clsx';
 import { useMindMapStore } from '../../store/mindMapStore';
 import { useUIStore } from '../../store/uiStore';
@@ -12,6 +12,7 @@ import {
 import { useT, LOCALES, localeTag, type Locale } from '../../shared/i18n';
 import { isEditableTarget } from '../../shared/lib/dom';
 import { AsciiBackdrop } from './AsciiBackdrop';
+import { HomeAppearanceDialog } from './HomeAppearanceDialog';
 import styles from './HomeScreen.module.css';
 
 interface HomeScreenProps {
@@ -19,10 +20,10 @@ interface HomeScreenProps {
   onEnterEditor: () => void;
 }
 
-/** Цвета ASCII-фона по теме (акцент/база). */
-const ASCII_COLORS: Record<'dark' | 'light', { accent: string; base: string }> = {
-  dark: { accent: '#5fd4ff', base: '#606670' },
-  light: { accent: '#141414', base: '#1a1a1a' },
+/** Базовый цвет символов ASCII-фона в покое, по теме (акцент берётся из настроек). */
+const ASCII_BASE: Record<'dark' | 'light', string> = {
+  dark: '#606670',
+  light: '#1a1a1a',
 };
 
 /** Декоративные ASCII-коннекторы для карточек — детерминированно по пути. */
@@ -39,10 +40,14 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
   const toggleTheme = useUIStore((s) => s.toggleTheme);
   const locale = useUIStore((s) => s.locale);
   const setLocale = useUIStore((s) => s.setLocale);
+  const settings = useUIStore((s) => s.settings);
+  const setHomeAccent = useUIStore((s) => s.setHomeAccent);
+  const setHomeFont = useUIStore((s) => s.setHomeFont);
 
   // Снимок на маунт: список меняется только действиями на этом же экране.
   const [recent, setRecent] = useState<RecentFile[]>(() => getRecentFiles());
   const [langOpen, setLangOpen] = useState(false);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [glitching, setGlitching] = useState(false);
 
   const dateFmt = useMemo(
@@ -142,6 +147,12 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
           e.preventDefault();
           toggleTheme();
           break;
+        case 'KeyA':
+          if (!appearanceOpen) {
+            e.preventDefault();
+            setAppearanceOpen(true);
+          }
+          break;
         case 'KeyL':
           e.preventDefault();
           setLangOpen((v) => !v);
@@ -152,12 +163,23 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [handleCreate, handleOpenDialog, toggleTheme]);
+  }, [handleCreate, handleOpenDialog, toggleTheme, appearanceOpen]);
 
-  const ascii = ASCII_COLORS[theme];
+  const ascii = {
+    accent: theme === 'light' ? '#141414' : settings.homeAccent,
+    base: ASCII_BASE[theme],
+  };
+  const screenStyle = useMemo(
+    () =>
+      ({
+        '--accent': settings.homeAccent,
+        fontFamily: `"${settings.homeFont}", ui-monospace, Menlo, monospace`,
+      }) as CSSProperties,
+    [settings.homeAccent, settings.homeFont],
+  );
 
   return (
-    <div className={styles.screen} data-theme={theme}>
+    <div className={styles.screen} data-theme={theme} style={screenStyle}>
       <AsciiBackdrop accent={ascii.accent} base={ascii.base} />
 
       {/* Ловец кликов вне меню языка */}
@@ -188,7 +210,16 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
           </button>
           <button
             type="button"
-            className={clsx(styles.iconBtn, styles.langBtn, langOpen && styles.langBtnOpen)}
+            className={clsx(styles.iconBtn, appearanceOpen && styles.iconBtnActive)}
+            title={t('home.appearanceTooltip')}
+            aria-label={t('home.appearanceTooltip')}
+            onClick={() => setAppearanceOpen(true)}
+          >
+            ◑
+          </button>
+          <button
+            type="button"
+            className={clsx(styles.iconBtn, styles.langBtn, langOpen && styles.iconBtnActive)}
             title={t('home.langTooltip')}
             aria-label={t('home.langTooltip')}
             aria-expanded={langOpen}
@@ -259,6 +290,15 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
             type="button"
             tabIndex={-1}
             className={styles.hintItem}
+            onClick={() => setAppearanceOpen(true)}
+          >
+            <span className={styles.hintKey}>a</span> {t('home.hintAppearance')}
+          </button>
+          <span className={styles.hintSep}>·</span>
+          <button
+            type="button"
+            tabIndex={-1}
+            className={styles.hintItem}
             onClick={() => setLangOpen((v) => !v)}
           >
             <span className={styles.hintKey}>l</span> {t('home.hintLang')}
@@ -290,6 +330,15 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
           </div>
         )}
       </div>
+
+      <HomeAppearanceDialog
+        isOpen={appearanceOpen}
+        onClose={() => setAppearanceOpen(false)}
+        accentHex={settings.homeAccent}
+        fontName={settings.homeFont}
+        onAccentChange={setHomeAccent}
+        onFontChange={setHomeFont}
+      />
     </div>
   );
 }
