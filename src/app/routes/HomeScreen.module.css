@@ -15,7 +15,10 @@
   --muted: rgba(255, 255, 255, 0.42);
   --faint: rgba(255, 255, 255, 0.35);
   --icon: #c9d4da;
-  --accent: #5fd4ff;
+  /* Акцент и шрифт — из выбора пользователя (uiStore.applyAccent/applyFont
+     пишут --rm-accent/--rm-font-family на documentElement), одни на всё
+     приложение, включая редактор/Canvas. */
+  --accent: var(--rm-accent);
   --accent-soft: color-mix(in srgb, var(--accent) 55%, transparent);
   --accent-weak: color-mix(in srgb, var(--accent) 12%, transparent);
   --menu: rgba(8, 12, 15, 0.92);
@@ -26,7 +29,7 @@
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
-  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-family: var(--rm-font-family);
   transition:
     background-color 0.55s ease,
     background 0.55s ease;
@@ -51,7 +54,7 @@
   --muted: rgba(12, 30, 42, 0.55);
   --faint: rgba(12, 30, 42, 0.5);
   --icon: #3d5560;
-  --accent: #0a86ba;
+  /* --accent наследуется из базового .screen (var(--rm-accent)) — единый для обеих тем. */
   --accent-soft: color-mix(in srgb, var(--accent) 55%, transparent);
   --accent-weak: color-mix(in srgb, var(--accent) 12%, transparent);
   --menu: rgba(255, 255, 255, 0.94);

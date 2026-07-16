@@ -1,5 +1,5 @@
 :root,
-[data-theme='dark'] {
+:root[data-theme='dark'] {
   color-scheme: dark;
 
   /* Typography — terminal monospace, matching the home screen / handoff design */
@@ -57,11 +57,11 @@
   --rm-border-strong: rgba(255, 255, 255, 0.16);
   --rm-border-soft: rgba(255, 255, 255, 0.12);
 
-  /* Accent — cyan */
+  /* Accent — cyan; user-overridable (see uiStore applyAccent), everything below derives from it */
   --rm-accent: #5fd4ff;
-  --rm-accent-hover: #8ae1ff;
-  --rm-accent-muted: rgba(95, 212, 255, 0.12);
-  --rm-accent-soft: rgba(95, 212, 255, 0.55);
+  --rm-accent-hover: color-mix(in srgb, var(--rm-accent) 82%, white);
+  --rm-accent-muted: color-mix(in srgb, var(--rm-accent) 12%, transparent);
+  --rm-accent-soft: color-mix(in srgb, var(--rm-accent) 55%, transparent);
 
   /* Semantics */
   --rm-danger: #fb7185;
@@ -71,7 +71,11 @@
 
   /* Nodes and edges */
   --rm-node-bg: rgba(12, 20, 28, 0.66);
-  --rm-node-grad: linear-gradient(180deg, rgba(95, 212, 255, 0.3), rgba(95, 212, 255, 0.1));
+  --rm-node-grad: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--rm-accent) 30%, transparent),
+    color-mix(in srgb, var(--rm-accent) 10%, transparent)
+  );
   --rm-node-bg-root: var(--rm-node-grad);
   --rm-node-border: rgba(255, 255, 255, 0.12);
   --rm-node-selected: var(--rm-accent);
@@ -84,7 +88,9 @@
   --rm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
   --rm-shadow: 0 14px 38px rgba(0, 0, 0, 0.34);
   --rm-shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.42);
-  --rm-shadow-glow: 0 0 0 3px rgba(95, 212, 255, 0.26), 0 18px 48px -8px rgba(95, 212, 255, 0.35);
+  --rm-shadow-glow:
+    0 0 0 3px color-mix(in srgb, var(--rm-accent) 26%, transparent),
+    0 18px 48px -8px color-mix(in srgb, var(--rm-accent) 35%, transparent);
 
   /* Node palette presets */
   --rm-node-color-blue: #2563eb;
@@ -124,7 +130,7 @@
   --transition-speed: var(--rm-transition);
 }
 
-[data-theme='light'] {
+:root[data-theme='light'] {
   color-scheme: light;
 
   /* Brushed-silver gradient backdrop; the canvas itself is transparent over it. */
@@ -154,9 +160,9 @@
   --rm-border-soft: rgba(12, 30, 42, 0.2);
 
   --rm-accent: #0a86ba;
-  --rm-accent-hover: #0b93cc;
-  --rm-accent-muted: rgba(10, 134, 186, 0.12);
-  --rm-accent-soft: rgba(10, 134, 186, 0.55);
+  --rm-accent-hover: color-mix(in srgb, var(--rm-accent) 82%, white);
+  --rm-accent-muted: color-mix(in srgb, var(--rm-accent) 12%, transparent);
+  --rm-accent-soft: color-mix(in srgb, var(--rm-accent) 55%, transparent);
 
   --rm-danger: #e11d48;
   --rm-danger-muted: rgba(225, 29, 72, 0.1);
@@ -164,7 +170,11 @@
   --rm-warning: #d97706;
 
   --rm-node-bg: rgba(255, 255, 255, 0.8);
-  --rm-node-grad: linear-gradient(180deg, rgba(10, 134, 186, 0.22), rgba(10, 134, 186, 0.08));
+  --rm-node-grad: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--rm-accent) 22%, transparent),
+    color-mix(in srgb, var(--rm-accent) 8%, transparent)
+  );
   --rm-node-bg-root: var(--rm-node-grad);
   --rm-node-border: rgba(12, 30, 42, 0.16);
   --rm-node-placeholder: rgba(12, 30, 42, 0.5);
@@ -175,5 +185,7 @@
   --rm-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
   --rm-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
   --rm-shadow-lg: 0 24px 70px rgba(15, 23, 42, 0.14);
-  --rm-shadow-glow: 0 0 0 3px rgba(10, 134, 186, 0.2), 0 18px 42px -8px rgba(10, 134, 186, 0.28);
+  --rm-shadow-glow:
+    0 0 0 3px color-mix(in srgb, var(--rm-accent) 20%, transparent),
+    0 18px 42px -8px color-mix(in srgb, var(--rm-accent) 28%, transparent);
 }

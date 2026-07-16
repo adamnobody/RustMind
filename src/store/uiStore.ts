@@ -143,6 +143,28 @@ function applyTheme(theme: Theme): void {
   }
 }
 
+/**
+ * Акцент и шрифт выбираются на главном меню (HomeAppearanceDialog), но
+ * применяются глобально: пишем их в --rm-accent/--rm-font-family на
+ * documentElement, откуда их читает вся остальная тема приложения (см.
+ * variables.css — --rm-accent-hover/-muted/-soft, --rm-node-grad и
+ * --rm-shadow-glow выведены через color-mix из --rm-accent).
+ */
+function applyAccent(hex: string): void {
+  if (typeof document !== 'undefined') {
+    document.documentElement.style.setProperty('--rm-accent', hex);
+  }
+}
+
+function applyFont(font: string): void {
+  if (typeof document !== 'undefined') {
+    document.documentElement.style.setProperty(
+      '--rm-font-family',
+      `"${font}", ui-monospace, Menlo, Consolas, "Courier New", monospace`,
+    );
+  }
+}
+
 function resolveInitialTheme(): Theme {
   if (typeof window === 'undefined') {
     return 'dark';
@@ -165,8 +187,35 @@ function resolveInitialTheme(): Theme {
   }
 }
 
+function resolveInitialHomeAppearance(): { accent: string; font: string } {
+  const fallback = { accent: defaultSettings.homeAccent, font: defaultSettings.homeFont };
+  if (typeof window === 'undefined') {
+    return fallback;
+  }
+
+  const persisted = window.localStorage.getItem(STORAGE_KEY);
+  if (!persisted) {
+    return fallback;
+  }
+
+  try {
+    const parsed = JSON.parse(persisted) as {
+      state?: { settings?: Partial<UiSettings> };
+    };
+    return {
+      accent: parsed.state?.settings?.homeAccent ?? fallback.accent,
+      font: parsed.state?.settings?.homeFont ?? fallback.font,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
 const initialTheme = resolveInitialTheme();
 applyTheme(initialTheme);
+const initialAppearance = resolveInitialHomeAppearance();
+applyAccent(initialAppearance.accent);
+applyFont(initialAppearance.font);
 
 export const useUIStore = create<UiState>()(
   persist(
@@ -270,14 +319,18 @@ export const useUIStore = create<UiState>()(
             backgroundBrightness: Math.min(100, Math.max(0, value)),
           },
         })),
-      setHomeAccent: (hex) =>
+      setHomeAccent: (hex) => {
+        applyAccent(hex);
         set((state) => ({
           settings: { ...state.settings, homeAccent: hex },
-        })),
-      setHomeFont: (font) =>
+        }));
+      },
+      setHomeFont: (font) => {
+        applyFont(font);
         set((state) => ({
           settings: { ...state.settings, homeFont: font },
-        })),
+        }));
+      },
       setBehaviorOption: (key, value) =>
         set((state) => ({
           settings: { ...state.settings, [key]: value },
@@ -306,6 +359,8 @@ export const useUIStore = create<UiState>()(
       },
       onRehydrateStorage: () => (state) => {
         applyTheme(state?.theme ?? 'dark');
+        applyAccent(state?.settings?.homeAccent ?? defaultSettings.homeAccent);
+        applyFont(state?.settings?.homeFont ?? defaultSettings.homeFont);
       },
     },
   ),

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { useMindMapStore } from '../../store/mindMapStore';
 import { useUIStore } from '../../store/uiStore';
@@ -169,17 +169,9 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
     accent: theme === 'light' ? '#141414' : settings.homeAccent,
     base: ASCII_BASE[theme],
   };
-  const screenStyle = useMemo(
-    () =>
-      ({
-        '--accent': settings.homeAccent,
-        fontFamily: `"${settings.homeFont}", ui-monospace, Menlo, monospace`,
-      }) as CSSProperties,
-    [settings.homeAccent, settings.homeFont],
-  );
 
   return (
-    <div className={styles.screen} data-theme={theme} style={screenStyle}>
+    <div className={styles.screen} data-theme={theme}>
       <AsciiBackdrop accent={ascii.accent} base={ascii.base} />
 
       {/* Ловец кликов вне меню языка */}
