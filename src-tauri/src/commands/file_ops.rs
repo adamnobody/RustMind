@@ -11,6 +11,16 @@ pub fn write_file(path: String, content: String) -> Result<(), String> {
     fs::write(Path::new(&path), content).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub fn rename_file(from: String, to: String) -> Result<(), String> {
+    fs::rename(Path::new(&from), Path::new(&to)).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn delete_file(path: String) -> Result<(), String> {
+    fs::remove_file(Path::new(&path)).map_err(|e| e.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

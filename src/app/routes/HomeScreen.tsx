@@ -6,7 +6,10 @@ import {
   fileService,
   openDocumentFromPath,
   getRecentFiles,
+  addRecentFile,
   removeRecentFile,
+  projectNameFromPath,
+  siblingPath,
   type RecentFile,
 } from '../../features/persistence';
 import { useT, LOCALES, localeTag, type Locale } from '../../shared/i18n';
@@ -49,6 +52,9 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
   const [langOpen, setLangOpen] = useState(false);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [glitching, setGlitching] = useState(false);
+  const [menu, setMenu] = useState<{ file: RecentFile; x: number; y: number } | null>(null);
+  const [renameFor, setRenameFor] = useState<RecentFile | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const dateFmt = useMemo(
     () =>
@@ -93,6 +99,75 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
     [onEnterEditor, t],
   );
 
+  const failAlert = useCallback(
+    (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      window.alert(t('home.actionFailed', { message }));
+    },
+    [t],
+  );
+
+  const openRename = useCallback((file: RecentFile) => {
+    setMenu(null);
+    setRenameValue(projectNameFromPath(file.path));
+    setRenameFor(file);
+  }, []);
+
+  const submitRename = useCallback(async () => {
+    const target = renameFor;
+    const name = renameValue.trim();
+    setRenameFor(null);
+    if (!target || !name || name === projectNameFromPath(target.path)) return;
+    const dest = siblingPath(target.path, name);
+    try {
+      if (await fileService.fileExists(dest)) {
+        window.alert(t('home.nameExists'));
+        return;
+      }
+      await fileService.renameFile(target.path, dest);
+      removeRecentFile(target.path);
+      addRecentFile(dest, name);
+      setRecent(getRecentFiles());
+    } catch (err) {
+      failAlert(err);
+    }
+  }, [renameFor, renameValue, t, failAlert]);
+
+  const handleClone = useCallback(
+    async (file: RecentFile) => {
+      setMenu(null);
+      const base = `${projectNameFromPath(file.path)} ${t('home.cloneSuffix')}`;
+      try {
+        let dest = siblingPath(file.path, base);
+        for (let n = 2; await fileService.fileExists(dest); n++) {
+          dest = siblingPath(file.path, `${base} ${n}`);
+        }
+        await fileService.copyFile(file.path, dest);
+        addRecentFile(dest, projectNameFromPath(dest));
+        setRecent(getRecentFiles());
+      } catch (err) {
+        failAlert(err);
+      }
+    },
+    [t, failAlert],
+  );
+
+  const handleDelete = useCallback(
+    async (file: RecentFile) => {
+      setMenu(null);
+      if (!window.confirm(t('home.deleteConfirm', { name: projectNameFromPath(file.path) }))) return;
+      try {
+        await fileService.deleteFile(file.path);
+      } catch (err) {
+        failAlert(err);
+        return;
+      }
+      removeRecentFile(file.path);
+      setRecent(getRecentFiles());
+    },
+    [t, failAlert],
+  );
+
   const selectLang = useCallback(
     (code: Locale) => {
       setLocale(code);
@@ -130,6 +205,7 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
       if (isEditableTarget(e.target)) return;
       if (e.key === 'Escape') {
         setLangOpen(false);
+        setMenu(null);
         return;
       }
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -258,6 +334,13 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
             <span className={styles.cursor}>_</span>
           </div>
         </button>
+        <button
+          type="button"
+          className={styles.ctaSecondary}
+          onClick={() => void handleOpenDialog()}
+        >
+          <span className={styles.prompt}>&gt;</span> {t('home.openProject')}
+        </button>
         {/* Подсказка дублирует клавиши/сайдбар — для мыши кликабельна, но вне
             tab-порядка и скрыта от скринридеров (иначе — фокус внутри aria-hidden). */}
         <div className={styles.hint} aria-hidden="true">
@@ -303,14 +386,18 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
         {recent.length === 0 ? (
           <div className={styles.recentEmpty}>{t('home.recentEmpty')}</div>
         ) : (
-          <div className={styles.recentRow}>
-            {recent.slice(0, 4).map((file) => (
+          <div className={styles.recentRow} onScroll={() => setMenu(null)}>
+            {recent.map((file) => (
               <button
                 key={file.path}
                 type="button"
                 className={styles.card}
                 title={file.path}
                 onClick={() => void handleOpenRecent(file)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setMenu({ file, x: e.clientX, y: e.clientY });
+                }}
               >
                 <div className={styles.cardName}>{file.name}</div>
                 <div className={styles.cardMeta}>{dateFmt.format(new Date(file.openedAt))}</div>
@@ -322,6 +409,99 @@ export function HomeScreen({ onEnterEditor }: HomeScreenProps): React.JSX.Elemen
           </div>
         )}
       </div>
+
+      {/* Контекстное меню карточки недавних (ПКМ) */}
+      {menu && (
+        <>
+          <div
+            className={styles.menuScrim}
+            onClick={() => setMenu(null)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setMenu(null);
+            }}
+          />
+          <div
+            className={styles.ctxMenu}
+            role="menu"
+            style={{
+              left: Math.min(menu.x, window.innerWidth - 190),
+              top: Math.min(menu.y, window.innerHeight - 130),
+            }}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.ctxItem}
+              onClick={() => openRename(menu.file)}
+            >
+              {t('home.ctxRename')}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.ctxItem}
+              onClick={() => void handleClone(menu.file)}
+            >
+              {t('home.ctxClone')}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className={clsx(styles.ctxItem, styles.ctxDanger)}
+              onClick={() => void handleDelete(menu.file)}
+            >
+              {t('home.ctxDelete')}
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Диалог переименования проекта */}
+      {renameFor && (
+        <div
+          className={styles.renameWrap}
+          role="presentation"
+          onClick={() => setRenameFor(null)}
+        >
+          <div
+            className={styles.renameBox}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('home.renameTitle')}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.renameTitle}>{t('home.renameTitle')}</div>
+            <input
+              autoFocus
+              className={styles.renameInput}
+              value={renameValue}
+              placeholder={t('home.renamePlaceholder')}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void submitRename();
+                else if (e.key === 'Escape') setRenameFor(null);
+              }}
+            />
+            <div className={styles.renameActions}>
+              <button
+                type="button"
+                className={styles.renameCancel}
+                onClick={() => setRenameFor(null)}
+              >
+                {t('home.cancel')}
+              </button>
+              <button
+                type="button"
+                className={styles.renameOk}
+                onClick={() => void submitRename()}
+              >
+                {t('home.rename')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <HomeAppearanceDialog
         isOpen={appearanceOpen}

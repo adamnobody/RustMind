@@ -5,7 +5,7 @@ import { useUIStore } from '../../store/uiStore';
 import { translate } from '../../shared/i18n';
 import { fileService } from './fileService';
 import { serializeMindMap, deserializeMindMap } from './serializer';
-import { addRecentFile } from './recentFiles';
+import { addRecentFile, projectNameFromPath } from './recentFiles';
 
 export interface PersistenceActions {
   handleSave: () => Promise<void>;
@@ -39,7 +39,7 @@ export async function openDocumentFromPath(path: string): Promise<void> {
   // хранит позиции как есть).
   state.loadDocument(payload);
   state.setFilePath(path);
-  addRecentFile(path, payload.documentName);
+  addRecentFile(path, projectNameFromPath(path));
   setTimeout(() => useUIStore.getState().triggerFitView(), 100);
 }
 
@@ -66,7 +66,7 @@ export function usePersistence(): PersistenceActions {
       await fileService.saveToPath(path, data);
       state.setFilePath(path);
       state.markSaved();
-      addRecentFile(path, state.documentName);
+      addRecentFile(path, projectNameFromPath(path));
     });
   }, []);
 
@@ -86,7 +86,7 @@ export function usePersistence(): PersistenceActions {
       await fileService.saveToPath(path, data);
       state.setFilePath(path);
       state.markSaved();
-      addRecentFile(path, state.documentName);
+      addRecentFile(path, projectNameFromPath(path));
     });
   }, []);
 

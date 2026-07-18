@@ -42,6 +42,18 @@ function persist(files: RecentFile[]): void {
   }
 }
 
+/** Имя проекта для показа — базовое имя файла без расширения .rustmind. */
+export function projectNameFromPath(path: string): string {
+  const base = path.split(/[\\/]/).pop() ?? path;
+  return base.replace(/\.rustmind$/i, '') || base;
+}
+
+/** Путь к файлу-соседу в той же папке с заданным базовым именем (+ .rustmind). */
+export function siblingPath(path: string, baseName: string): string {
+  const i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+  return `${path.slice(0, i + 1)}${baseName}.rustmind`;
+}
+
 /** Добавляет/обновляет запись и поднимает её наверх. */
 export function addRecentFile(path: string, name: string): void {
   const rest = getRecentFiles().filter((f) => f.path !== path);

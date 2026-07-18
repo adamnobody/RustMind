@@ -31,6 +31,29 @@ export const fileService = {
     return parsed;
   },
 
+  async renameFile(from: string, to: string): Promise<void> {
+    await invoke<void>('rename_file', { from, to });
+  },
+
+  async deleteFile(path: string): Promise<void> {
+    await invoke<void>('delete_file', { path });
+  },
+
+  /** Побайтовая копия файла (для «клонировать») — без разбора схемы. */
+  async copyFile(from: string, to: string): Promise<void> {
+    const content = await invoke<string>('read_file', { path: from });
+    await invoke<void>('write_file', { path: to, content });
+  },
+
+  async fileExists(path: string): Promise<boolean> {
+    try {
+      await invoke<string>('read_file', { path });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
   async showOpenDialog(): Promise<string | null> {
     const result = await open({ filters: DIALOG_FILTERS, multiple: false });
     if (!result || Array.isArray(result)) return null;

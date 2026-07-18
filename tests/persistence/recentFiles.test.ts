@@ -3,6 +3,8 @@ import {
   getRecentFiles,
   addRecentFile,
   removeRecentFile,
+  projectNameFromPath,
+  siblingPath,
 } from '../../src/features/persistence/recentFiles';
 
 describe('recentFiles (шаг 19)', () => {
@@ -41,6 +43,17 @@ describe('recentFiles (шаг 19)', () => {
     expect(files).toHaveLength(8);
     expect(files[0].path).toBe('C:\\map9.rustmind'); // самая свежая сверху
     expect(files.some((f) => f.path === 'C:\\map0.rustmind')).toBe(false);
+  });
+
+  it('projectNameFromPath — базовое имя без .rustmind, оба разделителя пути', () => {
+    expect(projectNameFromPath('C:\\maps\\Моя карта.rustmind')).toBe('Моя карта');
+    expect(projectNameFromPath('/home/user/plan.rustmind')).toBe('plan');
+    expect(projectNameFromPath('C:\\maps\\noext')).toBe('noext');
+  });
+
+  it('siblingPath — файл-сосед в той же папке, оба разделителя', () => {
+    expect(siblingPath('C:\\maps\\old.rustmind', 'new')).toBe('C:\\maps\\new.rustmind');
+    expect(siblingPath('/home/u/a.rustmind', 'a копия')).toBe('/home/u/a копия.rustmind');
   });
 
   it('removeRecentFile убирает только указанный путь', () => {
