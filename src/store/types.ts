@@ -107,8 +107,12 @@ export interface MindMapState {
   ) => boolean;
   updateNodeLabel: (id: string, label: string) => void;
   updateNodeData: (id: string, data: Partial<MindNodeData>) => void;
-  /** Свернуть/развернуть поддерево узла (скрывает потомков; структурное действие). */
-  toggleNodeCollapse: (id: string) => void;
+  /**
+   * Свернуть/развернуть ветки узла: прячет/показывает перечисленных прямых
+   * потомков вместе с их поддеревьями. Если все `childIds` уже свёрнуты —
+   * разворачивает их, иначе сворачивает. Структурное действие.
+   */
+  toggleBranchCollapse: (parentId: string, childIds: string[]) => void;
   /** Отметить/снять узел-задачу как выполненный. */
   toggleNodeChecked: (id: string) => void;
   /** Заметка узла (коалесится как label; пустая строка удаляет поле). */

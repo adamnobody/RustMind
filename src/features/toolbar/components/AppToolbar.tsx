@@ -166,6 +166,12 @@ export function AppToolbar({
           checked: settings.showControls,
           onSelect: () => setCanvasOption('showControls', !settings.showControls),
         },
+        {
+          kind: 'checkbox',
+          label: t('mi.statuses'),
+          checked: settings.showStatuses,
+          onSelect: () => setCanvasOption('showStatuses', !settings.showStatuses),
+        },
       ],
     },
     { id: 'settings', label: t('menu.settings'), onSelect: openSettings },
@@ -275,6 +281,14 @@ export function AppToolbar({
           title={t('toolbar.stylePanel')}
           onClick={toggleInspector}
           active={inspectorOpen}
+        />
+
+        <ToolTile
+          icon="check-square"
+          label={t('tile.statuses')}
+          title={t('toolbar.statuses')}
+          onClick={() => setCanvasOption('showStatuses', !settings.showStatuses)}
+          active={settings.showStatuses}
         />
 
         <select

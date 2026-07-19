@@ -49,6 +49,10 @@ export function serializeMindMap(
         color: n.data.color,
         textColor: n.data.textColor,
         collapsed: n.data.collapsed,
+        collapsedChildren:
+          n.data.collapsedChildren && n.data.collapsedChildren.length > 0
+            ? n.data.collapsedChildren
+            : undefined,
         checked: n.data.checked,
         isRoot: n.data.isRoot,
         note: n.data.note,
@@ -106,6 +110,7 @@ export function deserializeMindMap(serialized: SerializedMindMap): LoadDocumentP
       color: n.data.color,
       textColor: n.data.textColor,
       collapsed: n.data.collapsed,
+      collapsedChildren: n.data.collapsedChildren,
       checked: n.data.checked,
       isRoot: n.data.isRoot,
       note: n.data.note,

@@ -42,24 +42,75 @@ export function treeChildrenMap(nodes: AppNode[], edges: AppEdge[]): Map<string,
 }
 
 /**
- * Узлы, скрытые сворачиванием: потомки любого узла с data.collapsed. Сам
- * свёрнутый узел виден; скрыто всё его поддерево. Используется раскладкой (не
- * выделять место) и канвасом (node.hidden при рендере).
+ * Узлы, скрытые сворачиванием. Два независимых механизма:
+ * - `data.collapsedChildren` — свёрнутые ВЕТКИ: прячем перечисленных прямых
+ *   потомков вместе с их поддеревьями (сам потомок тоже скрыт). Каждая ветка
+ *   сворачивается отдельно — свернуть одну не трогает соседние.
+ * - `data.collapsed` — legacy-режим (старые файлы): прячет ВСЕ поддеревья узла,
+ *   сам узел виден.
+ * Используется раскладкой (не выделять место) и канвасом (node.hidden).
  */
 export function collapsedHiddenIds(nodes: AppNode[], edges: AppEdge[]): Set<string> {
   const children = treeChildrenMap(nodes, edges);
   const hidden = new Set<string>();
-  for (const n of nodes) {
-    if (!n.data.collapsed) continue;
-    const stack = [...(children.get(n.id) ?? [])];
+  // Прячет переданные узлы и все их поддеревья.
+  const hideFrom = (startIds: string[]): void => {
+    const stack = [...startIds];
     while (stack.length > 0) {
       const cur = stack.pop()!;
       if (hidden.has(cur)) continue;
       hidden.add(cur);
       stack.push(...(children.get(cur) ?? []));
     }
+  };
+  for (const n of nodes) {
+    const direct = children.get(n.id) ?? [];
+    // legacy: свёрнут весь узел → прячем всех потомков (сам узел остаётся).
+    if (n.data.collapsed) hideFrom(direct);
+    // по ветке: прячем каждый свёрнутый прямой потомок + его поддерево.
+    const folded = n.data.collapsedChildren;
+    if (folded && folded.length > 0) {
+      const directSet = new Set(direct);
+      hideFrom(folded.filter((c) => directSet.has(c)));
+    }
   }
   return hidden;
+}
+
+/**
+ * Узлы, ИСКЛЮЧАЕМЫЕ ИЗ РАСКЛАДКИ при сворачивании — отличается от
+ * {@link collapsedHiddenIds} (что прятать при рендере) специально: свёрнутый
+ * прямой потомок ОСТАЁТСЯ в раскладке (держит свой слот), из раскладки убираем
+ * лишь его ПОДДЕРЕВО. Так соседние ветки не перетекают на освободившееся место
+ * и, главное, не наезжают на «застывшую» позицию свёрнутой ветки — иначе на
+ * одну сторону попадали бы две ветки и одна кнопка сворачивала бы обе.
+ * (legacy `collapsed` по-прежнему освобождает всё поддерево целиком.)
+ */
+export function layoutExcludedIds(nodes: AppNode[], edges: AppEdge[]): Set<string> {
+  const children = treeChildrenMap(nodes, edges);
+  const excluded = new Set<string>();
+  // Исключает ПОТОМКОВ переданных узлов (сами узлы остаются в раскладке).
+  const excludeDescendants = (rootIds: string[]): void => {
+    const stack = rootIds.flatMap((rid) => children.get(rid) ?? []);
+    while (stack.length > 0) {
+      const cur = stack.pop()!;
+      if (excluded.has(cur)) continue;
+      excluded.add(cur);
+      stack.push(...(children.get(cur) ?? []));
+    }
+  };
+  for (const n of nodes) {
+    const direct = children.get(n.id) ?? [];
+    // legacy: убираем всё поддерево узла (сам узел держит слот).
+    if (n.data.collapsed) excludeDescendants(direct);
+    // по ветке: убираем поддерево свёрнутого потомка, но сам потомок — в раскладке.
+    const folded = n.data.collapsedChildren;
+    if (folded && folded.length > 0) {
+      const directSet = new Set(direct);
+      excludeDescendants(folded.filter((c) => directSet.has(c)));
+    }
+  }
+  return excluded;
 }
 
 /** Родитель по структурному ребру; null, если узел — корень/сирота. */

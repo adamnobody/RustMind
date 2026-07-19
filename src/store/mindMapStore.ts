@@ -384,17 +384,30 @@ export const useMindMapStore = create<MindMapState>()(
       });
     },
 
-    toggleNodeCollapse: (id) => {
+    toggleBranchCollapse: (parentId, childIds) => {
+      if (childIds.length === 0) return;
       recordHistory('structural');
       set((state) => {
-        const node = state.nodes.find((n) => n.id === id);
-        if (node) {
-          node.data.collapsed = !node.data.collapsed;
-          state.isDirty = true;
+        const node = state.nodes.find((n) => n.id === parentId);
+        if (!node) return;
+        const folded = new Set(node.data.collapsedChildren ?? []);
+        // Все переданные ветки уже свёрнуты → разворачиваем, иначе сворачиваем.
+        const allFolded = childIds.every((c) => folded.has(c));
+        for (const c of childIds) {
+          if (allFolded) folded.delete(c);
+          else folded.add(c);
         }
+        node.data.collapsedChildren = folded.size > 0 ? [...folded] : undefined;
+        // Гасим legacy-флаг: дальше источник истины — collapsedChildren.
+        node.data.collapsed = undefined;
+        state.isDirty = true;
       });
-      // Свёрнутое поддерево исключается из раскладки — пересчитываем позиции.
-      get().recomputeIfDerived();
+      // НЕ пересчитываем раскладку: сворачивание ветки прячет её на месте, а
+      // соседние ветки остаются где были (иначе derived-раскладка перетасовала
+      // бы все узлы, кнопки бы прыгали, и было бы неясно, что именно свернулось).
+      // Свёрнутая ветка сохраняет позицию → её сторона детектится → развернуть
+      // можно обратно. Место под ней подберётся при следующем структурном
+      // изменении (add/delete/move и т.п. вызывают recompute сами).
     },
 
     toggleNodeChecked: (id) => {

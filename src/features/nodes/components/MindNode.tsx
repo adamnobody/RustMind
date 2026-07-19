@@ -1,5 +1,10 @@
 import { memo, useCallback, useEffect, type CSSProperties } from 'react';
-import { useUpdateNodeInternals, type NodeProps } from '@xyflow/react';
+import {
+  useStore,
+  useUpdateNodeInternals,
+  type InternalNode,
+  type NodeProps,
+} from '@xyflow/react';
 import { useShallow } from 'zustand/react/shallow';
 import clsx from 'clsx';
 import { NodeHandles } from './NodeHandles';
@@ -9,7 +14,16 @@ import { NodeNotePanel } from './NodeNotePanel';
 import { useNodeEditing } from '../hooks/useNodeEditing';
 import { DEFAULT_NODE_STYLE, type BorderPattern, type MindNodeData, type NodeShape } from '../types';
 import { isDefaultChildLabel } from '../../../shared/i18n';
-import { isTreeEdge } from '../../edges/types';
+import { isTreeEdge, DEFAULT_TREE_EDGE_HANDLES } from '../../edges/types';
+import {
+  portToward,
+  rectCenter,
+  type EdgeRouting,
+  type PortSide,
+  type Rect,
+} from '../../edges/lib/routing';
+import { getLayoutStrategy } from '../../layout/strategies/registry';
+import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../../shared/lib/constants';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import styles from './MindNode.module.css';
@@ -20,6 +34,65 @@ const shapeClass: Record<NodeShape, string> = {
   ellipse: styles.shapeEllipse,
   diamond: styles.shapeDiamond,
 };
+
+const COLLAPSE_SIDES: PortSide[] = ['top', 'right', 'bottom', 'left'];
+/** На сколько px вынести кнопку сворачивания наружу от грани узла (на линию). */
+const COLLAPSE_PERP = 15;
+
+function isPortSide(v: string | null | undefined): v is PortSide {
+  return v === 'top' || v === 'right' || v === 'bottom' || v === 'left';
+}
+
+/**
+ * Сторона, с которой ребро реально ВЫХОДИТ из родителя — считаем ТЕМ ЖЕ
+ * способом, что и MindEdge рисует линию (по edgeRouting раскладки), иначе кнопка
+ * сворачивания встанет не на ту грань, где линия:
+ * - 'fixed' (free) — линия закреплена на хэндле, берём его сторону (sourceHandle);
+ * - 'orthogonal' (org/timeline) — по доминирующей оси, как routeOrthogonal;
+ * - остальное (bezier/radial/straight) — портом к центру соседа (portToward).
+ */
+function edgeSourceSide(
+  routing: EdgeRouting,
+  ownRect: Rect,
+  childRect: Rect,
+  sourceHandle: string | null | undefined,
+): PortSide {
+  if (routing === 'fixed') {
+    return isPortSide(sourceHandle) ? sourceHandle : DEFAULT_TREE_EDGE_HANDLES.sourceHandle;
+  }
+  if (routing === 'orthogonal') {
+    const sc = rectCenter(ownRect);
+    const tc = rectCenter(childRect);
+    const dx = tc.x - sc.x;
+    const dy = tc.y - sc.y;
+    if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left';
+    return dy >= 0 ? 'bottom' : 'top';
+  }
+  return portToward(ownRect, rectCenter(childRect)).side;
+}
+
+/**
+ * Инлайновый стиль кнопки сворачивания: одна кнопка НА СТОРОНУ (у хэндла), в
+ * середине грани — там, где сидит хэндл и сходятся линии связи этой стороны, —
+ * вынесенная на COLLAPSE_PERP наружу, ровно на линию. Проценты от РЕАЛЬНОГО бокса
+ * (50% = середина стороны = хэндл), поэтому точка закреплена у хэндла независимо
+ * от размеров; translate(-50%,-50%) центрирует кнопку.
+ */
+function collapseToggleStyle(side: PortSide): CSSProperties {
+  const out = `calc(100% + ${COLLAPSE_PERP}px)`;
+  const neg = `-${COLLAPSE_PERP}px`;
+  const base: CSSProperties = { transform: 'translate(-50%, -50%)' };
+  switch (side) {
+    case 'top':
+      return { ...base, left: '50%', top: neg };
+    case 'bottom':
+      return { ...base, left: '50%', top: out };
+    case 'left':
+      return { ...base, top: '50%', left: neg };
+    case 'right':
+      return { ...base, top: '50%', left: out };
+  }
+}
 
 /**
  * Build the inline style for the visual box from the node's style override.
@@ -117,32 +190,86 @@ function MindNodeComponent({
   const noteOpen = useUIStore((s) => s.openNoteNodeId === id);
   const toggleNotePanel = useUIStore((s) => s.toggleNotePanel);
   const searchQuery = useUIStore((s) => (s.searchOpen ? s.searchQuery.trim().toLowerCase() : ''));
+  const showStatuses = useUIStore((s) => s.settings.showStatuses);
   const searchMatch = searchQuery !== '' && nodeData.label.toLowerCase().includes(searchQuery);
 
-  const toggleNodeCollapse = useMindMapStore((s) => s.toggleNodeCollapse);
+  const toggleBranchCollapse = useMindMapStore((s) => s.toggleBranchCollapse);
   const toggleNodeChecked = useMindMapStore((s) => s.toggleNodeChecked);
 
-  // Дочерние узлы и прогресс поддёргиваем одним селектором. Возвращаем ТОЛЬКО
-  // примитивы (useShallow сравнивает поля через Object.is): объект прогресса
-  // создавал бы новую ссылку на каждый вызов и ломал бы мемоизацию.
-  const { childCount, progressDone, progressTotal } = useMindMapStore(
-    useShallow((s) => {
-      const childrenOf = new Map<string, string[]>();
-      const checkedOf = new Map<string, boolean>();
-      for (const n of s.nodes) checkedOf.set(n.id, Boolean(n.data.checked));
-      for (const e of s.edges) {
-        if (!isTreeEdge(e)) continue;
-        const list = childrenOf.get(e.source);
-        if (list) list.push(e.target);
-        else childrenOf.set(e.source, [e.target]);
-      }
-      const count = childrenOf.get(id)?.length ?? 0;
-      const p = count > 0 ? subtreeProgress(id, childrenOf, checkedOf) : { done: 0, total: 0 };
-      return { childCount: count, progressDone: p.done, progressTotal: p.total };
-    }),
-  );
+  // Дети (с sourceHandle их рёбер), прогресс и свёрнутые ветки — из mindMapStore.
+  // Каждого ребёнка кодируем как "childId:sourceHandle" (примитивная строка,
+  // useShallow/Object.is — массив рвал бы мемоизацию). Роутинг раскладки нужен,
+  // чтобы вычислить сторону выхода ТЕМ ЖЕ способом, что рисует MindEdge.
+  const { progressDone, progressTotal, foldedJoined, childEdgesJoined, layoutType } =
+    useMindMapStore(
+      useShallow((s) => {
+        const childrenOf = new Map<string, string[]>();
+        const checkedOf = new Map<string, boolean>();
+        const handleOf = new Map<string, string>();
+        for (const n of s.nodes) checkedOf.set(n.id, Boolean(n.data.checked));
+        for (const e of s.edges) {
+          if (!isTreeEdge(e)) continue;
+          const list = childrenOf.get(e.source);
+          if (list) list.push(e.target);
+          else childrenOf.set(e.source, [e.target]);
+          if (e.source === id) handleOf.set(e.target, e.sourceHandle ?? '');
+        }
+        const children = childrenOf.get(id) ?? [];
+        const p = children.length > 0 ? subtreeProgress(id, childrenOf, checkedOf) : { done: 0, total: 0 };
+        const self = s.nodes.find((n) => n.id === id);
+        return {
+          progressDone: p.done,
+          progressTotal: p.total,
+          foldedJoined: (self?.data.collapsedChildren ?? []).join(','),
+          childEdgesJoined: children.map((c) => `${c}:${handleOf.get(c) ?? ''}`).join(';'),
+          layoutType: s.layoutType,
+        };
+      }),
+    );
+  const foldedSet = new Set(foldedJoined === '' ? [] : foldedJoined.split(','));
+  const childEdges = childEdgesJoined === '' ? [] : childEdgesJoined.split(';').map((x) => x.split(':'));
+  const routing = getLayoutStrategy(layoutType).edgeRouting;
 
-  const collapsed = Boolean(nodeData.collapsed);
+  // Группируем детей по стороне выхода ветки — ОДНА кнопка на сторону (у хэндла),
+  // даже если из неё выходит несколько линий. Сторону считаем ТЕМ ЖЕ способом,
+  // что MindEdge рисует линию (edgeSourceSide по routing раскладки), по
+  // ИЗМЕРЕННОЙ геометрии React Flow (nodeLookup) — иначе кнопка встанет не на ту
+  // грань, где реально выходит линия. Свёрнутый потомок остаётся в раскладке
+  // (layoutExcludedIds) и в nodeLookup (hidden-узлы там сохраняются), поэтому его
+  // сторона стабильна. Возвращаем ПРИМИТИВНУЮ строку "top;right;bottom;left" (id
+  // через ','): store RF тикает часто, но Object.is по строке гасит ре-рендеры.
+  const sideBucketsJoined = useStore((s) => {
+    const rectOf = (n: InternalNode | undefined, root: boolean): Rect | null => {
+      if (!n) return null;
+      const fb = root ? ROOT_NODE_SIZE : DEFAULT_NODE_SIZE;
+      return {
+        x: n.internals.positionAbsolute.x,
+        y: n.internals.positionAbsolute.y,
+        width: n.measured?.width ?? fb.width,
+        height: n.measured?.height ?? fb.height,
+      };
+    };
+    const ownRect = rectOf(s.nodeLookup.get(id), isRoot);
+    const buckets: Record<PortSide, string[]> = { top: [], right: [], bottom: [], left: [] };
+    if (ownRect) {
+      for (const [cid, handle] of childEdges) {
+        const cRect = rectOf(s.nodeLookup.get(cid), false);
+        if (!cRect) continue;
+        buckets[edgeSourceSide(routing, ownRect, cRect, handle)].push(cid);
+      }
+    }
+    return COLLAPSE_SIDES.map((side) => buckets[side].join(',')).join(';');
+  });
+
+  // Одна кнопка на сторону: side → id детей, выходящих этой стороной.
+  const bucketParts = sideBucketsJoined.split(';');
+  const sideChildIds: Record<PortSide, string[]> = {
+    top: bucketParts[0] ? bucketParts[0].split(',') : [],
+    right: bucketParts[1] ? bucketParts[1].split(',') : [],
+    bottom: bucketParts[2] ? bucketParts[2].split(',') : [],
+    left: bucketParts[3] ? bucketParts[3].split(',') : [],
+  };
+
   const checked = Boolean(nodeData.checked);
   const hasNote = Boolean(nodeData.note && nodeData.note.trim() !== '');
 
@@ -194,7 +321,7 @@ function MindNodeComponent({
         style={boxStyleFrom(nodeData, shape)}
       >
         <div className={styles.content}>
-          {!isRoot && !isEditing && (
+          {showStatuses && !isRoot && !isEditing && (
             <button
               type="button"
               className={clsx(styles.checkbox, checked && styles.checkboxChecked)}
@@ -204,6 +331,7 @@ function MindNodeComponent({
                 e.stopPropagation();
                 toggleNodeChecked(id);
               }}
+              onDoubleClick={(e) => e.stopPropagation()}
             >
               {checked ? '✓' : ''}
             </button>
@@ -221,7 +349,7 @@ function MindNodeComponent({
               {nodeData.label}
             </span>
           )}
-          {progressTotal > 0 && progressDone > 0 && (
+          {showStatuses && progressTotal > 0 && progressDone > 0 && (
             <span className={styles.progressBadge}>
               {progressDone}/{progressTotal}
             </span>
@@ -238,25 +366,33 @@ function MindNodeComponent({
             e.stopPropagation();
             toggleNotePanel(id);
           }}
+          onDoubleClick={(e) => e.stopPropagation()}
         >
           ✎
         </button>
       )}
-      {/* ponytail: toggle always sits at the right edge; layouts that grow left
-          (left/both) still work, just the affordance isn't mirrored. */}
-      {childCount > 0 && (
-        <button
-          type="button"
-          className={clsx(styles.collapseToggle, collapsed && styles.collapseToggleCollapsed)}
-          aria-label="collapse"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleNodeCollapse(id);
-          }}
-        >
-          {collapsed ? childCount : '−'}
-        </button>
-      )}
+      {COLLAPSE_SIDES.map((side) => {
+        const ids = sideChildIds[side];
+        if (ids.length === 0) return null;
+        // Сторона свёрнута, если ВСЕ её ветки скрыты (клик сворачивает все разом).
+        const folded = ids.every((cid) => foldedSet.has(cid));
+        return (
+          <button
+            key={side}
+            type="button"
+            className={clsx(styles.collapseToggle, folded && styles.collapseToggleCollapsed)}
+            style={collapseToggleStyle(side)}
+            aria-label="collapse"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleBranchCollapse(id, ids);
+            }}
+            onDoubleClick={(e) => e.stopPropagation()}
+          >
+            {folded ? ids.length : '−'}
+          </button>
+        );
+      })}
       {noteOpen && <NodeNotePanel nodeId={id} note={nodeData.note ?? ''} />}
     </div>
   );

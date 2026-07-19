@@ -28,6 +28,7 @@ export type IconName =
   | 'image'
   | 'template'
   | 'group'
+  | 'check-square'
   // Иконки из шага 1/4, оставим для совместимости в будущем
   | 'zoomIn'
   | 'zoomOut'
@@ -297,6 +298,12 @@ const ICON_PATHS: Record<IconName, React.JSX.Element> = {
       <circle cx="12" cy="12" r="10" />
       <line x1="12" y1="16" x2="12" y2="12" />
       <line x1="12" y1="8" x2="12.01" y2="8" />
+    </>
+  ),
+  'check-square': (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <polyline points="8 12 11 15 16 9" />
     </>
   ),
 };

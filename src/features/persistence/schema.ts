@@ -45,6 +45,8 @@ export interface SerializedNode {
     color?: string;
     textColor?: string;
     collapsed?: boolean;
+    /** Свёрнутые ветки: id прямых потомков со спрятанным поддеревом (v4+). */
+    collapsedChildren?: string[];
     checked?: boolean;
     isRoot?: boolean;
     note?: string;

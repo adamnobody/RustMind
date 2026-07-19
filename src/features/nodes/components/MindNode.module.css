@@ -174,12 +174,12 @@
   border-color: var(--rm-accent-soft);
 }
 
-/* --- Collapse / expand toggle --- */
+/* --- Collapse / expand toggle ---
+   One toggle PER BRANCH (per direct child), so each branch folds independently.
+   Position is set inline in MindNode.tsx: on the node edge where that branch
+   leaves (fraction along the side) and pushed outward to clear the handle. */
 .collapseToggle {
   position: absolute;
-  top: 50%;
-  right: -11px;
-  transform: translateY(-50%);
   z-index: 2;
   display: inline-flex;
   align-items: center;

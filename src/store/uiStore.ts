@@ -28,6 +28,8 @@ interface UiSettings {
   showGrid: boolean;
   showMiniMap: boolean;
   showControls: boolean;
+  /** Показывать чекбоксы статуса задач на узлах (выкл. по умолчанию). */
+  showStatuses: boolean;
   confirmBranchDelete: boolean;
   /** Паттерн фона холста (когда showGrid включён). */
   backgroundPattern: BackgroundPattern;
@@ -118,7 +120,7 @@ interface UiState {
   closeTemplatePicker: () => void;
   setNodeFontSize: (size: NodeFontSize) => void;
   setCanvasOption: (
-    key: 'showGrid' | 'showMiniMap' | 'showControls',
+    key: 'showGrid' | 'showMiniMap' | 'showControls' | 'showStatuses',
     value: boolean,
   ) => void;
   setBackgroundPattern: (pattern: BackgroundPattern) => void;
@@ -137,6 +139,7 @@ const defaultSettings: UiSettings = {
   showGrid: true,
   showMiniMap: true,
   showControls: true,
+  showStatuses: false,
   confirmBranchDelete: false,
   backgroundPattern: 'dots',
   // 26 ≈ прежняя захардкоженная альфа сетки (rgba …, 0.26)
