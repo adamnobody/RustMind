@@ -14,6 +14,7 @@ import {
 } from '@xyflow/react';
 import { useShallow } from 'zustand/react/shallow';
 
+import type { AppNode } from '../../../store/types';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { MindNode } from '../../nodes/components/MindNode';
@@ -21,13 +22,24 @@ import { MindEdge } from '../../edges/components/MindEdge';
 import { MIND_NODE_TYPE } from '../../nodes/types';
 import { MIND_EDGE_TYPE, oppositeHandle } from '../../edges/types';
 import { getLayoutStrategy, isEdgeValidForLayout } from '../../layout/strategies/registry';
+import { collapsedHiddenIds, treeDepthMap } from '../../layout/strategies/shared';
+import {
+  GroupBox,
+  GroupSelectionButton,
+  groupBounds,
+  GROUP_NODE_TYPE,
+  GROUP_PADDING,
+  GROUP_TITLE_HEIGHT,
+} from '../../groups';
+import { DEFAULT_NODE_SIZE } from '../../../shared/lib/constants';
 import { resolveDropTarget } from '../lib/dropTarget';
 
-import { useT, translate } from '../../../shared/i18n';
+import { translate } from '../../../shared/i18n';
 import { useGlobalHotkeys } from '../hooks/useGlobalHotkeys';
 import { CanvasBackground } from './CanvasBackground';
 import { CanvasControls } from './CanvasControls';
 import { MiniMap } from './MiniMap';
+import { SearchBar } from './SearchBar';
 import styles from './MindMapCanvas.module.css';
 
 const nodeFontSizeBySetting = {
@@ -76,6 +88,12 @@ function CanvasInner(): React.JSX.Element {
   );
 
   const handleVisibility = useMindMapStore((s) => s.projectSettings.handleVisibility);
+  const bgColor = useMindMapStore((s) => s.projectSettings.backgroundColor);
+  const bgImage = useMindMapStore((s) => s.projectSettings.backgroundImage);
+  const edgeColor = useMindMapStore((s) => s.projectSettings.edgeColor);
+  const levelColors = useMindMapStore((s) => s.projectSettings.levelColors);
+  const groups = useMindMapStore((s) => s.groups);
+  const selectedGroupId = useUIStore((s) => s.selectedGroupId);
 
   const setSelectedNodeId = useUIStore((s) => s.setSelectedNodeId);
   const setSelection = useUIStore((s) => s.setSelection);
@@ -85,7 +103,6 @@ function CanvasInner(): React.JSX.Element {
   const settings = useUIStore((s) => s.settings);
   const layoutType = useMindMapStore((s) => s.layoutType);
   const isEditing = editingNodeId !== null;
-  const t = useT();
   const canvasStyle = useMemo(
     () =>
       ({
@@ -94,23 +111,113 @@ function CanvasInner(): React.JSX.Element {
     [settings.nodeFontSize],
   );
 
-  const nodeTypes = useMemo<NodeTypes>(() => ({ [MIND_NODE_TYPE]: MindNode }), []);
+  const nodeTypes = useMemo<NodeTypes>(
+    () => ({ [MIND_NODE_TYPE]: MindNode, [GROUP_NODE_TYPE]: GroupBox }),
+    [],
+  );
   const edgeTypes = useMemo<EdgeTypes>(() => ({ [MIND_EDGE_TYPE]: MindEdge }), []);
 
   const strategy = useMemo(() => getLayoutStrategy(layoutType), [layoutType]);
+
+  // Узлы, скрытые сворачиванием (потомки свёрнутых узлов) — прячем их и их рёбра.
+  const collapseHidden = useMemo(() => collapsedHiddenIds(nodes, edges), [nodes, edges]);
+
+  // Скрытие свёрнутых поддеревьев + внедрение цвета уровня (глобальные стили):
+  // levelColor — транзиентный фон для узлов БЕЗ собственного цвета, не пишется в файл.
+  const displayNodes = useMemo(() => {
+    const hasLevels = !!levelColors && levelColors.some((c) => c);
+    if (collapseHidden.size === 0 && !hasLevels) return nodes;
+    const depthOf = hasLevels ? treeDepthMap(nodes, edges) : null;
+    return nodes.map((n) => {
+      let next = collapseHidden.has(n.id) ? { ...n, hidden: true } : n;
+      if (hasLevels && depthOf) {
+        const explicitBg = n.data.style?.backgroundColor ?? n.data.color;
+        const depth = depthOf.get(n.id) ?? 0;
+        const lc = !explicitBg && depth >= 1 ? levelColors?.[depth - 1] : undefined;
+        if (lc) next = { ...next, data: { ...next.data, levelColor: lc } };
+      }
+      return next;
+    });
+  }, [nodes, edges, collapseHidden, levelColors]);
+
+  // Ноды-области групп: вычисляем bbox по видимым узлам-членам, кладём ПЕРЕД
+  // остальными (рисуются позади). Не draggable/selectable/connectable — тело
+  // pointer-events:none (клики проходят к узлам), интерактивен только заголовок.
+  const groupNodes = useMemo(() => {
+    if (groups.length === 0) return [];
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const out: AppNode[] = [];
+    for (const g of groups) {
+      const rects = g.nodeIds
+        .filter((id) => !collapseHidden.has(id))
+        .map((id) => byId.get(id))
+        .filter((n): n is AppNode => Boolean(n))
+        .map((n) => ({
+          x: n.position.x,
+          y: n.position.y,
+          w: n.measured?.width ?? DEFAULT_NODE_SIZE.width,
+          h: n.measured?.height ?? DEFAULT_NODE_SIZE.height,
+        }));
+      const b = groupBounds(rects);
+      if (!b) continue;
+      const width = b.width + GROUP_PADDING * 2;
+      const height = b.height + GROUP_PADDING * 2 + GROUP_TITLE_HEIGHT;
+      out.push({
+        id: `group:${g.id}`,
+        type: GROUP_NODE_TYPE,
+        position: { x: b.x - GROUP_PADDING, y: b.y - GROUP_PADDING - GROUP_TITLE_HEIGHT },
+        data: { group: g, selected: selectedGroupId === g.id } as unknown as AppNode['data'],
+        draggable: false,
+        selectable: false,
+        connectable: false,
+        deletable: false,
+        focusable: false,
+        zIndex: 0,
+        width,
+        height,
+        style: { width, height, pointerEvents: 'none' },
+      });
+    }
+    return out;
+  }, [groups, nodes, collapseHidden, selectedGroupId]);
+
+  const finalNodes = useMemo(
+    () => (groupNodes.length > 0 ? [...groupNodes, ...displayNodes] : displayNodes),
+    [groupNodes, displayNodes],
+  );
+
+  // Глобальные стили проекта на обёртке холста: фон (цвет/картинка) и цвет всех
+  // связей через переопределение --rm-edge (per-edge стиль остаётся в приоритете).
+  const wrapperStyle = useMemo(() => {
+    const st: Record<string, string> = {};
+    if (bgColor) st.backgroundColor = bgColor;
+    if (bgImage) {
+      st.backgroundImage = `url("${bgImage}")`;
+      st.backgroundSize = 'cover';
+      st.backgroundPosition = 'center';
+    }
+    if (edgeColor) st['--rm-edge'] = edgeColor;
+    return st as CSSProperties;
+  }, [bgColor, bgImage, edgeColor]);
 
   // Мягкий вариант ограничений: рёбра, невалидные для ТЕКУЩЕЙ раскладки
   // (остались после переключения типа), не удаляются — помечаются флагом
   // data.invalid для визуальной отбраковки в MindEdge. Флаг живёт только в
   // этом производном массиве и никогда не попадает в стор/файл.
   const displayEdges = useMemo(() => {
-    if (strategy.edgeConstraint === 'any') return edges;
-    return edges.map((e) =>
-      isEdgeValidForLayout(strategy, e, nodes, edges)
-        ? e
-        : { ...e, data: { ...e.data, invalid: true } },
+    const marked =
+      strategy.edgeConstraint === 'any'
+        ? edges
+        : edges.map((e) =>
+            isEdgeValidForLayout(strategy, e, nodes, edges)
+              ? e
+              : { ...e, data: { ...e.data, invalid: true } },
+          );
+    if (collapseHidden.size === 0) return marked;
+    return marked.map((e) =>
+      collapseHidden.has(e.source) || collapseHidden.has(e.target) ? { ...e, hidden: true } : e,
     );
-  }, [edges, nodes, strategy]);
+  }, [edges, nodes, strategy, collapseHidden]);
 
   // Жёсткий edgeConstraint на уровне жеста: невалидную связь нельзя даже
   // «защёлкнуть» — RF подсветит хэндл как запрещённый.
@@ -226,9 +333,9 @@ function CanvasInner(): React.JSX.Element {
   );
 
   return (
-    <div data-handle-visibility={handleVisibility} className={styles.wrapper}>
+    <div data-handle-visibility={handleVisibility} className={styles.wrapper} style={wrapperStyle}>
       <ReactFlow
-        nodes={nodes}
+        nodes={finalNodes}
         edges={displayEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -240,7 +347,10 @@ function CanvasInner(): React.JSX.Element {
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
         onSelectionChange={handleSelectionChange}
-        onPaneClick={() => setSelectedNodeId(null)}
+        onPaneClick={() => {
+          setSelectedNodeId(null);
+          useUIStore.getState().setSelectedGroupId(null);
+        }}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         connectionMode={ConnectionMode.Loose}
@@ -260,11 +370,8 @@ function CanvasInner(): React.JSX.Element {
         {settings.showControls && <CanvasControls />}
         {settings.showMiniMap && <MiniMap />}
       </ReactFlow>
-      <div className={styles.hint} aria-hidden="true">
-        <span className={styles.prompt}>&gt;</span>
-        {t('canvas.hint')}
-        <span className={styles.cursor}>_</span>
-      </div>
+      <SearchBar />
+      <GroupSelectionButton />
       {notice && (
         <div className={styles.notice} role="status">
           {notice}

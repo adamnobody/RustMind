@@ -1,0 +1,55 @@
+.group {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1.5px dashed var(--rm-accent-soft);
+  border-radius: var(--rm-radius);
+  background: color-mix(in srgb, var(--rm-accent) 8%, transparent);
+}
+
+.group.selected {
+  border-style: solid;
+  border-color: var(--rm-accent);
+  box-shadow: var(--rm-shadow-glow);
+}
+
+.titleBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rm-space-2);
+  padding: 0 var(--rm-space-3);
+  /* Тело группы pointer-events:none — заголовок возвращаем интерактивность. */
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--rm-font-sm);
+  font-weight: var(--rm-font-weight-semibold);
+  color: var(--rm-text-muted);
+}
+
+.del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--rm-radius-sm);
+  background: transparent;
+  color: var(--rm-text-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.del:hover {
+  background: var(--rm-danger-muted);
+  color: var(--rm-danger);
+}

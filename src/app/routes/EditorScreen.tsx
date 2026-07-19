@@ -2,7 +2,8 @@ import { MindMapCanvas } from '../../features/canvas';
 import { AppToolbar, SettingsPanel } from '../../features/toolbar';
 import { Inspector } from '../../features/inspector';
 import { LayoutTypeDialog } from '../../features/layout';
-import { usePersistence, useWindowCloseGuard } from '../../features/persistence';
+import { TemplateDialog } from '../../features/templates';
+import { usePersistence, useWindowCloseGuard, useAutosave } from '../../features/persistence';
 import { KeyboardProvider } from '../providers/KeyboardProvider';
 import styles from './EditorScreen.module.css';
 
@@ -14,6 +15,7 @@ interface EditorScreenProps {
 export function EditorScreen({ onGoHome }: EditorScreenProps = {}): React.JSX.Element {
   const { handleSave, handleSaveAs, handleOpen, handleNew } = usePersistence();
   useWindowCloseGuard();
+  useAutosave();
 
   return (
     <KeyboardProvider
@@ -38,6 +40,7 @@ export function EditorScreen({ onGoHome }: EditorScreenProps = {}): React.JSX.El
         </div>
         <SettingsPanel />
         <LayoutTypeDialog />
+        <TemplateDialog />
       </div>
     </KeyboardProvider>
   );

@@ -11,6 +11,13 @@ pub fn write_file(path: String, content: String) -> Result<(), String> {
     fs::write(Path::new(&path), content).map_err(|e| e.to_string())
 }
 
+/// Записать бинарный файл (PNG/PDF-экспорт): фронтенд шлёт байты массивом чисел,
+/// Tauri десериализует их в Vec<u8>. Текстовый write_file для этого не годится.
+#[tauri::command]
+pub fn write_binary_file(path: String, bytes: Vec<u8>) -> Result<(), String> {
+    fs::write(Path::new(&path), bytes).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 pub fn rename_file(from: String, to: String) -> Result<(), String> {
     fs::rename(Path::new(&from), Path::new(&to)).map_err(|e| e.to_string())

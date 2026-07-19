@@ -8,6 +8,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::file_ops::read_file,
             commands::file_ops::write_file,
+            commands::file_ops::write_binary_file,
             commands::file_ops::rename_file,
             commands::file_ops::delete_file,
             commands::fonts::list_system_fonts,

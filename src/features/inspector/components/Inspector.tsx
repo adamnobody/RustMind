@@ -5,6 +5,7 @@ import { IconButton } from '../../../shared/ui/IconButton/IconButton';
 import { useT } from '../../../shared/i18n';
 import { NodeStyleEditor } from './NodeStyleEditor';
 import { EdgeStyleEditor } from './EdgeStyleEditor';
+import { GroupEditor } from './GroupEditor';
 import styles from './Inspector.module.css';
 
 /**
@@ -15,14 +16,16 @@ import styles from './Inspector.module.css';
  */
 export function Inspector(): React.JSX.Element | null {
   const t = useT();
-  const { inspectorOpen, selectedNodeIds, selectedEdgeIds, hideInspector } = useUIStore(
-    useShallow((s) => ({
-      inspectorOpen: s.inspectorOpen,
-      selectedNodeIds: s.selectedNodeIds,
-      selectedEdgeIds: s.selectedEdgeIds,
-      hideInspector: s.hideInspector,
-    })),
-  );
+  const { inspectorOpen, selectedNodeIds, selectedEdgeIds, selectedGroupId, hideInspector } =
+    useUIStore(
+      useShallow((s) => ({
+        inspectorOpen: s.inspectorOpen,
+        selectedNodeIds: s.selectedNodeIds,
+        selectedEdgeIds: s.selectedEdgeIds,
+        selectedGroupId: s.selectedGroupId,
+        hideInspector: s.hideInspector,
+      })),
+    );
 
   const singleNodeId =
     selectedNodeIds.length === 1 && selectedEdgeIds.length === 0 ? selectedNodeIds[0] : null;
@@ -43,7 +46,9 @@ export function Inspector(): React.JSX.Element | null {
     ? t('inspector.nodeStyle')
     : edge
       ? t('inspector.edgeStyle')
-      : t('inspector.properties');
+      : selectedGroupId
+        ? t('inspector.groupStyle')
+        : t('inspector.properties');
 
   return (
     // Keep keystrokes typed into the panel away from the canvas' global node
@@ -62,6 +67,8 @@ export function Inspector(): React.JSX.Element | null {
           <NodeStyleEditor nodeId={node.id} data={node.data} />
         ) : edge ? (
           <EdgeStyleEditor edgeId={edge.id} data={edge.data} />
+        ) : selectedGroupId ? (
+          <GroupEditor groupId={selectedGroupId} />
         ) : (
           <p className={styles.empty}>{t('inspector.empty')}</p>
         )}

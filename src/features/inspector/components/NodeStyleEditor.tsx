@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import clsx from 'clsx';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { listSystemFonts, FALLBACK_FONTS } from '../../../shared/lib/fonts';
 import { useT, type TranslationKey } from '../../../shared/i18n';
@@ -138,6 +139,40 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
         onChange={(hex) => set({ textColor: hex })}
         onReset={() => set({ textColor: undefined })}
       />
+
+      {/* Начертание — независимые переключатели (жирный/курсив/подчёркнутый). */}
+      <div className={styles.field}>
+        <span className={styles.fieldLabel}>{t('node.textStyle')}</span>
+        <div className={styles.segment} style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+          <button
+            type="button"
+            aria-pressed={Boolean(style?.bold)}
+            className={clsx(styles.segmentItem, style?.bold && styles.segmentActive)}
+            style={{ fontWeight: 700 }}
+            onClick={() => set({ bold: !style?.bold })}
+          >
+            B
+          </button>
+          <button
+            type="button"
+            aria-pressed={Boolean(style?.italic)}
+            className={clsx(styles.segmentItem, style?.italic && styles.segmentActive)}
+            style={{ fontStyle: 'italic' }}
+            onClick={() => set({ italic: !style?.italic })}
+          >
+            I
+          </button>
+          <button
+            type="button"
+            aria-pressed={Boolean(style?.underline)}
+            className={clsx(styles.segmentItem, style?.underline && styles.segmentActive)}
+            style={{ textDecoration: 'underline' }}
+            onClick={() => set({ underline: !style?.underline })}
+          >
+            U
+          </button>
+        </div>
+      </div>
 
       {/* Смещение хэндлов вдоль своей стороны: 0% — левый/верхний угол,
           50% — центр (дефолт, не хранится), 100% — правый/нижний угол. */}

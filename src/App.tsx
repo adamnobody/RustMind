@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { HomeScreen } from './app/routes/HomeScreen';
 import { EditorScreen } from './app/routes/EditorScreen';
 import { useMindMapStore } from './store/mindMapStore';
+import { readDraft, clearDraft, deserializeMindMap } from './features/persistence';
 import { translate } from './shared/i18n';
 import './styles/global.css';
 
@@ -11,6 +12,25 @@ export function App(): React.JSX.Element {
   const [screen, setScreen] = useState<Screen>('home');
 
   const enterEditor = useCallback(() => setScreen('editor'), []);
+
+  // Восстановление после краха: при старте предлагаем открыть последний
+  // автосохранённый черновик (грязный документ, не сохранённый в файл).
+  useEffect(() => {
+    const draft = readDraft();
+    if (!draft) return;
+    if (window.confirm(translate('dialog.recoverDraft'))) {
+      try {
+        const st = useMindMapStore.getState();
+        st.loadDocument(deserializeMindMap(draft.serialized));
+        st.setFilePath(draft.filePath);
+        st.markDirty(); // восстановленный черновик не сохранён в файл
+        setScreen('editor');
+      } catch {
+        /* повреждённый черновик — просто игнорируем */
+      }
+    }
+    clearDraft();
+  }, []);
 
   const goHome = useCallback(() => {
     const { isDirty } = useMindMapStore.getState();

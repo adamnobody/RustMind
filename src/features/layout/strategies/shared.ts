@@ -41,10 +41,47 @@ export function treeChildrenMap(nodes: AppNode[], edges: AppEdge[]): Map<string,
   return map;
 }
 
+/**
+ * Узлы, скрытые сворачиванием: потомки любого узла с data.collapsed. Сам
+ * свёрнутый узел виден; скрыто всё его поддерево. Используется раскладкой (не
+ * выделять место) и канвасом (node.hidden при рендере).
+ */
+export function collapsedHiddenIds(nodes: AppNode[], edges: AppEdge[]): Set<string> {
+  const children = treeChildrenMap(nodes, edges);
+  const hidden = new Set<string>();
+  for (const n of nodes) {
+    if (!n.data.collapsed) continue;
+    const stack = [...(children.get(n.id) ?? [])];
+    while (stack.length > 0) {
+      const cur = stack.pop()!;
+      if (hidden.has(cur)) continue;
+      hidden.add(cur);
+      stack.push(...(children.get(cur) ?? []));
+    }
+  }
+  return hidden;
+}
+
 /** Родитель по структурному ребру; null, если узел — корень/сирота. */
 export function treeParentOf(nodeId: string, edges: AppEdge[]): string | null {
   const edge = edges.find((e) => e.target === nodeId && isTreeEdge(e));
   return edge ? edge.source : null;
+}
+
+/** Глубина каждого узла от корня по структурным рёбрам (корень = 0). BFS, O(N). */
+export function treeDepthMap(nodes: AppNode[], edges: AppEdge[]): Map<string, number> {
+  const children = treeChildrenMap(nodes, edges);
+  const root = findRoot(nodes);
+  const depth = new Map<string, number>();
+  if (!root) return depth;
+  const queue: [string, number][] = [[root.id, 0]];
+  while (queue.length > 0) {
+    const [id, d] = queue.shift()!;
+    if (depth.has(id)) continue;
+    depth.set(id, d);
+    for (const child of children.get(id) ?? []) queue.push([child, d + 1]);
+  }
+  return depth;
 }
 
 /** Глубина узла в дереве (корень/сирота = 0). С защитой от порчи данных (циклов). */

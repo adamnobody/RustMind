@@ -49,7 +49,7 @@ describe('реестр стратегий', () => {
   });
 
   it('каждая стратегия объявляет валидный edgeRouting', () => {
-    const valid = ['orthogonal', 'bezier', 'radial', 'straight'];
+    const valid = ['orthogonal', 'bezier', 'radial', 'straight', 'fixed'];
     for (const kind of LAYOUT_KINDS) {
       expect(valid).toContain(getLayoutStrategy(kind).edgeRouting);
     }

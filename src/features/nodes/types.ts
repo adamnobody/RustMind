@@ -15,6 +15,10 @@ export interface NodeStyle {
   textColor?: string;
   fontSize?: number;
   fontFamily?: string;
+  /** Начертание текста узла — как и остальные поля, храним только отклонения от дефолта (false). */
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
 }
 
 /** Skeleton defaults — used at render time via { ...DEFAULT_NODE_STYLE, ...node.data.style }. */
@@ -27,6 +31,9 @@ export const DEFAULT_NODE_STYLE: Required<NodeStyle> = {
   textColor: 'var(--rm-text)',
   fontSize: 14,
   fontFamily: 'inherit',
+  bold: false,
+  italic: false,
+  underline: false,
 };
 
 /** Сторона узла — совпадает с id хэндлов в NodeHandles. */
@@ -48,8 +55,15 @@ export interface MindNodeData {
   collapsed?: boolean;
   isRoot?: boolean;
   note?: string;
+  /** Узел-задача отмечен выполненным (чекбокс). Прогресс родителя считается по потомкам. */
+  checked?: boolean;
   style?: NodeStyle;
   handleOffsets?: HandleOffsets;
+  /**
+   * Транзиентный цвет уровня из глобальных настроек проекта (projectSettings.levelColors).
+   * Внедряется канвасом на лету, НЕ сериализуется — самый низкий приоритет фона.
+   */
+  levelColor?: string;
   /**
    * Порядок среди сиблингов (структурная модель раскладки). Опционально на
    * границе типов/сериализации, но после normalizeStructure у каждого узла в

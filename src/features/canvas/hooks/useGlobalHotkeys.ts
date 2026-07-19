@@ -53,6 +53,24 @@ export function useGlobalHotkeys(): void {
         return;
       }
 
+      // Поиск по узлам — Ctrl/Cmd+F.
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyF') {
+        e.preventDefault();
+        useUIStore.getState().toggleSearch();
+        return;
+      }
+
+      // Группировка выделенных узлов — Ctrl/Cmd+G (нужно ≥2 узла).
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyG') {
+        e.preventDefault();
+        const { selectedNodeIds, setSelectedGroupId } = useUIStore.getState();
+        if (selectedNodeIds.length >= 2) {
+          const gid = useMindMapStore.getState().createGroup(selectedNodeIds);
+          if (gid) setSelectedGroupId(gid);
+        }
+        return;
+      }
+
       // Helper: выделить новый узел без авто-редактирования — быстрый наброс структуры.
       const focusNew = (newId: string | null): void => {
         if (newId) {
@@ -90,6 +108,14 @@ export function useGlobalHotkeys(): void {
 
         case 'Delete':
         case 'Backspace': {
+          // Выбрана группа — удаляем её (узлы не трогаем).
+          const { selectedGroupId, setSelectedGroupId } = useUIStore.getState();
+          if (selectedGroupId) {
+            e.preventDefault();
+            useMindMapStore.getState().deleteGroup(selectedGroupId);
+            setSelectedGroupId(null);
+            break;
+          }
           if (selectedNodeId) {
             e.preventDefault();
             // deleteNode сам игнорирует удаление корня, но здесь не сбрасываем
@@ -114,8 +140,9 @@ export function useGlobalHotkeys(): void {
         }
 
         case 'Escape': {
-          // Снять выделение
+          // Снять выделение (узлов и группы)
           setSelectedNodeId(null);
+          useUIStore.getState().setSelectedGroupId(null);
           break;
         }
 

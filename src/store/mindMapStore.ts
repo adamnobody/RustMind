@@ -114,10 +114,11 @@ export const useMindMapStore = create<MindMapState>()(
      * Снимаем ТЕКУЩЕЕ состояние в past, чистим future и режем по лимиту.
      */
     const recordHistory = (category: HistoryCategory): void => {
-      const { nodes, edges, layoutType } = get();
+      const { nodes, edges, groups, layoutType } = get();
       const snapshot: HistorySnapshot = {
         nodes: structuredClone(nodes),
         edges: structuredClone(edges),
+        groups: structuredClone(groups),
         layoutType,
         category,
       };
@@ -151,6 +152,7 @@ export const useMindMapStore = create<MindMapState>()(
     return {
     nodes: [initialRoot],
     edges: [],
+    groups: [],
     documentName: translate('doc.untitled'),
     filePath: null,
     isDirty: false,
@@ -382,6 +384,42 @@ export const useMindMapStore = create<MindMapState>()(
       });
     },
 
+    toggleNodeCollapse: (id) => {
+      recordHistory('structural');
+      set((state) => {
+        const node = state.nodes.find((n) => n.id === id);
+        if (node) {
+          node.data.collapsed = !node.data.collapsed;
+          state.isDirty = true;
+        }
+      });
+      // Свёрнутое поддерево исключается из раскладки — пересчитываем позиции.
+      get().recomputeIfDerived();
+    },
+
+    toggleNodeChecked: (id) => {
+      recordHistory('text');
+      set((state) => {
+        const node = state.nodes.find((n) => n.id === id);
+        if (node) {
+          node.data.checked = node.data.checked ? undefined : true;
+          state.isDirty = true;
+        }
+      });
+    },
+
+    setNodeNote: (id, note) => {
+      // Коалесинг серии правок заметки одного узла — одна запись undo (как label).
+      recordCoalesced(`note:${id}`, 'text');
+      set((state) => {
+        const node = state.nodes.find((n) => n.id === id);
+        if (node) {
+          node.data.note = note === '' ? undefined : note;
+          state.isDirty = true;
+        }
+      });
+    },
+
     setNodeStyle: (id, patch) => {
       // Серия правок стиля одного узла (протяжка слайдера/цвета) — одна запись
       // undo. Стиль не меняет геометрию → категория 'text', без ре-центровки.
@@ -465,6 +503,10 @@ export const useMindMapStore = create<MindMapState>()(
         state.nodes = state.nodes.filter((n) => !toDelete.has(n.id));
         state.edges = state.edges.filter((e) => !toDelete.has(e.source) && !toDelete.has(e.target));
         reindexSiblings(state.nodes, remainingSiblings);
+        // Убираем удалённые узлы из групп; пустые группы распускаем.
+        state.groups = state.groups
+          .map((g) => ({ ...g, nodeIds: g.nodeIds.filter((nid) => !toDelete.has(nid)) }))
+          .filter((g) => g.nodeIds.length > 0);
         state.isDirty = true;
       });
       get().recomputeIfDerived();
@@ -567,6 +609,7 @@ export const useMindMapStore = create<MindMapState>()(
       set((state) => {
         state.nodes = positioned.nodes;
         state.edges = positioned.edges;
+        state.groups = payload.groups ?? [];
         state.documentName = payload.documentName;
         state.layoutType = payload.layoutType;
         state.projectSettings = payload.projectSettings ?? { handleVisibility: DEFAULT_HANDLE_VISIBILITY };
@@ -584,6 +627,7 @@ export const useMindMapStore = create<MindMapState>()(
       set((state) => {
         state.nodes = [root];
         state.edges = [];
+        state.groups = [];
         state.documentName = translate('doc.untitled');
         state.filePath = null;
         state.isDirty = false;
@@ -623,12 +667,58 @@ export const useMindMapStore = create<MindMapState>()(
       });
     },
 
+    createGroup: (nodeIds) => {
+      // Только существующие узлы; дубликаты убираем. Пустой набор — нет группы.
+      const known = new Set(get().nodes.map((n) => n.id));
+      const members = [...new Set(nodeIds)].filter((id) => known.has(id));
+      if (members.length === 0) return null;
+
+      const id = generateNodeId();
+      recordHistory('structural');
+      set((state) => {
+        state.groups.push({ id, title: translate('group.defaultTitle'), nodeIds: members });
+        state.isDirty = true;
+      });
+      return id;
+    },
+
+    setGroupTitle: (id, title) => {
+      recordCoalesced(`grouptitle:${id}`, 'text');
+      set((state) => {
+        const group = state.groups.find((g) => g.id === id);
+        if (group) {
+          group.title = title;
+          state.isDirty = true;
+        }
+      });
+    },
+
+    updateGroup: (id, patch) => {
+      recordCoalesced(`group:${id}`, 'text');
+      set((state) => {
+        const group = state.groups.find((g) => g.id === id);
+        if (!group) return;
+        if ('color' in patch) group.color = patch.color;
+        if (patch.titleStyle) group.titleStyle = { ...group.titleStyle, ...patch.titleStyle };
+        state.isDirty = true;
+      });
+    },
+
+    deleteGroup: (id) => {
+      if (!get().groups.some((g) => g.id === id)) return;
+      recordHistory('structural');
+      set((state) => {
+        state.groups = state.groups.filter((g) => g.id !== id);
+        state.isDirty = true;
+      });
+    },
+
     pushHistory: (category = 'move') => {
       recordHistory(category);
     },
 
     undo: () => {
-      const { past, nodes, edges, layoutType } = get();
+      const { past, nodes, edges, groups, layoutType } = get();
       if (past.length === 0) return;
       resetCoalesce();
 
@@ -638,6 +728,7 @@ export const useMindMapStore = create<MindMapState>()(
       const current: HistorySnapshot = {
         nodes: structuredClone(nodes),
         edges: structuredClone(edges),
+        groups: structuredClone(groups),
         layoutType,
         category: previous.category,
       };
@@ -647,6 +738,7 @@ export const useMindMapStore = create<MindMapState>()(
         state.future.push(current);
         state.nodes = structuredClone(previous.nodes);
         state.edges = structuredClone(previous.edges);
+        state.groups = structuredClone(previous.groups);
         state.layoutType = previous.layoutType;
         state.isDirty = true;
         state.canUndo = state.past.length > 0;
@@ -666,7 +758,7 @@ export const useMindMapStore = create<MindMapState>()(
     },
 
     redo: () => {
-      const { future, nodes, edges, layoutType } = get();
+      const { future, nodes, edges, groups, layoutType } = get();
       if (future.length === 0) return;
       resetCoalesce();
 
@@ -674,6 +766,7 @@ export const useMindMapStore = create<MindMapState>()(
       const current: HistorySnapshot = {
         nodes: structuredClone(nodes),
         edges: structuredClone(edges),
+        groups: structuredClone(groups),
         layoutType,
         category: next.category,
       };
@@ -683,6 +776,7 @@ export const useMindMapStore = create<MindMapState>()(
         state.past.push(current);
         state.nodes = structuredClone(next.nodes);
         state.edges = structuredClone(next.edges);
+        state.groups = structuredClone(next.groups);
         state.layoutType = next.layoutType;
         state.isDirty = true;
         state.canUndo = true;

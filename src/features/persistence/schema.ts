@@ -20,6 +20,9 @@ interface SerializedNodeStyle {
   textColor?: string;
   fontSize?: number;
   fontFamily?: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
 }
 
 interface SerializedEdgeStyle {
@@ -42,6 +45,7 @@ export interface SerializedNode {
     color?: string;
     textColor?: string;
     collapsed?: boolean;
+    checked?: boolean;
     isRoot?: boolean;
     note?: string;
     style?: SerializedNodeStyle;
@@ -63,6 +67,27 @@ export interface SerializedEdge {
 
 interface SerializedProjectSettings {
   handleVisibility?: string;
+  backgroundColor?: string;
+  backgroundImage?: string;
+  edgeColor?: string;
+  levelColors?: string[];
+}
+
+interface SerializedGroupTitleStyle {
+  fontFamily?: string;
+  fontSize?: number;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  color?: string;
+}
+
+export interface SerializedGroup {
+  id: string;
+  title: string;
+  nodeIds: string[];
+  color?: string;
+  titleStyle?: SerializedGroupTitleStyle;
 }
 
 export interface SerializedMindMap {
@@ -71,6 +96,7 @@ export interface SerializedMindMap {
   layoutType: string;
   nodes: SerializedNode[];
   edges: SerializedEdge[];
+  groups?: SerializedGroup[];
   projectSettings?: SerializedProjectSettings;
   createdAt: string;
   updatedAt: string;

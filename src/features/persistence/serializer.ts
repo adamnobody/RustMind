@@ -1,5 +1,6 @@
 import { type NodeStyle, type HandleOffsets, DEFAULT_NODE_STYLE } from '../../features/nodes/types';
 import { type EdgeStyle, type EdgeKind, DEFAULT_TREE_EDGE_HANDLES, DEFAULT_EDGE_STYLE } from '../../features/edges/types';
+import type { Group } from '../../features/groups/types';
 import type { AppNode, AppEdge, LayoutType, LoadDocumentPayload, HandleVisibility, ProjectSettings } from '../../store/types';
 import type { SerializedMindMap } from './schema';
 import { FILE_VERSION } from './schema';
@@ -32,6 +33,7 @@ export function serializeMindMap(
   nodes: AppNode[],
   edges: AppEdge[],
   projectSettings: ProjectSettings,
+  groups: Group[] = [],
   createdAt?: string,
 ): SerializedMindMap {
   const now = new Date().toISOString();
@@ -47,6 +49,7 @@ export function serializeMindMap(
         color: n.data.color,
         textColor: n.data.textColor,
         collapsed: n.data.collapsed,
+        checked: n.data.checked,
         isRoot: n.data.isRoot,
         note: n.data.note,
         style: pruneStyle(n.data.style, DEFAULT_NODE_STYLE),
@@ -69,8 +72,22 @@ export function serializeMindMap(
         data: Object.keys(data).length > 0 ? data : undefined,
       };
     }),
+    groups:
+      groups.length > 0
+        ? groups.map((g) => ({
+            id: g.id,
+            title: g.title,
+            nodeIds: g.nodeIds,
+            color: g.color,
+            titleStyle: g.titleStyle,
+          }))
+        : undefined,
     projectSettings: {
       handleVisibility: projectSettings.handleVisibility,
+      backgroundColor: projectSettings.backgroundColor,
+      backgroundImage: projectSettings.backgroundImage,
+      edgeColor: projectSettings.edgeColor,
+      levelColors: projectSettings.levelColors,
     },
     createdAt: createdAt ?? now,
     updatedAt: now,
@@ -89,6 +106,7 @@ export function deserializeMindMap(serialized: SerializedMindMap): LoadDocumentP
       color: n.data.color,
       textColor: n.data.textColor,
       collapsed: n.data.collapsed,
+      checked: n.data.checked,
       isRoot: n.data.isRoot,
       note: n.data.note,
       // Serialized style uses string for union fields; cast to domain type.
@@ -120,11 +138,28 @@ export function deserializeMindMap(serialized: SerializedMindMap): LoadDocumentP
   // валидную структуру и делает единственный пересчёт ПОЗИЦИЙ для derived.
   const normalized = normalizeStructure(nodes, edges, layoutType);
 
+  // Группы: чиним ссылки на удалённые узлы, распускаем опустевшие.
+  const nodeIdSet = new Set(normalized.nodes.map((n) => n.id));
+  const groups: Group[] = (serialized.groups ?? [])
+    .map((g) => ({
+      id: g.id,
+      title: g.title,
+      nodeIds: g.nodeIds.filter((id) => nodeIdSet.has(id)),
+      color: g.color,
+      titleStyle: g.titleStyle,
+    }))
+    .filter((g) => g.nodeIds.length > 0);
+
   return {
     documentName: serialized.documentName,
     layoutType,
+    groups,
     projectSettings: {
       handleVisibility: coerceHandleVisibility(serialized.projectSettings?.handleVisibility),
+      backgroundColor: serialized.projectSettings?.backgroundColor,
+      backgroundImage: serialized.projectSettings?.backgroundImage,
+      edgeColor: serialized.projectSettings?.edgeColor,
+      levelColors: serialized.projectSettings?.levelColors,
     },
     nodes: normalized.nodes,
     edges: normalized.edges,

@@ -22,6 +22,16 @@ export const fileService = {
     await invoke<void>('write_file', { path, content });
   },
 
+  /** Запись произвольного текста (SVG-экспорт). */
+  async saveTextToPath(path: string, content: string): Promise<void> {
+    await invoke<void>('write_file', { path, content });
+  },
+
+  /** Запись бинарного файла (PNG/PDF-экспорт): байты передаём массивом чисел. */
+  async saveBytesToPath(path: string, bytes: Uint8Array): Promise<void> {
+    await invoke<void>('write_binary_file', { path, bytes: Array.from(bytes) });
+  },
+
   async loadFromPath(path: string): Promise<SerializedMindMap> {
     const content = await invoke<string>('read_file', { path });
     const parsed: unknown = JSON.parse(content);
@@ -64,6 +74,19 @@ export const fileService = {
     const result = await save({
       filters: DIALOG_FILTERS,
       defaultPath: defaultName,
+    });
+    return result ?? null;
+  },
+
+  /** Диалог сохранения для экспорта картинки/PDF (свой фильтр расширения). */
+  async showSaveImageDialog(
+    defaultName: string,
+    ext: string,
+    label: string,
+  ): Promise<string | null> {
+    const result = await save({
+      filters: [{ name: label, extensions: [ext] }],
+      defaultPath: `${defaultName}.${ext}`,
     });
     return result ?? null;
   },

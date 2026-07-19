@@ -1,0 +1,111 @@
+import { useEffect, useState } from 'react';
+import clsx from 'clsx';
+import { useMindMapStore } from '../../../store/mindMapStore';
+import { listSystemFonts, FALLBACK_FONTS } from '../../../shared/lib/fonts';
+import { useT } from '../../../shared/i18n';
+import { ColorField, FontField, NumberField, TextField } from './fields';
+import styles from './Inspector.module.css';
+
+const DEFAULT_TITLE_SIZE = 12;
+const COLOR_SEED = { fill: '#5fd4ff', text: '#e2e8f0' } as const;
+
+interface GroupEditorProps {
+  groupId: string;
+}
+
+export function GroupEditor({ groupId }: GroupEditorProps): React.JSX.Element | null {
+  const t = useT();
+  const group = useMindMapStore((s) => s.groups.find((g) => g.id === groupId));
+  const setGroupTitle = useMindMapStore((s) => s.setGroupTitle);
+  const updateGroup = useMindMapStore((s) => s.updateGroup);
+
+  const [fonts, setFonts] = useState<string[]>([...FALLBACK_FONTS]);
+  useEffect(() => {
+    let alive = true;
+    void listSystemFonts().then((list) => {
+      if (alive) setFonts(list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (!group) return null;
+  const ts = group.titleStyle;
+
+  return (
+    <div className={styles.editor}>
+      <TextField
+        label={t('group.titleLabel')}
+        value={group.title}
+        placeholder={t('group.titlePlaceholder')}
+        onChange={(value) => setGroupTitle(groupId, value)}
+      />
+
+      <ColorField
+        label={t('group.fillColor')}
+        value={group.color}
+        fallback={COLOR_SEED.fill}
+        onChange={(hex) => updateGroup(groupId, { color: hex })}
+        onReset={() => updateGroup(groupId, { color: undefined })}
+      />
+
+      <FontField
+        label={t('node.font')}
+        value={ts?.fontFamily}
+        fonts={fonts}
+        onChange={(fontFamily) => updateGroup(groupId, { titleStyle: { fontFamily } })}
+      />
+
+      <NumberField
+        label={t('node.fontSize')}
+        value={ts?.fontSize ?? DEFAULT_TITLE_SIZE}
+        min={10}
+        max={40}
+        suffix="px"
+        onChange={(fontSize) => updateGroup(groupId, { titleStyle: { fontSize } })}
+      />
+
+      <ColorField
+        label={t('node.textColor')}
+        value={ts?.color}
+        fallback={COLOR_SEED.text}
+        onChange={(hex) => updateGroup(groupId, { titleStyle: { color: hex } })}
+        onReset={() => updateGroup(groupId, { titleStyle: { color: undefined } })}
+      />
+
+      <div className={styles.field}>
+        <span className={styles.fieldLabel}>{t('node.textStyle')}</span>
+        <div className={styles.segment} style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+          <button
+            type="button"
+            aria-pressed={Boolean(ts?.bold)}
+            className={clsx(styles.segmentItem, ts?.bold && styles.segmentActive)}
+            style={{ fontWeight: 700 }}
+            onClick={() => updateGroup(groupId, { titleStyle: { bold: !ts?.bold } })}
+          >
+            B
+          </button>
+          <button
+            type="button"
+            aria-pressed={Boolean(ts?.italic)}
+            className={clsx(styles.segmentItem, ts?.italic && styles.segmentActive)}
+            style={{ fontStyle: 'italic' }}
+            onClick={() => updateGroup(groupId, { titleStyle: { italic: !ts?.italic } })}
+          >
+            I
+          </button>
+          <button
+            type="button"
+            aria-pressed={Boolean(ts?.underline)}
+            className={clsx(styles.segmentItem, ts?.underline && styles.segmentActive)}
+            style={{ textDecoration: 'underline' }}
+            onClick={() => updateGroup(groupId, { titleStyle: { underline: !ts?.underline } })}
+          >
+            U
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

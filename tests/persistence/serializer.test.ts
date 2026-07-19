@@ -46,10 +46,40 @@ describe('serializer round-trip', () => {
     }
   });
 
+  it('round-trip: задачи, стиль текста, группы и глобальные стили проекта', () => {
+    const nodes: AppNode[] = [
+      makeNode('root', true),
+      { ...makeNode('a'), data: { label: 'A', checked: true, style: { bold: true, italic: true } } },
+    ];
+    const edges: AppEdge[] = [makeEdge('root', 'a')];
+    const projectSettings: ProjectSettings = {
+      handleVisibility: 'always',
+      backgroundColor: '#101010',
+      edgeColor: '#ff0000',
+      levelColors: ['#111', '', '#333'],
+    };
+    const groups = [
+      { id: 'g1', title: 'Cluster', nodeIds: ['root', 'a'], color: '#00ff00', titleStyle: { bold: true } },
+    ];
+
+    const serialized = serializeMindMap('Doc', 'hierarchy', nodes, edges, projectSettings, groups);
+    const restored = deserializeMindMap(serialized);
+
+    const a = restored.nodes.find((n) => n.id === 'a');
+    expect(a?.data.checked).toBe(true);
+    expect(a?.data.style?.bold).toBe(true);
+    expect(a?.data.style?.italic).toBe(true);
+    expect(restored.projectSettings?.backgroundColor).toBe('#101010');
+    expect(restored.projectSettings?.edgeColor).toBe('#ff0000');
+    expect(restored.projectSettings?.levelColors).toEqual(['#111', '', '#333']);
+    expect(restored.groups).toHaveLength(1);
+    expect(restored.groups?.[0]).toMatchObject({ title: 'Cluster', color: '#00ff00', nodeIds: ['root', 'a'] });
+  });
+
   it('сохраняет createdAt при повторной сериализации', () => {
     const nodes: AppNode[] = [makeNode('root', true)];
     const first = serializeMindMap('Doc', 'tree-TB', nodes, [], defaultProjectSettings);
-    const second = serializeMindMap('Doc', 'tree-TB', nodes, [], defaultProjectSettings, first.createdAt);
+    const second = serializeMindMap('Doc', 'tree-TB', nodes, [], defaultProjectSettings, [], first.createdAt);
 
     expect(second.createdAt).toBe(first.createdAt);
     expect(second.version).toBe(FILE_VERSION);

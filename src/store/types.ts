@@ -8,6 +8,7 @@ import type {
 import type { HandleSide, MindNodeData, NodeStyle } from '../features/nodes/types';
 import type { EdgeStyle, MindEdgeData } from '../features/edges/types';
 import type { LayoutKind } from '../features/layout/engines/layoutTypes';
+import type { Group, GroupTitleStyle } from '../features/groups/types';
 
 export type AppNode = Node<MindNodeData>;
 export type AppEdge = Edge<MindEdgeData>;
@@ -18,6 +19,18 @@ export type HandleVisibility = 'hidden' | 'dashed' | 'always';
 
 export interface ProjectSettings {
   handleVisibility: HandleVisibility;
+  /** Глобальный фон холста (hex). Отсутствие — фон темы. */
+  backgroundColor?: string;
+  /** Фоновое изображение холста (data URL). */
+  backgroundImage?: string;
+  /** Цвет ВСЕХ связей (переопределяет --rm-edge); per-edge стиль имеет приоритет. */
+  edgeColor?: string;
+  /**
+   * Цвет фона узлов по уровням дерева: индекс 0 — уровень 1 (дети корня), 1 —
+   * уровень 2 и т.д. Пустая строка/отсутствие — без переопределения. Применяется
+   * только к узлам без собственного цвета фона.
+   */
+  levelColors?: string[];
 }
 
 export interface LoadDocumentPayload {
@@ -26,6 +39,7 @@ export interface LoadDocumentPayload {
   nodes: AppNode[];
   edges: AppEdge[];
   projectSettings?: ProjectSettings;
+  groups?: Group[];
 }
 
 /**
@@ -48,6 +62,7 @@ export type HistoryCategory = 'structural' | 'layout' | 'move' | 'text';
 export interface HistorySnapshot {
   nodes: AppNode[];
   edges: AppEdge[];
+  groups: Group[];
   layoutType: LayoutType;
   category: HistoryCategory;
 }
@@ -55,6 +70,7 @@ export interface HistorySnapshot {
 export interface MindMapState {
   nodes: AppNode[];
   edges: AppEdge[];
+  groups: Group[];
 
   documentName: string;
   filePath: string | null;
@@ -91,6 +107,12 @@ export interface MindMapState {
   ) => boolean;
   updateNodeLabel: (id: string, label: string) => void;
   updateNodeData: (id: string, data: Partial<MindNodeData>) => void;
+  /** Свернуть/развернуть поддерево узла (скрывает потомков; структурное действие). */
+  toggleNodeCollapse: (id: string) => void;
+  /** Отметить/снять узел-задачу как выполненный. */
+  toggleNodeChecked: (id: string) => void;
+  /** Заметка узла (коалесится как label; пустая строка удаляет поле). */
+  setNodeNote: (id: string, note: string) => void;
   /**
    * Merge a partial style override into a node, then prune against
    * DEFAULT_NODE_STYLE so any field set to its default is removed (not stored as
@@ -138,6 +160,15 @@ export interface MindMapState {
   markSaved: () => void;
   markDirty: () => void;
   setProjectSettings: (patch: Partial<ProjectSettings>) => void;
+
+  /** Создать группу из узлов (≥1). Возвращает id новой группы или null. */
+  createGroup: (nodeIds: string[]) => string | null;
+  /** Изменить заголовок группы (коалесится). */
+  setGroupTitle: (id: string, title: string) => void;
+  /** Изменить цвет заливки / стиль заголовка группы. */
+  updateGroup: (id: string, patch: { color?: string; titleStyle?: GroupTitleStyle }) => void;
+  /** Удалить группу (сами узлы не трогаются). */
+  deleteGroup: (id: string) => void;
 
   /** Снять снимок текущего дерева в past (для drag — на старте перетаскивания). */
   pushHistory: (category?: HistoryCategory) => void;

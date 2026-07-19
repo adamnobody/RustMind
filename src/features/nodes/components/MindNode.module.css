@@ -92,8 +92,128 @@
 }
 
 .content {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rm-space-2);
   width: 100%;
+}
+
+/* --- Task checkbox --- */
+.checkbox {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1.5px solid var(--rm-border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--rm-accent);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+/* Скрыт, пока узел не наведён/выбран — но всегда виден, если отмечен. */
+.node:hover .checkbox,
+.node.selected .checkbox,
+.checkbox.checkboxChecked {
+  opacity: 1;
+}
+
+.checkbox.checkboxChecked {
+  background: var(--rm-accent);
+  border-color: var(--rm-accent);
+  color: var(--rm-bg);
+}
+
+.labelChecked {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+/* --- Progress badge (X/Y выполнено в поддереве) --- */
+.progressBadge {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: var(--rm-radius-full);
+  background: var(--rm-accent-muted);
+  color: var(--rm-accent);
+  font-size: var(--rm-font-xs);
+  font-weight: var(--rm-font-weight-semibold);
+  line-height: 1.4;
+}
+
+/* --- Note badge --- */
+.noteBadge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--rm-border-soft);
+  border-radius: var(--rm-radius-full);
+  background: var(--rm-panel);
+  color: var(--rm-warning);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.noteBadge:hover {
+  border-color: var(--rm-accent-soft);
+}
+
+/* --- Collapse / expand toggle --- */
+.collapseToggle {
+  position: absolute;
+  top: 50%;
+  right: -11px;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border: 1px solid var(--rm-border-soft);
+  border-radius: var(--rm-radius-full);
+  background: var(--rm-panel);
+  color: var(--rm-text-muted);
+  font-size: var(--rm-font-xs);
+  font-weight: var(--rm-font-weight-bold);
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.node:hover .collapseToggle,
+.node.selected .collapseToggle,
+.collapseToggle.collapseToggleCollapsed {
+  opacity: 1;
+}
+
+.collapseToggle.collapseToggleCollapsed {
+  background: var(--rm-accent);
+  border-color: var(--rm-accent);
+  color: var(--rm-bg);
+}
+
+.collapseToggle:hover {
+  border-color: var(--rm-accent-soft);
+  color: var(--rm-text);
 }
 
 /* --- Root — glowing cyan-gradient hero node from the handoff design --- */
@@ -138,6 +258,12 @@
   border-color: var(--rm-accent) !important;
   border-style: dashed !important;
   box-shadow: var(--rm-shadow-glow) !important;
+}
+
+/* Совпадение поиска — жёлтая обводка (поверх обычных состояний). */
+.searchMatch .box {
+  border-color: var(--rm-warning) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rm-warning) 40%, transparent) !important;
 }
 
 .label {

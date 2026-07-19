@@ -44,10 +44,18 @@ interface UiState {
   /** Full selection from the canvas; drives the inspector's single-selection rule. */
   selectedNodeIds: string[];
   selectedEdgeIds: string[];
+  /** Выбранная группа (её заголовок редактируется в инспекторе). Session-only. */
+  selectedGroupId: string | null;
   editingNodeId: string | null;
   editingIntent: NodeEditingIntent | null;
   /** Ребро, чья подпись редактируется инлайн (двойной клик). Session-only. */
   editingEdgeId: string | null;
+  /** Узел, у которого открыта панель заметки. Session-only. */
+  openNoteNodeId: string | null;
+  /** Открыта ли строка поиска по узлам. Session-only. */
+  searchOpen: boolean;
+  /** Текущий поисковый запрос (подсветка совпадений в узлах). */
+  searchQuery: string;
   /** Короткое всплывающее уведомление (например, «связь запрещена»). */
   notice: string | null;
   theme: Theme;
@@ -56,6 +64,8 @@ interface UiState {
   isSettingsOpen: boolean;
   /** Диалог выбора типа карты — открывается для нового документа и по кнопке в тулбаре. */
   isLayoutPickerOpen: boolean;
+  /** Диалог выбора стартового шаблона. */
+  isTemplatePickerOpen: boolean;
   settings: UiSettings;
 
   /**
@@ -78,6 +88,8 @@ interface UiState {
   setSelectedNodeId: (id: string | null) => void;
   /** Authoritative selection setter called by the canvas; syncs inspector auto-open. */
   setSelection: (nodeIds: string[], edgeIds: string[]) => void;
+  /** Выбрать группу (снимает выбор узлов/связей, открывает инспектор). */
+  setSelectedGroupId: (id: string | null) => void;
   /** Manual open (toolbar) — clears the manual-hidden override. */
   openInspector: () => void;
   /** Manual hide (panel close button) — sets the override so it won't auto-open. */
@@ -87,6 +99,11 @@ interface UiState {
   startNodeEditing: (id: string, intent?: NodeEditingIntent) => void;
   clearNodeEditing: () => void;
   setEditingEdgeId: (id: string | null) => void;
+  /** Открыть/закрыть панель заметки узла (toggle по тому же id). */
+  toggleNotePanel: (id: string) => void;
+  /** Открыть/закрыть строку поиска. */
+  toggleSearch: () => void;
+  setSearchQuery: (query: string) => void;
   /** Показать тост; сам гаснет через пару секунд. */
   showNotice: (message: string) => void;
   setTheme: (theme: Theme) => void;
@@ -97,6 +114,8 @@ interface UiState {
   toggleSettings: () => void;
   openLayoutPicker: () => void;
   closeLayoutPicker: () => void;
+  openTemplatePicker: () => void;
+  closeTemplatePicker: () => void;
   setNodeFontSize: (size: NodeFontSize) => void;
   setCanvasOption: (
     key: 'showGrid' | 'showMiniMap' | 'showControls',
@@ -223,14 +242,19 @@ export const useUIStore = create<UiState>()(
       selectedNodeId: null,
       selectedNodeIds: [],
       selectedEdgeIds: [],
+      selectedGroupId: null,
       editingNodeId: null,
       editingIntent: null,
       editingEdgeId: null,
+      openNoteNodeId: null,
+      searchOpen: false,
+      searchQuery: '',
       notice: null,
       theme: initialTheme,
       locale: DEFAULT_LOCALE,
       isSettingsOpen: false,
       isLayoutPickerOpen: false,
+      isTemplatePickerOpen: false,
       settings: defaultSettings,
       inspectorOpen: false,
       inspectorManuallyHidden: false,
@@ -252,9 +276,19 @@ export const useUIStore = create<UiState>()(
             selectedNodeIds: nodeIds,
             selectedEdgeIds: edgeIds,
             selectedNodeId: nodeIds[0] ?? null,
+            selectedGroupId: null, // выбор узла/связи снимает выбор группы
             inspectorOpen,
           };
         }),
+      setSelectedGroupId: (id) =>
+        set((state) => ({
+          selectedGroupId: id,
+          // Группа — единственная цель редактирования: снимаем узлы/связи.
+          selectedNodeIds: [],
+          selectedEdgeIds: [],
+          selectedNodeId: null,
+          inspectorOpen: id ? !state.inspectorManuallyHidden || state.inspectorOpen : state.inspectorOpen,
+        })),
       openInspector: () => set({ inspectorOpen: true, inspectorManuallyHidden: false }),
       hideInspector: () => set({ inspectorOpen: false, inspectorManuallyHidden: true }),
       toggleInspector: () =>
@@ -275,6 +309,14 @@ export const useUIStore = create<UiState>()(
           editingIntent: null,
         }),
       setEditingEdgeId: (id) => set({ editingEdgeId: id }),
+      toggleNotePanel: (id) =>
+        set((state) => ({ openNoteNodeId: state.openNoteNodeId === id ? null : id })),
+      toggleSearch: () =>
+        set((state) => ({
+          searchOpen: !state.searchOpen,
+          searchQuery: state.searchOpen ? '' : state.searchQuery,
+        })),
+      setSearchQuery: (query) => set({ searchQuery: query }),
       showNotice: (message) => {
         set({ notice: message });
         // Гасим только СВОЁ сообщение: если за это время показали новое,
@@ -300,6 +342,8 @@ export const useUIStore = create<UiState>()(
       toggleSettings: () => set((state) => ({ isSettingsOpen: !state.isSettingsOpen })),
       openLayoutPicker: () => set({ isLayoutPickerOpen: true }),
       closeLayoutPicker: () => set({ isLayoutPickerOpen: false }),
+      openTemplatePicker: () => set({ isTemplatePickerOpen: true }),
+      closeTemplatePicker: () => set({ isTemplatePickerOpen: false }),
       setNodeFontSize: (size) =>
         set((state) => ({
           settings: { ...state.settings, nodeFontSize: size },
