@@ -410,17 +410,6 @@ export const useMindMapStore = create<MindMapState>()(
       // изменении (add/delete/move и т.п. вызывают recompute сами).
     },
 
-    toggleNodeChecked: (id) => {
-      recordHistory('text');
-      set((state) => {
-        const node = state.nodes.find((n) => n.id === id);
-        if (node) {
-          node.data.checked = node.data.checked ? undefined : true;
-          state.isDirty = true;
-        }
-      });
-    },
-
     setNodeNote: (id, note) => {
       // Коалесинг серии правок заметки одного узла — одна запись undo (как label).
       recordCoalesced(`note:${id}`, 'text');

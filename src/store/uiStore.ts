@@ -23,6 +23,13 @@ export interface DragIndicator {
   index?: number;
 }
 
+/** Правый клик по узлу открывает контекстное меню в точке курсора. Session-only. */
+export interface NodeContextMenuState {
+  nodeId: string;
+  x: number;
+  y: number;
+}
+
 interface UiSettings {
   nodeFontSize: NodeFontSize;
   showGrid: boolean;
@@ -86,6 +93,11 @@ interface UiState {
   /** Текущая drop-цель во время drag узла (see DragIndicator). Session-only. */
   dragIndicator: DragIndicator | null;
   setDragIndicator: (indicator: DragIndicator | null) => void;
+
+  /** Контекстное меню узла (правый клик). Session-only. */
+  contextMenu: NodeContextMenuState | null;
+  openContextMenu: (nodeId: string, x: number, y: number) => void;
+  closeContextMenu: () => void;
 
   setSelectedNodeId: (id: string | null) => void;
   /** Authoritative selection setter called by the canvas; syncs inspector auto-open. */
@@ -265,16 +277,21 @@ export const useUIStore = create<UiState>()(
       dragIndicator: null,
       setDragIndicator: (indicator) => set({ dragIndicator: indicator }),
 
+      contextMenu: null,
+      openContextMenu: (nodeId, x, y) => set({ contextMenu: { nodeId, x, y } }),
+      closeContextMenu: () => set({ contextMenu: null }),
+
       setSelectedNodeId: (id) => get().setSelection(id ? [id] : [], []),
       setSelection: (nodeIds, edgeIds) =>
         set((state) => {
           // Single editable target → auto-open unless the user hid the panel.
-          // Anything else (none / multi / mixed) soft-closes WITHOUT setting the
-          // manual-hidden override, so the next single selection re-opens it.
+          // Anything else (none / multi / mixed) leaves inspectorOpen as-is: a
+          // panel the user is looking at should not vanish just because they
+          // clicked empty canvas — only hideInspector() (explicit close) does.
           const single = isEditableSelection(nodeIds, edgeIds);
           const inspectorOpen = single
             ? !state.inspectorManuallyHidden || state.inspectorOpen
-            : false;
+            : state.inspectorOpen;
           return {
             selectedNodeIds: nodeIds,
             selectedEdgeIds: edgeIds,

@@ -195,6 +195,24 @@ const ru = {
   'nodeToolbar.editNote': 'Редактировать заметку',
   'nodeToolbar.deleteBranch': 'Удалить ветку (Delete)',
 
+  // — статусы задач —
+  'status.pending': 'В ожидании',
+  'status.inProgress': 'В работе',
+  'status.completed': 'Завершено',
+  'status.failed': 'Провалено',
+  'status.addCustom': 'Добавить свой статус…',
+  'status.customPrompt': 'Название статуса',
+
+  // — контекстное меню узла —
+  'ctxMenu.addChild': 'Создать дочернюю ноду',
+  'ctxMenu.addChildRight': 'Справа',
+  'ctxMenu.addChildLeft': 'Слева',
+  'ctxMenu.addChildTop': 'Сверху',
+  'ctxMenu.addChildBottom': 'Снизу',
+  'ctxMenu.changeStatus': 'Изменить статус',
+  'ctxMenu.delete': 'Удалить ноду',
+  'ctxMenu.hideChildren': 'Скрыть дочерние ноды',
+
   // — заметки —
   'note.title': 'Заметка',
   'note.hide': 'Скрыть заметку',
@@ -451,6 +469,22 @@ const en: Record<TranslationKey, string> = {
   'nodeToolbar.editNote': 'Edit note',
   'nodeToolbar.deleteBranch': 'Delete branch (Delete)',
 
+  'status.pending': 'Pending',
+  'status.inProgress': 'In progress',
+  'status.completed': 'Completed',
+  'status.failed': 'Failed',
+  'status.addCustom': 'Add custom status…',
+  'status.customPrompt': 'Status name',
+
+  'ctxMenu.addChild': 'Create child node',
+  'ctxMenu.addChildRight': 'Right',
+  'ctxMenu.addChildLeft': 'Left',
+  'ctxMenu.addChildTop': 'Top',
+  'ctxMenu.addChildBottom': 'Bottom',
+  'ctxMenu.changeStatus': 'Change status',
+  'ctxMenu.delete': 'Delete node',
+  'ctxMenu.hideChildren': 'Hide child nodes',
+
   'note.title': 'Note',
   'note.hide': 'Hide note',
   'note.placeholder': 'Note text…',
@@ -697,6 +731,22 @@ const de: Record<TranslationKey, string> = {
   'nodeToolbar.addNote': 'Notiz hinzufügen',
   'nodeToolbar.editNote': 'Notiz bearbeiten',
   'nodeToolbar.deleteBranch': 'Zweig löschen (Entf)',
+
+  'status.pending': 'Ausstehend',
+  'status.inProgress': 'In Arbeit',
+  'status.completed': 'Abgeschlossen',
+  'status.failed': 'Fehlgeschlagen',
+  'status.addCustom': 'Eigenen Status hinzufügen…',
+  'status.customPrompt': 'Statusname',
+
+  'ctxMenu.addChild': 'Unterknoten erstellen',
+  'ctxMenu.addChildRight': 'Rechts',
+  'ctxMenu.addChildLeft': 'Links',
+  'ctxMenu.addChildTop': 'Oben',
+  'ctxMenu.addChildBottom': 'Unten',
+  'ctxMenu.changeStatus': 'Status ändern',
+  'ctxMenu.delete': 'Knoten löschen',
+  'ctxMenu.hideChildren': 'Unterknoten ausblenden',
 
   'note.title': 'Notiz',
   'note.hide': 'Notiz ausblenden',
@@ -945,6 +995,22 @@ const fr: Record<TranslationKey, string> = {
   'nodeToolbar.addNote': 'Ajouter une note',
   'nodeToolbar.editNote': 'Modifier la note',
   'nodeToolbar.deleteBranch': 'Supprimer la branche (Suppr)',
+
+  'status.pending': 'En attente',
+  'status.inProgress': 'En cours',
+  'status.completed': 'Terminé',
+  'status.failed': 'Échoué',
+  'status.addCustom': 'Ajouter un statut personnalisé…',
+  'status.customPrompt': 'Nom du statut',
+
+  'ctxMenu.addChild': 'Créer un nœud enfant',
+  'ctxMenu.addChildRight': 'Droite',
+  'ctxMenu.addChildLeft': 'Gauche',
+  'ctxMenu.addChildTop': 'Haut',
+  'ctxMenu.addChildBottom': 'Bas',
+  'ctxMenu.changeStatus': 'Changer le statut',
+  'ctxMenu.delete': 'Supprimer le nœud',
+  'ctxMenu.hideChildren': 'Masquer les nœuds enfants',
 
   'note.title': 'Note',
   'note.hide': 'Masquer la note',

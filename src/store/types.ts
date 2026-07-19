@@ -5,7 +5,7 @@ import type {
   EdgeChange,
   Connection,
 } from '@xyflow/react';
-import type { HandleSide, MindNodeData, NodeStyle } from '../features/nodes/types';
+import type { HandleSide, MindNodeData, NodeStyle, StatusOption } from '../features/nodes/types';
 import type { EdgeStyle, MindEdgeData } from '../features/edges/types';
 import type { LayoutKind } from '../features/layout/engines/layoutTypes';
 import type { Group, GroupTitleStyle } from '../features/groups/types';
@@ -31,6 +31,8 @@ export interface ProjectSettings {
    * только к узлам без собственного цвета фона.
    */
   levelColors?: string[];
+  /** Пользовательские статусы задач, добавленные через контекстное меню узла. */
+  customStatuses?: StatusOption[];
 }
 
 export interface LoadDocumentPayload {
@@ -113,8 +115,6 @@ export interface MindMapState {
    * разворачивает их, иначе сворачивает. Структурное действие.
    */
   toggleBranchCollapse: (parentId: string, childIds: string[]) => void;
-  /** Отметить/снять узел-задачу как выполненный. */
-  toggleNodeChecked: (id: string) => void;
   /** Заметка узла (коалесится как label; пустая строка удаляет поле). */
   setNodeNote: (id: string, note: string) => void;
   /**

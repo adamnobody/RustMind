@@ -1,3 +1,5 @@
+import type { TranslationKey } from '../../shared/i18n/translations';
+
 export type NodeShape = 'rect' | 'rounded' | 'ellipse' | 'diamond';
 export type BorderPattern = 'solid' | 'dashed' | 'dotted' | 'none';
 
@@ -36,6 +38,37 @@ export const DEFAULT_NODE_STYLE: Required<NodeStyle> = {
   underline: false,
 };
 
+/**
+ * Статус узла-задачи: 'pending'/'in-progress'/'completed'/'failed' (встроенные,
+ * см. {@link BUILTIN_STATUSES}) или id пользовательского статуса из
+ * `projectSettings.customStatuses`. Каждый узел хранит статус независимо —
+ * смена статуса родителя НИКОГДА не каскадится на детей (см. mindMapStore).
+ */
+export interface StatusOption {
+  id: string;
+  /** Ключ перевода — только для встроенных статусов. */
+  labelKey?: TranslationKey;
+  /** Текст пользовательского статуса (введён через "Добавить свой статус"). */
+  label?: string;
+  color: string;
+}
+
+export const BUILTIN_STATUSES: StatusOption[] = [
+  { id: 'pending', labelKey: 'status.pending', color: '#9aa5b1' },
+  { id: 'in-progress', labelKey: 'status.inProgress', color: '#f2b90c' },
+  { id: 'completed', labelKey: 'status.completed', color: '#3ecf6e' },
+  { id: 'failed', labelKey: 'status.failed', color: '#f0506e' },
+];
+
+/** Ищет статус по id среди встроенных и пользовательских (документа). */
+export function findStatus(
+  id: string | undefined,
+  customStatuses: StatusOption[] | undefined,
+): StatusOption | undefined {
+  if (!id) return undefined;
+  return BUILTIN_STATUSES.find((s) => s.id === id) ?? customStatuses?.find((s) => s.id === id);
+}
+
 /** Сторона узла — совпадает с id хэндлов в NodeHandles. */
 export type HandleSide = 'top' | 'right' | 'bottom' | 'left';
 
@@ -66,8 +99,12 @@ export interface MindNodeData {
   collapsedChildren?: string[];
   isRoot?: boolean;
   note?: string;
-  /** Узел-задача отмечен выполненным (чекбокс). Прогресс родителя считается по потомкам. */
-  checked?: boolean;
+  /**
+   * Статус узла-задачи (см. {@link StatusOption}). Отсутствие — узел без
+   * статуса. Прогресс родителя считается по статусам потомков-листьев
+   * (subtreeProgress в MindNode.tsx), независимо от статуса самого родителя.
+   */
+  status?: string;
   style?: NodeStyle;
   handleOffsets?: HandleOffsets;
   /**

@@ -49,7 +49,7 @@ describe('serializer round-trip', () => {
   it('round-trip: задачи, стиль текста, группы и глобальные стили проекта', () => {
     const nodes: AppNode[] = [
       makeNode('root', true),
-      { ...makeNode('a'), data: { label: 'A', checked: true, style: { bold: true, italic: true } } },
+      { ...makeNode('a'), data: { label: 'A', status: 'completed', style: { bold: true, italic: true } } },
     ];
     const edges: AppEdge[] = [makeEdge('root', 'a')];
     const projectSettings: ProjectSettings = {
@@ -66,7 +66,7 @@ describe('serializer round-trip', () => {
     const restored = deserializeMindMap(serialized);
 
     const a = restored.nodes.find((n) => n.id === 'a');
-    expect(a?.data.checked).toBe(true);
+    expect(a?.data.status).toBe('completed');
     expect(a?.data.style?.bold).toBe(true);
     expect(a?.data.style?.italic).toBe(true);
     expect(restored.projectSettings?.backgroundColor).toBe('#101010');
@@ -562,6 +562,28 @@ describe('style and projectSettings', () => {
     const nodes = [makeNode('root', true)];
     const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [], defaultProjectSettings);
     expect(serialized.version).toBe(FILE_VERSION);
+  });
+
+  it('миграция: legacy checked:true → status:"completed"', () => {
+    const oldFile: SerializedMindMap = {
+      version: 4,
+      documentName: 'Legacy Checked',
+      layoutType: 'hierarchy',
+      nodes: [
+        { id: 'root', position: { x: 0, y: 0 }, data: { label: 'Root', isRoot: true } },
+        { id: 'a', position: { x: 200, y: 0 }, data: { label: 'A', checked: true } },
+        { id: 'b', position: { x: 200, y: 100 }, data: { label: 'B', checked: false } },
+      ],
+      edges: [
+        { id: 'e1', source: 'root', target: 'a' },
+        { id: 'e2', source: 'root', target: 'b' },
+      ],
+      createdAt: '2025-01-01T00:00:00.000Z',
+      updatedAt: '2025-01-01T00:00:00.000Z',
+    };
+    const restored = deserializeMindMap(oldFile);
+    expect(restored.nodes.find((n) => n.id === 'a')?.data.status).toBe('completed');
+    expect(restored.nodes.find((n) => n.id === 'b')?.data.status).toBeUndefined();
   });
 
   it('старый файл (version 1, без NodeStyle/EdgeStyle) открывается без ошибок', () => {

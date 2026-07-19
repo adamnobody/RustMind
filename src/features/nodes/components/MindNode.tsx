@@ -12,7 +12,13 @@ import { NodeEditor } from './NodeEditor';
 import { MindNodeToolbar } from './NodeToolbar';
 import { NodeNotePanel } from './NodeNotePanel';
 import { useNodeEditing } from '../hooks/useNodeEditing';
-import { DEFAULT_NODE_STYLE, type BorderPattern, type MindNodeData, type NodeShape } from '../types';
+import {
+  DEFAULT_NODE_STYLE,
+  findStatus,
+  type BorderPattern,
+  type MindNodeData,
+  type NodeShape,
+} from '../types';
 import { isDefaultChildLabel } from '../../../shared/i18n';
 import { isTreeEdge, DEFAULT_TREE_EDGE_HANDLES } from '../../edges/types';
 import {
@@ -194,19 +200,23 @@ function MindNodeComponent({
   const searchMatch = searchQuery !== '' && nodeData.label.toLowerCase().includes(searchQuery);
 
   const toggleBranchCollapse = useMindMapStore((s) => s.toggleBranchCollapse);
-  const toggleNodeChecked = useMindMapStore((s) => s.toggleNodeChecked);
+  const updateNodeData = useMindMapStore((s) => s.updateNodeData);
+  const customStatuses = useMindMapStore((s) => s.projectSettings.customStatuses);
 
   // Дети (с sourceHandle их рёбер), прогресс и свёрнутые ветки — из mindMapStore.
   // Каждого ребёнка кодируем как "childId:sourceHandle" (примитивная строка,
   // useShallow/Object.is — массив рвал бы мемоизацию). Роутинг раскладки нужен,
   // чтобы вычислить сторону выхода ТЕМ ЖЕ способом, что рисует MindEdge.
+  // Прогресс считается по статусу КАЖДОГО листа независимо — смена статуса
+  // родителя никогда не трогает детей (нет каскада), поэтому просто читаем
+  // status каждого узла как есть.
   const { progressDone, progressTotal, foldedJoined, childEdgesJoined, layoutType } =
     useMindMapStore(
       useShallow((s) => {
         const childrenOf = new Map<string, string[]>();
         const checkedOf = new Map<string, boolean>();
         const handleOf = new Map<string, string>();
-        for (const n of s.nodes) checkedOf.set(n.id, Boolean(n.data.checked));
+        for (const n of s.nodes) checkedOf.set(n.id, n.data.status === 'completed');
         for (const e of s.edges) {
           if (!isTreeEdge(e)) continue;
           const list = childrenOf.get(e.source);
@@ -270,7 +280,8 @@ function MindNodeComponent({
     left: bucketParts[3] ? bucketParts[3].split(',') : [],
   };
 
-  const checked = Boolean(nodeData.checked);
+  const statusOption = findStatus(nodeData.status, customStatuses);
+  const checked = nodeData.status === 'completed';
   const hasNote = Boolean(nodeData.note && nodeData.note.trim() !== '');
 
   // Смещение хэндлов меняет их DOM-позиции — просим RF перемерить узел.
@@ -308,6 +319,11 @@ function MindNodeComponent({
         searchMatch && styles.searchMatch,
       )}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        useUIStore.getState().openContextMenu(id, e.clientX, e.clientY);
+      }}
     >
       <MindNodeToolbar nodeId={id} isRoot={isRoot} isVisible={showToolbar} hasNote={hasNote} />
       <NodeHandles offsets={handleOffsets} />
@@ -325,11 +341,21 @@ function MindNodeComponent({
             <button
               type="button"
               className={clsx(styles.checkbox, checked && styles.checkboxChecked)}
+              style={
+                statusOption
+                  ? {
+                      opacity: 1,
+                      borderColor: statusOption.color,
+                      backgroundColor: statusOption.color,
+                      color: '#fff',
+                    }
+                  : undefined
+              }
               aria-pressed={checked}
               aria-label="task"
               onClick={(e) => {
                 e.stopPropagation();
-                toggleNodeChecked(id);
+                updateNodeData(id, { status: checked ? undefined : 'completed' });
               }}
               onDoubleClick={(e) => e.stopPropagation()}
             >

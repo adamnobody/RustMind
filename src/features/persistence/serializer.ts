@@ -1,4 +1,9 @@
-import { type NodeStyle, type HandleOffsets, DEFAULT_NODE_STYLE } from '../../features/nodes/types';
+import {
+  type NodeStyle,
+  type HandleOffsets,
+  type StatusOption,
+  DEFAULT_NODE_STYLE,
+} from '../../features/nodes/types';
 import { type EdgeStyle, type EdgeKind, DEFAULT_TREE_EDGE_HANDLES, DEFAULT_EDGE_STYLE } from '../../features/edges/types';
 import type { Group } from '../../features/groups/types';
 import type { AppNode, AppEdge, LayoutType, LoadDocumentPayload, HandleVisibility, ProjectSettings } from '../../store/types';
@@ -53,7 +58,7 @@ export function serializeMindMap(
           n.data.collapsedChildren && n.data.collapsedChildren.length > 0
             ? n.data.collapsedChildren
             : undefined,
-        checked: n.data.checked,
+        status: n.data.status,
         isRoot: n.data.isRoot,
         note: n.data.note,
         style: pruneStyle(n.data.style, DEFAULT_NODE_STYLE),
@@ -92,6 +97,7 @@ export function serializeMindMap(
       backgroundImage: projectSettings.backgroundImage,
       edgeColor: projectSettings.edgeColor,
       levelColors: projectSettings.levelColors,
+      customStatuses: projectSettings.customStatuses,
     },
     createdAt: createdAt ?? now,
     updatedAt: now,
@@ -111,7 +117,9 @@ export function deserializeMindMap(serialized: SerializedMindMap): LoadDocumentP
       textColor: n.data.textColor,
       collapsed: n.data.collapsed,
       collapsedChildren: n.data.collapsedChildren,
-      checked: n.data.checked,
+      // Legacy: checked:true (до статусов) → status:'completed'. Явный status
+      // в файле (даже если checked тоже есть) имеет приоритет.
+      status: n.data.status ?? (n.data.checked ? 'completed' : undefined),
       isRoot: n.data.isRoot,
       note: n.data.note,
       // Serialized style uses string for union fields; cast to domain type.
@@ -165,6 +173,7 @@ export function deserializeMindMap(serialized: SerializedMindMap): LoadDocumentP
       backgroundImage: serialized.projectSettings?.backgroundImage,
       edgeColor: serialized.projectSettings?.edgeColor,
       levelColors: serialized.projectSettings?.levelColors,
+      customStatuses: serialized.projectSettings?.customStatuses as StatusOption[] | undefined,
     },
     nodes: normalized.nodes,
     edges: normalized.edges,

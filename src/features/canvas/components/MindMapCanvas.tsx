@@ -18,6 +18,7 @@ import type { AppNode } from '../../../store/types';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { MindNode } from '../../nodes/components/MindNode';
+import { NodeContextMenu } from '../../nodes/components/NodeContextMenu';
 import { MindEdge } from '../../edges/components/MindEdge';
 import { MIND_NODE_TYPE } from '../../nodes/types';
 import { MIND_EDGE_TYPE, oppositeHandle } from '../../edges/types';
@@ -372,6 +373,7 @@ function CanvasInner(): React.JSX.Element {
       </ReactFlow>
       <SearchBar />
       <GroupSelectionButton />
+      <NodeContextMenu />
       {notice && (
         <div className={styles.notice} role="status">
           {notice}

@@ -76,16 +76,24 @@ describe('uiStore — inspector visibility', () => {
     expect(useUIStore.getState().inspectorOpen).toBe(true);
   });
 
-  it('снятие выбора мягко закрывает панель, но НЕ ставит флаг скрытия', () => {
+  it('снятие выбора НЕ закрывает панель — остаётся открытой до явного закрытия', () => {
     useUIStore.getState().setSelection(['n1'], []);
     expect(useUIStore.getState().inspectorOpen).toBe(true);
 
     useUIStore.getState().setSelection([], []);
-    expect(useUIStore.getState().inspectorOpen).toBe(false);
+    expect(useUIStore.getState().inspectorOpen).toBe(true);
     expect(useUIStore.getState().inspectorManuallyHidden).toBe(false);
 
-    // Так как флаг не выставлен — повторный выбор узла снова открывает панель.
     useUIStore.getState().setSelection(['n2'], []);
+    expect(useUIStore.getState().inspectorOpen).toBe(true);
+  });
+
+  it('панель, открытая вручную без выбора, не закрывается кликом по пустому месту', () => {
+    useUIStore.getState().openInspector();
+    expect(useUIStore.getState().inspectorOpen).toBe(true);
+
+    useUIStore.getState().setSelection(['n1'], []);
+    useUIStore.getState().setSelection([], []);
     expect(useUIStore.getState().inspectorOpen).toBe(true);
   });
 
@@ -108,7 +116,7 @@ describe('uiStore — inspector visibility', () => {
 
     useUIStore.getState().setSelectedNodeId(null);
     expect(useUIStore.getState().selectedNodeIds).toEqual([]);
-    expect(useUIStore.getState().inspectorOpen).toBe(false);
+    expect(useUIStore.getState().inspectorOpen).toBe(true);
   });
 });
 

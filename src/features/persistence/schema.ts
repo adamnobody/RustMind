@@ -7,6 +7,9 @@
  * упразднена (free/block/bridge/multiflow/dialogue/flowchart — мапятся на
  * ближайший из оставшихся при загрузке). Все новые поля опциональны —
  * файлы v1–v3 читаются, normalizeStructure чинит недостающую структуру.
+ * v4+: `checked` (boolean) заменён на `status` (string, id из BUILTIN_STATUSES
+ * или projectSettings.customStatuses) — старые файлы мигрируют checked:true →
+ * status:'completed' при загрузке (см. deserializeMindMap).
  */
 export const FILE_VERSION = 4;
 export const FILE_EXTENSION = 'rustmind';
@@ -47,7 +50,10 @@ export interface SerializedNode {
     collapsed?: boolean;
     /** Свёрнутые ветки: id прямых потомков со спрятанным поддеревом (v4+). */
     collapsedChildren?: string[];
+    /** Legacy (до статусов): true → мигрирует в status:'completed'. */
     checked?: boolean;
+    /** Статус узла-задачи — id из BUILTIN_STATUSES или customStatuses (v4+). */
+    status?: string;
     isRoot?: boolean;
     note?: string;
     style?: SerializedNodeStyle;
@@ -67,12 +73,20 @@ export interface SerializedEdge {
   data?: { kind?: string; style?: SerializedEdgeStyle };
 }
 
+interface SerializedStatusOption {
+  id: string;
+  labelKey?: string;
+  label?: string;
+  color: string;
+}
+
 interface SerializedProjectSettings {
   handleVisibility?: string;
   backgroundColor?: string;
   backgroundImage?: string;
   edgeColor?: string;
   levelColors?: string[];
+  customStatuses?: SerializedStatusOption[];
 }
 
 interface SerializedGroupTitleStyle {
