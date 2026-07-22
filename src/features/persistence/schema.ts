@@ -29,6 +29,13 @@ interface SerializedNodeStyle {
 }
 
 interface SerializedEdgeStyle {
+  /**
+   * Геометрия пути, выбранная пользователем (v4+): 'straight' | 'bezier' |
+   * 'smoothstep' | 'orthogonal' | 'step'. Отсутствие поля = 'auto' (маршрут
+   * определяет раскладка) — так читаются все старые файлы; 'auto' никогда не
+   * пишется, его вырезает pruneStyle против DEFAULT_EDGE_STYLE.
+   */
+  routing?: string;
   linePattern?: string;
   strokeWidth?: number;
   strokeColor?: string;

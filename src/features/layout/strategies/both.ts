@@ -1,6 +1,8 @@
 import type { LayoutStrategy } from './types';
 import { DEFAULT_NODE_SIZE } from '../../../shared/lib/constants';
 import { canConnectAsTree, findRoot, treeChildrenMap, nodeSize, withPositions } from './shared';
+import { leftToRightRoute, rightToLeftRoute } from './routes';
+import { rectCenter } from '../../edges/lib/routing';
 import { buildSpans, placeSubtree } from './treeGeometry';
 
 const LEVEL_GAP = 200;
@@ -20,6 +22,11 @@ export const bothStrategy: LayoutStrategy = {
   positionMode: 'derived',
   edgeRouting: 'bezier',
   blockedReasonKey: 'constraint.both',
+  // Сторона ветви решает направление: правая половина растёт вправо, левая — влево.
+  routeTreeEdge: ({ sourceRect, targetRect }) =>
+    rectCenter(targetRect).x >= rectCenter(sourceRect).x
+      ? leftToRightRoute(sourceRect, targetRect)
+      : rightToLeftRoute(sourceRect, targetRect),
   canConnect: canConnectAsTree,
   layout: (nodes, edges) => {
     const root = findRoot(nodes);

@@ -7,9 +7,53 @@ import {
   type EdgeArrowType,
   type EdgeLinePattern,
 } from '../../edges/types';
+import type { EdgeRoutingChoice } from '../../edges/lib/routing';
+import type { TranslationKey } from '../../../shared/i18n/translations';
 import { Switch } from '../../../shared/ui/Switch/Switch';
 import { ColorField, NumberField, SegField, TextField } from './fields';
 import styles from './Inspector.module.css';
+
+/**
+ * Мини-схема варианта геометрии: тот же путь в координатах 28×16, что рисует
+ * соответствующий маршрут на канвасе — вариант узнаётся глазом, а не по тексту.
+ */
+function RoutingGlyph({ d, dashed }: { d: string; dashed?: boolean }): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 28 16" width={28} height={16} aria-hidden="true" focusable="false">
+      <path
+        d={d}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray={dashed === true ? '3 2.5' : undefined}
+      />
+    </svg>
+  );
+}
+
+const routingOptions: {
+  value: EdgeRoutingChoice;
+  glyph: React.JSX.Element;
+  labelKey: TranslationKey;
+}[] = [
+  // auto — та же кривая, но пунктиром: «форму выбирает раскладка».
+  { value: 'auto', glyph: <RoutingGlyph d="M 2 13 C 10 13, 18 3, 26 3" dashed />, labelKey: 'edge.routing.auto' },
+  { value: 'straight', glyph: <RoutingGlyph d="M 2 13 L 26 3" />, labelKey: 'edge.routing.straight' },
+  { value: 'bezier', glyph: <RoutingGlyph d="M 2 13 C 10 13, 18 3, 26 3" />, labelKey: 'edge.routing.bezier' },
+  {
+    value: 'smoothstep',
+    glyph: <RoutingGlyph d="M 2 13 L 10 13 Q 14 13, 14 9 L 14 7 Q 14 3, 18 3 L 26 3" />,
+    labelKey: 'edge.routing.smoothstep',
+  },
+  {
+    value: 'orthogonal',
+    glyph: <RoutingGlyph d="M 2 13 L 8 13 L 8 8 L 20 8 L 20 3 L 26 3" />,
+    labelKey: 'edge.routing.orthogonal',
+  },
+  { value: 'step', glyph: <RoutingGlyph d="M 2 13 L 14 13 L 14 3 L 26 3" />, labelKey: 'edge.routing.step' },
+];
 
 const patternOptions: { value: EdgeLinePattern; label: string }[] = [
   { value: 'solid', label: '——' },
@@ -86,6 +130,19 @@ export function EdgeStyleEditor({ edgeId, data }: EdgeStyleEditorProps): React.J
           />
         </>
       )}
+
+      {/* Геометрия пути — не путать с паттерном штриха ниже. */}
+      <SegField
+        label={t('edge.routing')}
+        value={style?.routing ?? DEFAULT_EDGE_STYLE.routing}
+        columns={3}
+        options={routingOptions.map((o) => ({
+          value: o.value,
+          label: o.glyph,
+          title: t(o.labelKey),
+        }))}
+        onChange={(routing) => set({ routing })}
+      />
 
       <SegField
         label={t('edge.line')}

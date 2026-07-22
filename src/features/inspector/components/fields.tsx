@@ -12,13 +12,18 @@ import styles from './Inspector.module.css';
 
 interface SegOption<T extends string> {
   value: T;
-  label: string;
+  /** Содержимое кнопки: текст или маленькая SVG-схема варианта. */
+  label: React.ReactNode;
+  /** Доступное имя и подсказка, когда label — не текст. */
+  title?: string;
 }
 
 interface SegFieldProps<T extends string> {
   label: string;
   value: T;
   options: SegOption<T>[];
+  /** Число колонок сетки; по умолчанию — все варианты в один ряд. */
+  columns?: number;
   onChange: (value: T) => void;
 }
 
@@ -26,6 +31,7 @@ export function SegField<T extends string>({
   label,
   value,
   options,
+  columns,
   onChange,
 }: SegFieldProps<T>): React.JSX.Element {
   return (
@@ -35,7 +41,7 @@ export function SegField<T extends string>({
         className={styles.segment}
         role="radiogroup"
         aria-label={label}
-        style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${columns ?? options.length}, minmax(0, 1fr))` }}
       >
         {options.map((option) => (
           <button
@@ -43,6 +49,8 @@ export function SegField<T extends string>({
             type="button"
             role="radio"
             aria-checked={option.value === value}
+            aria-label={option.title}
+            title={option.title}
             className={clsx(styles.segmentItem, option.value === value && styles.segmentActive)}
             onClick={() => onChange(option.value)}
           >

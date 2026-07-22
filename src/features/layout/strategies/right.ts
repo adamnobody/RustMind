@@ -1,5 +1,6 @@
 import type { LayoutStrategy } from './types';
 import { canConnectAsTree, withPositions } from './shared';
+import { leftToRightRoute } from './routes';
 import { layoutAxisTree } from './treeGeometry';
 
 const LEVEL_GAP = 200; // расстояние между поколениями по X
@@ -17,6 +18,8 @@ export const rightStrategy: LayoutStrategy = {
   positionMode: 'derived',
   edgeRouting: 'bezier',
   blockedReasonKey: 'constraint.right',
+  // Дерево растёт вправо: выход всегда справа, вход всегда слева.
+  routeTreeEdge: ({ sourceRect, targetRect }) => leftToRightRoute(sourceRect, targetRect),
   canConnect: canConnectAsTree,
   layout: (nodes, edges) => {
     const positions = layoutAxisTree(nodes, edges, {

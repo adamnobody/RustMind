@@ -18,6 +18,28 @@ const CHILD_DIRECTIONS: { side: HandleSide; labelKey: 'ctxMenu.addChildRight' | 
 ];
 
 /**
+ * Смещение позиции нового узла от родителя по выбранной стороне — совпадает с
+ * дефолтным сдвигом addChildNode (+200 вправо). Для derived-раскладок это лишь
+ * плейсхолдер (recomputeIfDerived тут же перепишет), но для 'stored'
+ * (network/free) — финальная точка: без него узел всегда падал бы в дефолтную
+ * "вправо", а ребро (fixed-роутинг) тянулось бы от выбранного хэндла в другую
+ * сторону — залом линии, как на баг-репорте.
+ */
+const CHILD_OFFSET = 200;
+function positionForSide(parentX: number, parentY: number, side: HandleSide): { x: number; y: number } {
+  switch (side) {
+    case 'right':
+      return { x: parentX + CHILD_OFFSET, y: parentY };
+    case 'left':
+      return { x: parentX - CHILD_OFFSET, y: parentY };
+    case 'top':
+      return { x: parentX, y: parentY - CHILD_OFFSET };
+    case 'bottom':
+      return { x: parentX, y: parentY + CHILD_OFFSET };
+  }
+}
+
+/**
  * Правый клик по узлу: создать дочерний узел в конкретном направлении,
  * сменить статус (встроенный/пользовательский/новый), удалить узел, скрыть
  * дочерние ветки. Один плоский уровень + один flyout-подменю за раз (as в
@@ -33,12 +55,14 @@ export function NodeContextMenu(): React.JSX.Element | null {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const nodeId = menu?.nodeId ?? null;
-  const { isRoot, directChildIds, customStatuses } = useMindMapStore(
+  const { isRoot, parentX, parentY, directChildIds, customStatuses } = useMindMapStore(
     useShallow((s) => {
       const node = nodeId ? s.nodes.find((n) => n.id === nodeId) : undefined;
       const children = nodeId ? (treeChildrenMap(s.nodes, s.edges).get(nodeId) ?? []) : [];
       return {
         isRoot: Boolean(node?.data.isRoot),
+        parentX: node?.position.x ?? 0,
+        parentY: node?.position.y ?? 0,
         directChildIds: children,
         customStatuses: s.projectSettings.customStatuses,
       };
@@ -70,11 +94,11 @@ export function NodeContextMenu(): React.JSX.Element | null {
   const { nodeId: id } = menu;
   // ponytail: не учитывает высоту раскрытого подменю справа — приемлемо для
   // экранов десктоп-приложения, доработать флипом стороны, если понадобится.
-  const x = Math.min(menu.x, window.innerWidth - 240);
-  const y = Math.min(menu.y, window.innerHeight - 200);
+  const menuX = Math.min(menu.x, window.innerWidth - 240);
+  const menuY = Math.min(menu.y, window.innerHeight - 200);
 
   const addChild = (side: HandleSide): void => {
-    const newId = addChildNode(id, undefined, {
+    const newId = addChildNode(id, positionForSide(parentX, parentY, side), {
       sourceHandle: side,
       targetHandle: oppositeHandle(side),
     });
@@ -110,7 +134,7 @@ export function NodeContextMenu(): React.JSX.Element | null {
   };
 
   return (
-    <div ref={menuRef} className={styles.menu} style={{ left: x, top: y }} role="menu">
+    <div ref={menuRef} className={styles.menu} style={{ left: menuX, top: menuY }} role="menu">
       <div className={styles.itemRow}>
         <button
           type="button"

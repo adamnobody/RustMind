@@ -1,7 +1,31 @@
 import type { AppNode, AppEdge } from '../../../store/types';
 import type { LayoutKind } from '../engines/layoutTypes';
 import type { TranslationKey } from '../../../shared/i18n/translations';
-import type { EdgeRouting } from '../../edges/lib/routing';
+import type { EdgeRouting, Rect, RoutedEdge } from '../../edges/lib/routing';
+
+/**
+ * Всё, что нужно стратегии, чтобы проложить СТРУКТУРНОЕ ребро: концы, их
+ * ИЗМЕРЕННЫЕ прямоугольники и доступ к остальной карте (для общих шин, оси
+ * таймлайна, хребта fishbone). Вся эта геометрия вычисляемая — ничего из неё
+ * не попадает в документ.
+ */
+export interface TreeRouteContext {
+  sourceId: string;
+  targetId: string;
+  sourceRect: Rect;
+  targetRect: Rect;
+  /** Прямоугольник любого узла карты; undefined — узел ещё не измерен. */
+  rectOf: (id: string) => Rect | undefined;
+  nodes: AppNode[];
+  edges: AppEdge[];
+}
+
+/**
+ * Специализированный маршрут структурного ребра. null — стратегия отказалась
+ * (нет данных / нетипичный случай), рендер падает на общий routeEdge по
+ * edgeRouting. Применяется ТОЛЬКО при routing: 'auto' и только к tree-рёбрам.
+ */
+export type TreeRouteBuilder = (ctx: TreeRouteContext) => RoutedEdge | null;
 
 /**
  * Декларации ограничений раскладки (БЛОК 0):
@@ -40,6 +64,13 @@ export interface LayoutStrategy {
    * - 'fixed' — порт берётся с реального хэндла ребра как есть, без пересчёта.
    */
   edgeRouting: EdgeRouting;
+  /**
+   * Опциональный СЕМАНТИЧЕСКИЙ маршрут структурных рёбер этой раскладки: порты
+   * и форма пути выводятся из смысла раскладки (шина оргструктуры, ось
+   * таймлайна, хребет fishbone), а не из взаимного положения нод. Отсутствует —
+   * работает общий routing по edgeRouting.
+   */
+  routeTreeEdge?: TreeRouteBuilder;
   /** Ключ i18n с короткой причиной запрета связи (тост при блокировке). */
   blockedReasonKey: TranslationKey;
   /**

@@ -2,6 +2,7 @@ import { isTreeEdge } from '../../edges/types';
 import { layoutTree } from '../lib/layoutTree';
 import type { LayoutStrategy } from './types';
 import { canConnectAsTree } from './shared';
+import { topDownRoute } from './routes';
 
 /**
  * Схема-иерархия: дерево сверху вниз, корень наверху, дети уровнями (Dagre TB).
@@ -14,6 +15,9 @@ export const hierarchyStrategy: LayoutStrategy = {
   positionMode: 'derived',
   edgeRouting: 'bezier',
   blockedReasonKey: 'constraint.hierarchy',
+  // Сверху вниз: строго низ родителя → верх ребёнка, аккуратная smooth-step
+  // «капля» вместо случайной безье-волны; вбок/вверх маршрут не уходит.
+  routeTreeEdge: ({ sourceRect, targetRect }) => topDownRoute(sourceRect, targetRect),
   canConnect: canConnectAsTree,
   layout: (nodes, edges) => {
     const orderOf = new Map(nodes.map((n) => [n.id, n.data.order]));

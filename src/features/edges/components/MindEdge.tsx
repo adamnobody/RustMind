@@ -3,6 +3,7 @@ import {
   BaseEdge,
   EdgeLabelRenderer,
   useInternalNode,
+  useStoreApi,
   type EdgeProps,
   type InternalNode,
 } from '@xyflow/react';
@@ -10,16 +11,11 @@ import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { getLayoutStrategy } from '../../layout/strategies/registry';
 import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../../shared/lib/constants';
-import {
-  routeEdge,
-  routeFixed,
-  type CubicControls,
-  type Point,
-  type PortSide,
-  type Rect,
-} from '../lib/routing';
+import { resolveEdgeRoute } from '../lib/resolveRoute';
+import type { CubicControls, Point, PortSide, Rect } from '../lib/routing';
 import {
   DEFAULT_EDGE_STYLE,
+  isTreeEdge,
   type EdgeArrowType,
   type EdgeLinePattern,
   type MindEdgeData,
@@ -85,17 +81,25 @@ function dashArrayFor(pattern: EdgeLinePattern, strokeWidth: number): string | u
   }
 }
 
+/** Прямоугольник ноды в координатах потока; undefined — ноды нет в потоке. */
+function internalRect(node: InternalNode | undefined): Rect | undefined {
+  if (!node) return undefined;
+  const fallback = node.data?.isRoot ? ROOT_NODE_SIZE : DEFAULT_NODE_SIZE;
+  return {
+    x: node.internals.positionAbsolute.x,
+    y: node.internals.positionAbsolute.y,
+    width: node.measured?.width ?? fallback.width,
+    height: node.measured?.height ?? fallback.height,
+  };
+}
+
 /**
- * Прямоугольник ноды в координатах потока. Fallback, если нода ещё не
- * измерена/не найдена: нулевой rect в точке хэндла (portToward выродится в
- * саму точку — ребро рисуется от неё, как раньше).
+ * Прямоугольник конца ребра. Fallback, если нода ещё не измерена/не найдена:
+ * нулевой rect в точке хэндла (порт вырождается в саму точку — ребро рисуется
+ * от неё, как раньше).
  */
 function nodeRect(node: InternalNode | undefined, fx: number, fy: number): Rect {
-  if (!node) return { x: fx, y: fy, width: 0, height: 0 };
-  const fallback = node.data?.isRoot ? ROOT_NODE_SIZE : DEFAULT_NODE_SIZE;
-  const width = node.measured?.width ?? fallback.width;
-  const height = node.measured?.height ?? fallback.height;
-  return { x: node.internals.positionAbsolute.x, y: node.internals.positionAbsolute.y, width, height };
+  return internalRect(node) ?? { x: fx, y: fy, width: 0, height: 0 };
 }
 
 /**
@@ -139,33 +143,47 @@ export function MindEdge({
   selected,
   data,
 }: EdgeProps): React.JSX.Element {
-  // Роутинг объявляет стратегия раскладки (только рендер, данные не трогаем):
-  // 'fixed' — порт берётся с реального хэндла ребра как есть (для free, где
-  // позиция ноды не связана со стороной подключения); остальные режимы
-  // выбирают порт динамически по взаимному положению нод.
-  const routing = useMindMapStore((s) => getLayoutStrategy(s.layoutType).edgeRouting);
+  // Форму ребра решает resolveEdgeRoute (только рендер, данные не трогаем):
+  // пользовательский routing > семантический маршрут стратегии > общий routing.
+  const layoutType = useMindMapStore((s) => s.layoutType);
   const editing = useUIStore((s) => s.editingEdgeId === id);
   const setEditingEdgeId = useUIStore((s) => s.setEditingEdgeId);
 
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
-
-  const routed =
-    routing === 'fixed'
-      ? routeFixed(
-          { x: sourceX, y: sourceY, side: sourcePosition as PortSide },
-          { x: targetX, y: targetY, side: targetPosition as PortSide },
-        )
-      : routeEdge(
-          nodeRect(sourceNode, sourceX, sourceY),
-          nodeRect(targetNode, targetX, targetY),
-          routing,
-        );
-  const { path: edgePath, labelX, labelY } = routed;
+  const flowStore = useStoreApi();
 
   const edgeData = data as MindEdgeData | undefined;
   const style = { ...DEFAULT_EDGE_STYLE, ...edgeData?.style };
   const invalid = edgeData?.invalid === true;
+
+  const strategy = getLayoutStrategy(layoutType);
+  const sourceRect = nodeRect(sourceNode, sourceX, sourceY);
+  const targetRect = nodeRect(targetNode, targetX, targetY);
+  // Структура (корень, группы сиблингов) читается через getState: она меняется
+  // только вместе с позициями концов, а те уже перерисовывают это ребро —
+  // подписка на весь массив нод дала бы ре-рендер всех рёбер на каждый кадр драга.
+  const { nodes, edges } = useMindMapStore.getState();
+
+  const routed = resolveEdgeRoute({
+    geometry: style.routing,
+    isTree: isTreeEdge({ data: edgeData }),
+    strategy,
+    ctx: {
+      sourceId: source,
+      targetId: target,
+      sourceRect,
+      targetRect,
+      rectOf: (nodeId) => internalRect(flowStore.getState().nodeLookup.get(nodeId)),
+      nodes,
+      edges,
+    },
+    handles: {
+      source: { x: sourceX, y: sourceY, side: sourcePosition as PortSide },
+      target: { x: targetX, y: targetY, side: targetPosition as PortSide },
+    },
+  });
+  const { path: edgePath, labelX, labelY } = routed;
 
   // Подсветка выделения — здесь, а не в CSS: BaseEdge пишет stroke инлайном,
   // и правило вида `.selected .react-flow__edge-path` его не перебило бы.

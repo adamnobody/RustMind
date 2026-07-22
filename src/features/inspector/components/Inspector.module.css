@@ -88,6 +88,10 @@
 }
 
 .segmentItem {
+  /* Центрирует и текстовые подписи, и SVG-схемы вариантов геометрии. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: var(--rm-radius-sm);
   background: transparent;

@@ -62,9 +62,19 @@ describe('реестр стратегий', () => {
     expect(getLayoutStrategy('right').edgeRouting).toBe('bezier');
     expect(getLayoutStrategy('left').edgeRouting).toBe('bezier');
     expect(getLayoutStrategy('both').edgeRouting).toBe('bezier');
-    expect(getLayoutStrategy('logic').edgeRouting).toBe('bezier');
+    expect(getLayoutStrategy('logic').edgeRouting).toBe('orthogonal');
     expect(getLayoutStrategy('org').edgeRouting).toBe('orthogonal');
     expect(getLayoutStrategy('timeline').edgeRouting).toBe('orthogonal');
+  });
+
+  it('семантический routeTreeEdge объявлен там, где направление задаёт раскладка', () => {
+    for (const kind of ['hierarchy', 'right', 'left', 'both', 'org', 'logic', 'timeline', 'fishbone'] as const) {
+      expect(typeof getLayoutStrategy(kind).routeTreeEdge).toBe('function');
+    }
+    // Геометрический выбор порта уместен — специализированного маршрута нет.
+    for (const kind of ['tree', 'bubble', 'network', 'free'] as const) {
+      expect(getLayoutStrategy(kind).routeTreeEdge).toBeUndefined();
+    }
   });
 
   it('каждая стратегия объявляет positionMode: derived везде, кроме network и free (stored)', () => {
@@ -328,12 +338,17 @@ describe('геометрические свойства ключевых рас�
     expect(c.position.y).toBeGreaterThan(a.position.y);
   });
 
-  it('logic: как right — компактный аутлайн, X растёт с глубиной', () => {
+  it('logic: вложенный аутлайн — X растёт с глубиной, узел в начале своего поддерева', () => {
     const { nodes, edges } = sampleGraph();
     const out = getLayoutStrategy('logic').layout(nodes, edges);
     const root = out.find((n) => n.id === 'R')!;
     const a = out.find((n) => n.id === 'A')!;
+    const c = out.find((n) => n.id === 'C')!; // внук через A
     expect(a.position.x).toBeGreaterThan(root.position.x);
+    expect(c.position.x).toBeGreaterThan(a.position.x);
+    // Аутлайн, а не центрирование: родитель выше всех своих потомков.
+    expect(root.position.y).toBeLessThan(a.position.y);
+    expect(a.position.y).toBeLessThan(c.position.y);
   });
 });
 

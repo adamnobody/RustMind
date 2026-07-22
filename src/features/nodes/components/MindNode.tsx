@@ -20,15 +20,12 @@ import {
   type NodeShape,
 } from '../types';
 import { isDefaultChildLabel } from '../../../shared/i18n';
-import { isTreeEdge, DEFAULT_TREE_EDGE_HANDLES } from '../../edges/types';
-import {
-  portToward,
-  rectCenter,
-  type EdgeRouting,
-  type PortSide,
-  type Rect,
-} from '../../edges/lib/routing';
+import { isTreeEdge, oppositeHandle, DEFAULT_TREE_EDGE_HANDLES } from '../../edges/types';
+import { sidePort, type EdgeRoutingChoice, type PortSide, type Rect } from '../../edges/lib/routing';
+import { resolveEdgeRoute } from '../../edges/lib/resolveRoute';
 import { getLayoutStrategy } from '../../layout/strategies/registry';
+import type { LayoutStrategy } from '../../layout/strategies/types';
+import type { AppNode, AppEdge } from '../../../store/types';
 import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../../shared/lib/constants';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
@@ -49,32 +46,62 @@ function isPortSide(v: string | null | undefined): v is PortSide {
   return v === 'top' || v === 'right' || v === 'bottom' || v === 'left';
 }
 
+/** Значение routing из сериализованной строки; всё неизвестное — 'auto'. */
+function toRoutingChoice(v: string | undefined): EdgeRoutingChoice {
+  switch (v) {
+    case 'straight':
+    case 'bezier':
+    case 'smoothstep':
+    case 'orthogonal':
+    case 'step':
+      return v;
+    default:
+      return 'auto';
+  }
+}
+
+interface EdgeSideArgs {
+  strategy: LayoutStrategy;
+  geometry: EdgeRoutingChoice;
+  sourceId: string;
+  targetId: string;
+  ownRect: Rect;
+  childRect: Rect;
+  sourceHandle: string | null | undefined;
+  rectOf: (id: string) => Rect | undefined;
+  nodes: AppNode[];
+  edges: AppEdge[];
+}
+
 /**
- * Сторона, с которой ребро реально ВЫХОДИТ из родителя — считаем ТЕМ ЖЕ
- * способом, что и MindEdge рисует линию (по edgeRouting раскладки), иначе кнопка
- * сворачивания встанет не на ту грань, где линия:
- * - 'fixed' (free) — линия закреплена на хэндле, берём его сторону (sourceHandle);
- * - 'orthogonal' (org/timeline) — по доминирующей оси, как routeOrthogonal;
- * - остальное (bezier/radial/straight) — портом к центру соседа (portToward).
+ * Сторона, с которой ребро реально ВЫХОДИТ из родителя. Не воспроизводим логику
+ * повторно — спрашиваем ТОТ ЖЕ resolveEdgeRoute, которым MindEdge рисует линию
+ * (включая семантические маршруты раскладок и пользовательский override),
+ * иначе кнопка сворачивания встаёт не на ту грань, где линия.
  */
-function edgeSourceSide(
-  routing: EdgeRouting,
-  ownRect: Rect,
-  childRect: Rect,
-  sourceHandle: string | null | undefined,
-): PortSide {
-  if (routing === 'fixed') {
-    return isPortSide(sourceHandle) ? sourceHandle : DEFAULT_TREE_EDGE_HANDLES.sourceHandle;
-  }
-  if (routing === 'orthogonal') {
-    const sc = rectCenter(ownRect);
-    const tc = rectCenter(childRect);
-    const dx = tc.x - sc.x;
-    const dy = tc.y - sc.y;
-    if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left';
-    return dy >= 0 ? 'bottom' : 'top';
-  }
-  return portToward(ownRect, rectCenter(childRect)).side;
+function edgeSourceSide(args: EdgeSideArgs): PortSide {
+  const handleSide = isPortSide(args.sourceHandle)
+    ? args.sourceHandle
+    : DEFAULT_TREE_EDGE_HANDLES.sourceHandle;
+  const opposite = oppositeHandle(handleSide);
+  return resolveEdgeRoute({
+    geometry: args.geometry,
+    isTree: true,
+    strategy: args.strategy,
+    ctx: {
+      sourceId: args.sourceId,
+      targetId: args.targetId,
+      sourceRect: args.ownRect,
+      targetRect: args.childRect,
+      rectOf: args.rectOf,
+      nodes: args.nodes,
+      edges: args.edges,
+    },
+    handles: {
+      source: sidePort(args.ownRect, handleSide),
+      target: sidePort(args.childRect, isPortSide(opposite) ? opposite : 'left'),
+    },
+  }).source.side;
 }
 
 /**
@@ -216,13 +243,17 @@ function MindNodeComponent({
         const childrenOf = new Map<string, string[]>();
         const checkedOf = new Map<string, boolean>();
         const handleOf = new Map<string, string>();
+        const routingOf = new Map<string, string>();
         for (const n of s.nodes) checkedOf.set(n.id, n.data.status === 'completed');
         for (const e of s.edges) {
           if (!isTreeEdge(e)) continue;
           const list = childrenOf.get(e.source);
           if (list) list.push(e.target);
           else childrenOf.set(e.source, [e.target]);
-          if (e.source === id) handleOf.set(e.target, e.sourceHandle ?? '');
+          if (e.source === id) {
+            handleOf.set(e.target, e.sourceHandle ?? '');
+            routingOf.set(e.target, e.data?.style?.routing ?? 'auto');
+          }
         }
         const children = childrenOf.get(id) ?? [];
         const p = children.length > 0 ? subtreeProgress(id, childrenOf, checkedOf) : { done: 0, total: 0 };
@@ -231,14 +262,16 @@ function MindNodeComponent({
           progressDone: p.done,
           progressTotal: p.total,
           foldedJoined: (self?.data.collapsedChildren ?? []).join(','),
-          childEdgesJoined: children.map((c) => `${c}:${handleOf.get(c) ?? ''}`).join(';'),
+          childEdgesJoined: children
+            .map((c) => `${c}:${handleOf.get(c) ?? ''}:${routingOf.get(c) ?? 'auto'}`)
+            .join(';'),
           layoutType: s.layoutType,
         };
       }),
     );
   const foldedSet = new Set(foldedJoined === '' ? [] : foldedJoined.split(','));
   const childEdges = childEdgesJoined === '' ? [] : childEdgesJoined.split(';').map((x) => x.split(':'));
-  const routing = getLayoutStrategy(layoutType).edgeRouting;
+  const strategy = getLayoutStrategy(layoutType);
 
   // Группируем детей по стороне выхода ветки — ОДНА кнопка на сторону (у хэндла),
   // даже если из неё выходит несколько линий. Сторону считаем ТЕМ ЖЕ способом,
@@ -262,10 +295,30 @@ function MindNodeComponent({
     const ownRect = rectOf(s.nodeLookup.get(id), isRoot);
     const buckets: Record<PortSide, string[]> = { top: [], right: [], bottom: [], left: [] };
     if (ownRect) {
-      for (const [cid, handle] of childEdges) {
+      // Структура для семантических маршрутов (шина/ось/хребет) — как в MindEdge,
+      // через getState: меняется вместе с позициями, которые и так тикают здесь.
+      const { nodes, edges } = useMindMapStore.getState();
+      const rectById = (nodeId: string): Rect | undefined => {
+        const n = s.nodeLookup.get(nodeId);
+        return rectOf(n, n?.data?.isRoot === true) ?? undefined;
+      };
+      for (const [cid, handle, geometry] of childEdges) {
         const cRect = rectOf(s.nodeLookup.get(cid), false);
         if (!cRect) continue;
-        buckets[edgeSourceSide(routing, ownRect, cRect, handle)].push(cid);
+        buckets[
+          edgeSourceSide({
+            strategy,
+            geometry: toRoutingChoice(geometry),
+            sourceId: id,
+            targetId: cid,
+            ownRect,
+            childRect: cRect,
+            sourceHandle: handle,
+            rectOf: rectById,
+            nodes,
+            edges,
+          })
+        ].push(cid);
       }
     }
     return COLLAPSE_SIDES.map((side) => buckets[side].join(',')).join(';');

@@ -1,3 +1,5 @@
+import type { EdgeRoutingChoice } from './lib/routing';
+
 export type EdgeLinePattern = 'solid' | 'dashed' | 'dotted';
 /**
  * Форма наконечника. 'filled' — закрашенный треугольник (он же «triangle» из
@@ -12,6 +14,12 @@ export type EdgeArrowType = 'none' | 'open' | 'filled' | 'dot' | 'diamond';
  */
 export interface EdgeStyle {
   linePattern?: EdgeLinePattern;
+  /**
+   * ГЕОМЕТРИЯ пути (не оформление штриха — то `linePattern`). 'auto' (дефолт,
+   * вырезается pruneStyle) = маршрут определяет активная раскладка; любое
+   * другое значение — пользовательский override, переживающий смену раскладки.
+   */
+  routing?: EdgeRoutingChoice;
   strokeWidth?: number;
   strokeColor?: string;
   /**
@@ -41,6 +49,7 @@ export interface EdgeStyle {
  * `label` is intentionally excluded: free text has no universal default.
  */
 export const DEFAULT_EDGE_STYLE: Required<Omit<EdgeStyle, 'label'>> = {
+  routing: 'auto',
   linePattern: 'solid',
   strokeWidth: 2,
   strokeColor: 'var(--rm-edge)',
