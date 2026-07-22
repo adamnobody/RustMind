@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import clsx from 'clsx';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { listSystemFonts, FALLBACK_FONTS } from '../../../shared/lib/fonts';
 import { useT, type TranslationKey } from '../../../shared/i18n';
@@ -11,8 +10,16 @@ import {
   type BorderPattern,
   type HandleSide,
 } from '../../nodes/types';
-import { ColorField, FontField, NumberField, SegField } from './fields';
-import styles from './Inspector.module.css';
+import {
+  ColorField,
+  FontField,
+  GroupBody,
+  GroupHeading,
+  NumberField,
+  SegField,
+  ToggleGroupField,
+} from './fields';
+import { BorderGlyph, ShapeGlyph } from './glyphs';
 
 const handleSides: { side: HandleSide; labelKey: TranslationKey }[] = [
   { side: 'top', labelKey: 'node.handleTop' },
@@ -21,18 +28,18 @@ const handleSides: { side: HandleSide; labelKey: TranslationKey }[] = [
   { side: 'left', labelKey: 'node.handleLeft' },
 ];
 
-const shapeOptions: { value: NodeShape; label: string }[] = [
-  { value: 'rect', label: '▭' },
-  { value: 'rounded', label: '▢' },
-  { value: 'ellipse', label: '◯' },
-  { value: 'diamond', label: '◇' },
+const shapeOptions: { value: NodeShape; labelKey: TranslationKey }[] = [
+  { value: 'rect', labelKey: 'shape.rect' },
+  { value: 'rounded', labelKey: 'shape.rounded' },
+  { value: 'ellipse', labelKey: 'shape.ellipse' },
+  { value: 'diamond', labelKey: 'shape.diamond' },
 ];
 
-const borderOptions: { value: BorderPattern; label: string }[] = [
-  { value: 'solid', label: '——' },
-  { value: 'dashed', label: '- -' },
-  { value: 'dotted', label: '···' },
-  { value: 'none', label: '∅' },
+const borderOptions: { value: BorderPattern; labelKey: TranslationKey }[] = [
+  { value: 'solid', labelKey: 'line.solid' },
+  { value: 'dashed', labelKey: 'line.dashed' },
+  { value: 'dotted', labelKey: 'line.dotted' },
+  { value: 'none', labelKey: 'line.none' },
 ];
 
 // Picker starting points when a colour has no override yet. Defaults in
@@ -76,7 +83,7 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
   );
 
   return (
-    <div className={styles.editor}>
+    <>
       <ColorField
         label={t('node.bgColor')}
         value={style?.backgroundColor}
@@ -88,7 +95,11 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
       <SegField
         label={t('node.shape')}
         value={style?.shape ?? DEFAULT_NODE_STYLE.shape}
-        options={shapeOptions}
+        options={shapeOptions.map((o) => ({
+          value: o.value,
+          label: <ShapeGlyph shape={o.value} />,
+          title: t(o.labelKey),
+        }))}
         onChange={(shape) => set({ shape })}
       />
 
@@ -112,7 +123,11 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
       <SegField
         label={t('node.borderStyle')}
         value={style?.borderPattern ?? DEFAULT_NODE_STYLE.borderPattern}
-        options={borderOptions}
+        options={borderOptions.map((o) => ({
+          value: o.value,
+          label: <BorderGlyph pattern={o.value} />,
+          title: t(o.labelKey),
+        }))}
         onChange={(borderPattern) => set({ borderPattern })}
       />
 
@@ -141,53 +156,50 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
       />
 
       {/* Начертание — независимые переключатели (жирный/курсив/подчёркнутый). */}
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t('node.textStyle')}</span>
-        <div className={styles.segment} style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
-          <button
-            type="button"
-            aria-pressed={Boolean(style?.bold)}
-            className={clsx(styles.segmentItem, style?.bold && styles.segmentActive)}
-            style={{ fontWeight: 700 }}
-            onClick={() => set({ bold: !style?.bold })}
-          >
-            B
-          </button>
-          <button
-            type="button"
-            aria-pressed={Boolean(style?.italic)}
-            className={clsx(styles.segmentItem, style?.italic && styles.segmentActive)}
-            style={{ fontStyle: 'italic' }}
-            onClick={() => set({ italic: !style?.italic })}
-          >
-            I
-          </button>
-          <button
-            type="button"
-            aria-pressed={Boolean(style?.underline)}
-            className={clsx(styles.segmentItem, style?.underline && styles.segmentActive)}
-            style={{ textDecoration: 'underline' }}
-            onClick={() => set({ underline: !style?.underline })}
-          >
-            U
-          </button>
-        </div>
-      </div>
+      <ToggleGroupField
+        label={t('node.textStyle')}
+        items={[
+          {
+            key: 'bold',
+            label: <span style={{ fontWeight: 800 }}>B</span>,
+            title: t('node.bold'),
+            active: Boolean(style?.bold),
+            onToggle: () => set({ bold: !style?.bold }),
+          },
+          {
+            key: 'italic',
+            label: <span style={{ fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>I</span>,
+            title: t('node.italic'),
+            active: Boolean(style?.italic),
+            onToggle: () => set({ italic: !style?.italic }),
+          },
+          {
+            key: 'underline',
+            label: <span style={{ textDecoration: 'underline' }}>U</span>,
+            title: t('node.underline'),
+            active: Boolean(style?.underline),
+            onToggle: () => set({ underline: !style?.underline }),
+          },
+        ]}
+      />
 
       {/* Смещение хэндлов вдоль своей стороны: 0% — левый/верхний угол,
           50% — центр (дефолт, не хранится), 100% — правый/нижний угол. */}
-      <h3 className={styles.subheading}>{t('node.connectionPoints')}</h3>
-      {handleSides.map(({ side, labelKey }) => (
-        <NumberField
-          key={side}
-          label={t(labelKey)}
-          value={data.handleOffsets?.[side] ?? DEFAULT_HANDLE_OFFSET}
-          min={0}
-          max={100}
-          suffix="%"
-          onChange={(value) => setNodeHandleOffset(nodeId, side, value)}
-        />
-      ))}
-    </div>
+      <GroupHeading title={t('node.connectionPoints')} />
+      <GroupBody>
+        {handleSides.map(({ side, labelKey }) => (
+          <NumberField
+            key={side}
+            inGroup
+            label={t(labelKey)}
+            value={data.handleOffsets?.[side] ?? DEFAULT_HANDLE_OFFSET}
+            min={0}
+            max={100}
+            suffix="%"
+            onChange={(value) => setNodeHandleOffset(nodeId, side, value)}
+          />
+        ))}
+      </GroupBody>
+    </>
   );
 }

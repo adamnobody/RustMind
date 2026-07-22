@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import clsx from 'clsx';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { listSystemFonts, FALLBACK_FONTS } from '../../../shared/lib/fonts';
 import { useT } from '../../../shared/i18n';
-import { ColorField, FontField, NumberField, TextField } from './fields';
-import styles from './Inspector.module.css';
+import { ColorField, FontField, NumberField, TextField, ToggleGroupField } from './fields';
 
 const DEFAULT_TITLE_SIZE = 12;
 const COLOR_SEED = { fill: '#5fd4ff', text: '#e2e8f0' } as const;
@@ -34,7 +32,7 @@ export function GroupEditor({ groupId }: GroupEditorProps): React.JSX.Element | 
   const ts = group.titleStyle;
 
   return (
-    <div className={styles.editor}>
+    <>
       <TextField
         label={t('group.titleLabel')}
         value={group.title}
@@ -74,38 +72,32 @@ export function GroupEditor({ groupId }: GroupEditorProps): React.JSX.Element | 
         onReset={() => updateGroup(groupId, { titleStyle: { color: undefined } })}
       />
 
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t('node.textStyle')}</span>
-        <div className={styles.segment} style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
-          <button
-            type="button"
-            aria-pressed={Boolean(ts?.bold)}
-            className={clsx(styles.segmentItem, ts?.bold && styles.segmentActive)}
-            style={{ fontWeight: 700 }}
-            onClick={() => updateGroup(groupId, { titleStyle: { bold: !ts?.bold } })}
-          >
-            B
-          </button>
-          <button
-            type="button"
-            aria-pressed={Boolean(ts?.italic)}
-            className={clsx(styles.segmentItem, ts?.italic && styles.segmentActive)}
-            style={{ fontStyle: 'italic' }}
-            onClick={() => updateGroup(groupId, { titleStyle: { italic: !ts?.italic } })}
-          >
-            I
-          </button>
-          <button
-            type="button"
-            aria-pressed={Boolean(ts?.underline)}
-            className={clsx(styles.segmentItem, ts?.underline && styles.segmentActive)}
-            style={{ textDecoration: 'underline' }}
-            onClick={() => updateGroup(groupId, { titleStyle: { underline: !ts?.underline } })}
-          >
-            U
-          </button>
-        </div>
-      </div>
-    </div>
+      <ToggleGroupField
+        label={t('node.textStyle')}
+        items={[
+          {
+            key: 'bold',
+            label: <span style={{ fontWeight: 800 }}>B</span>,
+            title: t('node.bold'),
+            active: Boolean(ts?.bold),
+            onToggle: () => updateGroup(groupId, { titleStyle: { bold: !ts?.bold } }),
+          },
+          {
+            key: 'italic',
+            label: <span style={{ fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>I</span>,
+            title: t('node.italic'),
+            active: Boolean(ts?.italic),
+            onToggle: () => updateGroup(groupId, { titleStyle: { italic: !ts?.italic } }),
+          },
+          {
+            key: 'underline',
+            label: <span style={{ textDecoration: 'underline' }}>U</span>,
+            title: t('node.underline'),
+            active: Boolean(ts?.underline),
+            onToggle: () => updateGroup(groupId, { titleStyle: { underline: !ts?.underline } }),
+          },
+        ]}
+      />
+    </>
   );
 }

@@ -9,29 +9,8 @@ import {
 } from '../../edges/types';
 import type { EdgeRoutingChoice } from '../../edges/lib/routing';
 import type { TranslationKey } from '../../../shared/i18n/translations';
-import { Switch } from '../../../shared/ui/Switch/Switch';
-import { ColorField, NumberField, SegField, TextField } from './fields';
-import styles from './Inspector.module.css';
-
-/**
- * Мини-схема варианта геометрии: тот же путь в координатах 28×16, что рисует
- * соответствующий маршрут на канвасе — вариант узнаётся глазом, а не по тексту.
- */
-function RoutingGlyph({ d, dashed }: { d: string; dashed?: boolean }): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 28 16" width={28} height={16} aria-hidden="true" focusable="false">
-      <path
-        d={d}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.6}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeDasharray={dashed === true ? '3 2.5' : undefined}
-      />
-    </svg>
-  );
-}
+import { ColorField, NumberField, SegField, TextField, ToggleField } from './fields';
+import { ArrowGlyph, LinePatternGlyph, RoutingGlyph } from './glyphs';
 
 const routingOptions: {
   value: EdgeRoutingChoice;
@@ -55,26 +34,18 @@ const routingOptions: {
   { value: 'step', glyph: <RoutingGlyph d="M 2 13 L 14 13 L 14 3 L 26 3" />, labelKey: 'edge.routing.step' },
 ];
 
-const patternOptions: { value: EdgeLinePattern; label: string }[] = [
-  { value: 'solid', label: '——' },
-  { value: 'dashed', label: '- -' },
-  { value: 'dotted', label: '···' },
+const patternOptions: { value: EdgeLinePattern; labelKey: TranslationKey }[] = [
+  { value: 'solid', labelKey: 'line.solid' },
+  { value: 'dashed', labelKey: 'line.dashed' },
+  { value: 'dotted', labelKey: 'line.dotted' },
 ];
 
-const startArrowOptions: { value: EdgeArrowType; label: string }[] = [
-  { value: 'none', label: '—' },
-  { value: 'open', label: '◁' },
-  { value: 'filled', label: '◀' },
-  { value: 'dot', label: '●' },
-  { value: 'diamond', label: '◆' },
-];
-
-const endArrowOptions: { value: EdgeArrowType; label: string }[] = [
-  { value: 'none', label: '—' },
-  { value: 'open', label: '▷' },
-  { value: 'filled', label: '▶' },
-  { value: 'dot', label: '●' },
-  { value: 'diamond', label: '◆' },
+const arrowOptions: { value: EdgeArrowType; labelKey: TranslationKey }[] = [
+  { value: 'none', labelKey: 'arrow.none' },
+  { value: 'open', labelKey: 'arrow.open' },
+  { value: 'filled', labelKey: 'arrow.filled' },
+  { value: 'dot', labelKey: 'arrow.dot' },
+  { value: 'diamond', labelKey: 'arrow.diamond' },
 ];
 
 // Стартовые значения нативного color-input, когда переопределения ещё нет
@@ -102,7 +73,76 @@ export function EdgeStyleEditor({ edgeId, data }: EdgeStyleEditorProps): React.J
   const label = style?.label ?? '';
 
   return (
-    <div className={styles.editor}>
+    <>
+      {/* Геометрия пути — не путать с паттерном штриха ниже. */}
+      <SegField
+        label={t('edge.routing')}
+        value={style?.routing ?? DEFAULT_EDGE_STYLE.routing}
+        columns={3}
+        options={routingOptions.map((o) => ({
+          value: o.value,
+          label: o.glyph,
+          title: t(o.labelKey),
+        }))}
+        onChange={(routing) => set({ routing })}
+      />
+
+      <ColorField
+        label={t('edge.lineColor')}
+        value={style?.strokeColor}
+        fallback={COLOR_SEED.edge}
+        onChange={(hex) => set({ strokeColor: hex })}
+        onReset={() => set({ strokeColor: undefined })}
+      />
+
+      <NumberField
+        label={t('edge.thickness')}
+        value={style?.strokeWidth ?? DEFAULT_EDGE_STYLE.strokeWidth}
+        min={1}
+        max={8}
+        suffix="px"
+        onChange={(strokeWidth) => set({ strokeWidth })}
+      />
+
+      <SegField
+        label={t('edge.line')}
+        value={style?.linePattern ?? DEFAULT_EDGE_STYLE.linePattern}
+        options={patternOptions.map((o) => ({
+          value: o.value,
+          label: <LinePatternGlyph pattern={o.value} />,
+          title: t(o.labelKey),
+        }))}
+        onChange={(linePattern) => set({ linePattern })}
+      />
+
+      <SegField
+        label={t('edge.startArrow')}
+        value={style?.sourceArrow ?? DEFAULT_EDGE_STYLE.sourceArrow}
+        options={arrowOptions.map((o) => ({
+          value: o.value,
+          label: <ArrowGlyph arrow={o.value} direction="start" />,
+          title: t(o.labelKey),
+        }))}
+        onChange={(sourceArrow) => set({ sourceArrow })}
+      />
+
+      <SegField
+        label={t('edge.endArrow')}
+        value={style?.targetArrow ?? DEFAULT_EDGE_STYLE.targetArrow}
+        options={arrowOptions.map((o) => ({
+          value: o.value,
+          label: <ArrowGlyph arrow={o.value} direction="end" />,
+          title: t(o.labelKey),
+        }))}
+        onChange={(targetArrow) => set({ targetArrow })}
+      />
+
+      <ToggleField
+        label={t('edge.taper')}
+        checked={style?.taper ?? DEFAULT_EDGE_STYLE.taper}
+        onChange={(taper) => set({ taper })}
+      />
+
       <TextField
         label={t('edge.labelText')}
         value={label}
@@ -130,63 +170,6 @@ export function EdgeStyleEditor({ edgeId, data }: EdgeStyleEditorProps): React.J
           />
         </>
       )}
-
-      {/* Геометрия пути — не путать с паттерном штриха ниже. */}
-      <SegField
-        label={t('edge.routing')}
-        value={style?.routing ?? DEFAULT_EDGE_STYLE.routing}
-        columns={3}
-        options={routingOptions.map((o) => ({
-          value: o.value,
-          label: o.glyph,
-          title: t(o.labelKey),
-        }))}
-        onChange={(routing) => set({ routing })}
-      />
-
-      <SegField
-        label={t('edge.line')}
-        value={style?.linePattern ?? DEFAULT_EDGE_STYLE.linePattern}
-        options={patternOptions}
-        onChange={(linePattern) => set({ linePattern })}
-      />
-
-      <NumberField
-        label={t('edge.thickness')}
-        value={style?.strokeWidth ?? DEFAULT_EDGE_STYLE.strokeWidth}
-        min={1}
-        max={8}
-        suffix="px"
-        onChange={(strokeWidth) => set({ strokeWidth })}
-      />
-
-      <ColorField
-        label={t('edge.lineColor')}
-        value={style?.strokeColor}
-        fallback={COLOR_SEED.edge}
-        onChange={(hex) => set({ strokeColor: hex })}
-        onReset={() => set({ strokeColor: undefined })}
-      />
-
-      <SegField
-        label={t('edge.startArrow')}
-        value={style?.sourceArrow ?? DEFAULT_EDGE_STYLE.sourceArrow}
-        options={startArrowOptions}
-        onChange={(sourceArrow) => set({ sourceArrow })}
-      />
-
-      <SegField
-        label={t('edge.endArrow')}
-        value={style?.targetArrow ?? DEFAULT_EDGE_STYLE.targetArrow}
-        options={endArrowOptions}
-        onChange={(targetArrow) => set({ targetArrow })}
-      />
-
-      <Switch
-        label={t('edge.taper')}
-        checked={style?.taper ?? DEFAULT_EDGE_STYLE.taper}
-        onCheckedChange={(taper) => set({ taper })}
-      />
-    </div>
+    </>
   );
 }
