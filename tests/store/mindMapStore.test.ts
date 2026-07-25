@@ -194,12 +194,15 @@ describe('mindMapStore — undo/redo', () => {
     expect(useMindMapStore.getState().canRedo).toBe(false);
   });
 
-  it('история ограничена лимитом и не растёт бесконечно', () => {
+  it('история ограничена лимитом и сохраняет актуальный снимок', () => {
     const rootId = useMindMapStore.getState().getRootNode()!.id;
     for (let i = 0; i < 130; i++) {
       useMindMapStore.getState().addChildNode(rootId);
     }
-    expect(useMindMapStore.getState().past.length).toBeLessThanOrEqual(100);
+
+    expect(useMindMapStore.getState().past).toHaveLength(100);
+    useMindMapStore.getState().undo();
+    expect(useMindMapStore.getState().nodes).toHaveLength(130);
   });
 
   it('undo/redo на пустых стеках — безопасный no-op', () => {

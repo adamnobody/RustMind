@@ -30,7 +30,9 @@ export function layoutTree(
 
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: direction, ranksep: rankSep, nodesep: nodeSep });
+  // hierarchyStrategy всегда передаёт дерево: специализированный ranker избегает
+  // дорогого network-simplex без изменения контракта positioning.
+  g.setGraph({ rankdir: direction, ranksep: rankSep, nodesep: nodeSep, ranker: 'tight-tree' });
 
   for (const node of nodes) {
     const fallback = node.data.isRoot ? ROOT_NODE_SIZE : DEFAULT_NODE_SIZE;
