@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { AppNode, AppEdge } from '../../src/store/types';
+import type { AppNode, AppEdge } from '../../src/domain/mind-map';
 import { resolveDropTarget } from '../../src/features/canvas/lib/dropTarget';
 
 /** Корень R (220x56 в 0,0) с детьми A (order 0, 400,0) и B (order 1, 400,200). */

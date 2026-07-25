@@ -1,22 +1,6 @@
-/**
- * Тип раскладки документа. Позиции узлов всегда вычисляются движком раскладки
- * из структуры дерева — пользователь редактирует только структуру. Исключение
- * — 'network' (force-directed, хранит собственные мягкие позиции, допускает
- * произвольные связи и циклы). См. features/layout/strategies.
- */
-export type LayoutKind =
-  | 'hierarchy'
-  | 'right'
-  | 'left'
-  | 'both'
-  | 'tree'
-  | 'org'
-  | 'logic'
-  | 'fishbone'
-  | 'timeline'
-  | 'bubble'
-  | 'network'
-  | 'free';
+import type { LayoutKind } from '../../../domain/mind-map';
+
+export type { LayoutKind, LayoutType } from '../../../domain/mind-map';
 
 export const LAYOUT_KINDS: LayoutKind[] = [
   'hierarchy',
@@ -56,6 +40,3 @@ export function coerceLayoutKind(value: string): LayoutKind {
   if (LAYOUT_KINDS.includes(value as LayoutKind)) return value as LayoutKind;
   return LEGACY_LAYOUT_MAP[value] ?? DEFAULT_LAYOUT_KIND;
 }
-
-/** Совместимость со старым именем типа (store, persistence). */
-export type LayoutType = LayoutKind;

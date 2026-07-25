@@ -1,5 +1,4 @@
-import type { AppNode, AppEdge, LoadDocumentPayload } from '../../store/types';
-import type { LayoutKind } from '../layout/engines/layoutTypes';
+import type { AppNode, AppEdge, LayoutKind, LoadDocumentPayload } from '../../domain/mind-map';
 import type { Locale } from '../../shared/i18n/locales';
 import { MIND_NODE_TYPE } from '../nodes/types';
 import { DEFAULT_TREE_EDGE_HANDLES } from '../edges/types';

@@ -15,11 +15,9 @@ import { resolveEdgeRoute } from '../lib/resolveRoute';
 import type { CubicControls, Point, PortSide, Rect } from '../lib/routing';
 import {
   DEFAULT_EDGE_STYLE,
-  isTreeEdge,
-  type EdgeArrowType,
-  type EdgeLinePattern,
-  type MindEdgeData,
 } from '../types';
+import type { EdgeArrowType, EdgeLinePattern, MindEdgeData } from '../../../domain/mind-map';
+import { isTreeEdge } from '../../../domain/mind-map';
 import styles from './MindEdge.module.css';
 
 /**

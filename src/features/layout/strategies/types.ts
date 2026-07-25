@@ -1,5 +1,4 @@
-import type { AppNode, AppEdge } from '../../../store/types';
-import type { LayoutKind } from '../engines/layoutTypes';
+import type { AppNode, AppEdge, LayoutKind } from '../../../domain/mind-map';
 import type { TranslationKey } from '../../../shared/i18n/translations';
 import type { EdgeRouting, Rect, RoutedEdge } from '../../edges/lib/routing';
 

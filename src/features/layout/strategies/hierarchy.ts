@@ -1,4 +1,4 @@
-import { isTreeEdge } from '../../edges/types';
+import { isTreeEdge } from '../../../domain/mind-map';
 import { layoutTree } from '../lib/layoutTree';
 import type { LayoutStrategy } from './types';
 import { canConnectAsTree } from './shared';

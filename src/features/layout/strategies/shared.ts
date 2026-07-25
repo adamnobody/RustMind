@@ -1,5 +1,4 @@
-import type { AppNode, AppEdge } from '../../../store/types';
-import { isTreeEdge } from '../../edges/types';
+import { isTreeEdge, type AppNode, type AppEdge } from '../../../domain/mind-map';
 import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../../shared/lib/constants';
 import type { ConnectContext } from './types';
 

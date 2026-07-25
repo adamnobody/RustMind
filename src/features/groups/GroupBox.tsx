@@ -3,7 +3,8 @@ import { type NodeProps } from '@xyflow/react';
 import clsx from 'clsx';
 import { useUIStore } from '../../store/uiStore';
 import { useMindMapStore } from '../../store/mindMapStore';
-import { GROUP_TITLE_HEIGHT, type Group } from './types';
+import { GROUP_TITLE_HEIGHT } from './types';
+import type { Group } from '../../domain/mind-map';
 import styles from './GroupBox.module.css';
 
 interface GroupBoxData {

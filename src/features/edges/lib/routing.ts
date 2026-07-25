@@ -6,6 +6,10 @@
  * стора/React — модуль тестируется как есть.
  */
 
+import type { EdgeGeometry } from '../../../domain/mind-map';
+
+export type { EdgeGeometry, EdgeRoutingChoice } from '../../../domain/mind-map';
+
 export type EdgeRouting = 'orthogonal' | 'bezier' | 'radial' | 'straight' | 'fixed';
 
 /**
@@ -19,10 +23,6 @@ export type EdgeRouting = 'orthogonal' | 'bezier' | 'radial' | 'straight' | 'fix
  * - 'orthogonal' — резкий dogleg с выходом перпендикулярно семантическим
  *   сторонам портов (короткий «носик» у каждого конца).
  */
-export type EdgeGeometry = 'straight' | 'bezier' | 'smoothstep' | 'orthogonal' | 'step';
-/** Значение EdgeStyle.routing: 'auto' = маршрут определяет активная раскладка. */
-export type EdgeRoutingChoice = 'auto' | EdgeGeometry;
-
 /** Радиус скругления углов ломаной (smoothstep и «аккуратные» маршруты раскладок). */
 export const CORNER_RADIUS = 12;
 /** Длина перпендикулярного «носика» у порта в ортогональном маршруте. */

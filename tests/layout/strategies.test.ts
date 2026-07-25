@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { AppNode, AppEdge } from '../../src/store/types';
+import type { AppNode, AppEdge } from '../../src/domain/mind-map';
 import { LAYOUT_KINDS, coerceLayoutKind } from '../../src/features/layout/engines/layoutTypes';
 import {
   LAYOUT_STRATEGIES,

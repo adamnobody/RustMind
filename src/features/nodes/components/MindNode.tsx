@@ -15,17 +15,22 @@ import { useNodeEditing } from '../hooks/useNodeEditing';
 import {
   DEFAULT_NODE_STYLE,
   findStatus,
-  type BorderPattern,
-  type MindNodeData,
-  type NodeShape,
 } from '../types';
+import type {
+  AppNode,
+  AppEdge,
+  BorderPattern,
+  EdgeRoutingChoice,
+  MindNodeData,
+  NodeShape,
+} from '../../../domain/mind-map';
 import { isDefaultChildLabel } from '../../../shared/i18n';
-import { isTreeEdge, oppositeHandle, DEFAULT_TREE_EDGE_HANDLES } from '../../edges/types';
-import { sidePort, type EdgeRoutingChoice, type PortSide, type Rect } from '../../edges/lib/routing';
+import { oppositeHandle, DEFAULT_TREE_EDGE_HANDLES } from '../../edges/types';
+import { isTreeEdge } from '../../../domain/mind-map';
+import { sidePort, type PortSide, type Rect } from '../../edges/lib/routing';
 import { resolveEdgeRoute } from '../../edges/lib/resolveRoute';
 import { getLayoutStrategy } from '../../layout/strategies/registry';
 import type { LayoutStrategy } from '../../layout/strategies/types';
-import type { AppNode, AppEdge } from '../../../store/types';
 import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../../shared/lib/constants';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';

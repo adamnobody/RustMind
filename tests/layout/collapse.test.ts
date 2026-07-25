@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { AppNode, AppEdge } from '../../src/store/types';
+import type { AppNode, AppEdge } from '../../src/domain/mind-map';
 import {
   collapsedHiddenIds,
   layoutExcludedIds,

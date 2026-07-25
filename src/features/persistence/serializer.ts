@@ -1,12 +1,21 @@
 import {
-  type NodeStyle,
-  type HandleOffsets,
-  type StatusOption,
   DEFAULT_NODE_STYLE,
 } from '../../features/nodes/types';
-import { type EdgeStyle, type EdgeKind, DEFAULT_TREE_EDGE_HANDLES, DEFAULT_EDGE_STYLE } from '../../features/edges/types';
-import type { Group } from '../../features/groups/types';
-import type { AppNode, AppEdge, LayoutType, LoadDocumentPayload, HandleVisibility, ProjectSettings } from '../../store/types';
+import { DEFAULT_TREE_EDGE_HANDLES, DEFAULT_EDGE_STYLE } from '../../features/edges/types';
+import type {
+  AppNode,
+  AppEdge,
+  EdgeKind,
+  EdgeStyle,
+  Group,
+  HandleOffsets,
+  HandleVisibility,
+  LayoutType,
+  LoadDocumentPayload,
+  NodeStyle,
+  ProjectSettings,
+  StatusOption,
+} from '../../domain/mind-map';
 import type { SerializedMindMap } from './schema';
 import { FILE_VERSION } from './schema';
 import { DEFAULT_HANDLE_VISIBILITY } from '../../shared/lib/constants';

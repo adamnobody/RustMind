@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { serializeMindMap, deserializeMindMap } from '../../src/features/persistence/serializer';
 import { useMindMapStore } from '../../src/store/mindMapStore';
-import type { AppNode, AppEdge, ProjectSettings } from '../../src/store/types';
+import type { AppNode, AppEdge, ProjectSettings } from '../../src/domain/mind-map';
 import type { SerializedMindMap } from '../../src/features/persistence/schema';
 import { FILE_VERSION } from '../../src/features/persistence/schema';
 

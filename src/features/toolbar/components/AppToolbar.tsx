@@ -4,7 +4,7 @@ import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { Icon, type IconName } from '../../../shared/ui/Icon/Icon';
 import { useT, translate } from '../../../shared/i18n';
-import type { HandleVisibility } from '../../../store/types';
+import type { HandleVisibility } from '../../../domain/mind-map';
 import { exportMindMap, type ExportFormat } from '../../persistence/exportImage';
 import { LAYOUT_LABEL_KEYS } from '../../layout/lib/layoutLabels';
 import { MenuBar, type MenuDef } from './MenuBar';

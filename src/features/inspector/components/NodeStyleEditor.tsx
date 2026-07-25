@@ -5,11 +5,8 @@ import { useT, type TranslationKey } from '../../../shared/i18n';
 import {
   DEFAULT_NODE_STYLE,
   DEFAULT_HANDLE_OFFSET,
-  type MindNodeData,
-  type NodeShape,
-  type BorderPattern,
-  type HandleSide,
 } from '../../nodes/types';
+import type { BorderPattern, HandleSide, MindNodeData, NodeShape } from '../../../domain/mind-map';
 import {
   ColorField,
   FontField,

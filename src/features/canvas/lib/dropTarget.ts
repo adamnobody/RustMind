@@ -1,5 +1,4 @@
-import type { AppNode, AppEdge } from '../../../store/types';
-import { isTreeEdge } from '../../edges/types';
+import { isTreeEdge, type AppNode, type AppEdge } from '../../../domain/mind-map';
 import { nodeSize, treeParentOf } from '../../layout/strategies/shared';
 
 /** Дискриминированное объединение — сужается по `kind` без явных приведений. */

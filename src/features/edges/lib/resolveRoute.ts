@@ -1,10 +1,10 @@
 import type { LayoutStrategy, TreeRouteContext } from '../../layout/strategies/types';
+import type { EdgeRoutingChoice } from '../../../domain/mind-map';
 import {
   routeBetweenPorts,
   routeEdge,
   routeFixed,
   routeUserGeometry,
-  type EdgeRoutingChoice,
   type Port,
   type RoutedEdge,
 } from './routing';

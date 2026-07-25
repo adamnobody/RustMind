@@ -1,6 +1,5 @@
-import type { AppNode, AppEdge } from '../../../store/types';
-import type { LayoutKind } from '../engines/layoutTypes';
-import { isTreeEdge, DEFAULT_TREE_EDGE_HANDLES } from '../../edges/types';
+import { isTreeEdge, type AppNode, type AppEdge, type LayoutKind } from '../../../domain/mind-map';
+import { DEFAULT_TREE_EDGE_HANDLES } from '../../edges/types';
 import { generateEdgeId } from '../../../shared/lib/id';
 
 export interface NormalizedStructure {

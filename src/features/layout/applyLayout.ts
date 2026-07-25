@@ -1,4 +1,4 @@
-import type { AppNode, AppEdge, LayoutType } from '../../store/types';
+import type { AppNode, AppEdge, LayoutType } from '../../domain/mind-map';
 import { getLayoutStrategy } from './strategies/registry';
 import { layoutExcludedIds } from './strategies/shared';
 

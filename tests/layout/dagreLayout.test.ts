@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { Node, Edge } from '@xyflow/react';
 import { layoutTree } from '../../src/features/layout/lib/layoutTree';
-import type { MindNodeData } from '../../src/features/nodes/types';
+import type { MindNodeData } from '../../src/domain/mind-map';
 
 type TestNode = Node<MindNodeData>;
 

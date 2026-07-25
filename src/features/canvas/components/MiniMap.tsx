@@ -7,8 +7,7 @@ import {
   type MiniMapNodeProps,
 } from '@xyflow/react';
 import { useShallow } from 'zustand/react/shallow';
-import type { MindNodeData } from '../../nodes/types';
-import type { AppEdge, AppNode } from '../../../store/types';
+import type { AppEdge, AppNode, MindNodeData } from '../../../domain/mind-map';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { collapsedHiddenIds } from '../../layout/strategies/shared';
 import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../../shared/lib/constants';

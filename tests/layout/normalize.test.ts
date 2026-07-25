@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { AppNode, AppEdge } from '../../src/store/types';
+import type { AppNode, AppEdge } from '../../src/domain/mind-map';
 import { normalizeStructure } from '../../src/features/layout/strategies/normalize';
 
 function makeNode(id: string, isRoot = false, order?: number): AppNode {

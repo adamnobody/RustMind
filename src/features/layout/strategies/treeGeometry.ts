@@ -1,4 +1,4 @@
-import type { AppNode, AppEdge } from '../../../store/types';
+import type { AppNode, AppEdge } from '../../../domain/mind-map';
 import { DEFAULT_NODE_SIZE } from '../../../shared/lib/constants';
 import { findRoot, treeChildrenMap, nodeSize } from './shared';
 

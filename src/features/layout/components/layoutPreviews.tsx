@@ -1,4 +1,4 @@
-import type { LayoutKind } from '../engines/layoutTypes';
+import type { LayoutKind } from '../../../domain/mind-map';
 import styles from './LayoutTypeDialog.module.css';
 
 /**

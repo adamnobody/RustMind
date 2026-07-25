@@ -4,7 +4,7 @@ import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { useT } from '../../../shared/i18n';
 import { Icon } from '../../../shared/ui/Icon/Icon';
-import type { AppNode } from '../../../store/types';
+import type { AppNode } from '../../../domain/mind-map';
 import { DEFAULT_NODE_SIZE } from '../../../shared/lib/constants';
 import styles from './SearchBar.module.css';
 

@@ -1,4 +1,4 @@
-import type { LayoutKind } from '../engines/layoutTypes';
+import type { LayoutKind } from '../../../domain/mind-map';
 import type { TranslationKey } from '../../../shared/i18n/translations';
 
 /** Локализованные названия типов раскладки — общие для тулбара и диалога выбора. */

@@ -3,8 +3,9 @@ import { useShallow } from 'zustand/react/shallow';
 import clsx from 'clsx';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
-import { useT } from '../../../shared/i18n';
-import { BUILTIN_STATUSES, type HandleSide, type StatusOption } from '../types';
+import { useT, type TranslationKey } from '../../../shared/i18n';
+import { BUILTIN_STATUSES } from '../types';
+import type { HandleSide, StatusOption } from '../../../domain/mind-map';
 import { oppositeHandle } from '../../edges/types';
 import { treeChildrenMap } from '../../layout/strategies/shared';
 import { NODE_COLORS } from '../../../shared/lib/constants';
@@ -171,7 +172,7 @@ export function NodeContextMenu(): React.JSX.Element | null {
             {BUILTIN_STATUSES.map((s) => (
               <button key={s.id} type="button" className={styles.item} onClick={() => setStatus(s.id)}>
                 <span className={styles.swatch} style={{ backgroundColor: s.color }} aria-hidden="true" />
-                <span className={styles.itemLabel}>{s.labelKey ? t(s.labelKey) : s.label}</span>
+                <span className={styles.itemLabel}>{s.labelKey ? t(s.labelKey as TranslationKey) : s.label}</span>
               </button>
             ))}
             {customStatuses?.map((s) => (

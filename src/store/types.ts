@@ -1,48 +1,30 @@
 import type {
-  Node,
-  Edge,
   NodeChange,
   EdgeChange,
   Connection,
 } from '@xyflow/react';
-import type { HandleSide, MindNodeData, NodeStyle, StatusOption } from '../features/nodes/types';
-import type { EdgeStyle, MindEdgeData } from '../features/edges/types';
-import type { LayoutKind } from '../features/layout/engines/layoutTypes';
-import type { Group, GroupTitleStyle } from '../features/groups/types';
+import type {
+  AppNode,
+  AppEdge,
+  EdgeStyle,
+  Group,
+  GroupTitleStyle,
+  HandleSide,
+  LayoutType,
+  LoadDocumentPayload,
+  MindNodeData,
+  NodeStyle,
+  ProjectSettings,
+} from '../domain/mind-map';
 
-export type AppNode = Node<MindNodeData>;
-export type AppEdge = Edge<MindEdgeData>;
-
-/** Тип раскладки документа — см. features/layout (12 видов, дефолт 'hierarchy'). */
-export type LayoutType = LayoutKind;
-export type HandleVisibility = 'hidden' | 'dashed' | 'always';
-
-export interface ProjectSettings {
-  handleVisibility: HandleVisibility;
-  /** Глобальный фон холста (hex). Отсутствие — фон темы. */
-  backgroundColor?: string;
-  /** Фоновое изображение холста (data URL). */
-  backgroundImage?: string;
-  /** Цвет ВСЕХ связей (переопределяет --rm-edge); per-edge стиль имеет приоритет. */
-  edgeColor?: string;
-  /**
-   * Цвет фона узлов по уровням дерева: индекс 0 — уровень 1 (дети корня), 1 —
-   * уровень 2 и т.д. Пустая строка/отсутствие — без переопределения. Применяется
-   * только к узлам без собственного цвета фона.
-   */
-  levelColors?: string[];
-  /** Пользовательские статусы задач, добавленные через контекстное меню узла. */
-  customStatuses?: StatusOption[];
-}
-
-export interface LoadDocumentPayload {
-  documentName: string;
-  layoutType: LayoutType;
-  nodes: AppNode[];
-  edges: AppEdge[];
-  projectSettings?: ProjectSettings;
-  groups?: Group[];
-}
+export type {
+  AppNode,
+  AppEdge,
+  HandleVisibility,
+  LayoutType,
+  LoadDocumentPayload,
+  ProjectSettings,
+} from '../domain/mind-map';
 
 /**
  * Категория действия, породившего запись истории. Используется, чтобы решить,

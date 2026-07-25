@@ -3,8 +3,6 @@ import { immer } from 'zustand/middleware/immer';
 import { applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react';
 import type {
   MindMapState,
-  AppNode,
-  AppEdge,
   HistorySnapshot,
   HistoryCategory,
 } from './types';
@@ -12,14 +10,13 @@ import {
   MIND_NODE_TYPE,
   DEFAULT_NODE_STYLE,
   DEFAULT_HANDLE_OFFSET,
-  type HandleOffsets,
 } from '../features/nodes/types';
 import {
-  type EdgeKind,
-  isTreeEdge,
   DEFAULT_TREE_EDGE_HANDLES,
   DEFAULT_EDGE_STYLE,
 } from '../features/edges/types';
+import { isTreeEdge } from '../domain/mind-map';
+import type { AppNode, AppEdge, EdgeKind, HandleOffsets } from '../domain/mind-map';
 import { generateNodeId, generateEdgeId } from '../shared/lib/id';
 import { pruneStyle } from '../shared/lib/style';
 import { NODE_COLORS, DEFAULT_HANDLE_VISIBILITY } from '../shared/lib/constants';

@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { DEFAULT_HANDLE_OFFSET, type HandleOffsets, type HandleSide } from '../types';
+import { DEFAULT_HANDLE_OFFSET } from '../types';
+import type { HandleOffsets, HandleSide } from '../../../domain/mind-map';
 
 /**
  * Four connection handles — one per side. All handles are type="source" with

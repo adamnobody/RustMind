@@ -1,5 +1,5 @@
 import dagre from 'dagre';
-import type { AppNode, AppEdge } from '../../../store/types';
+import type { AppNode, AppEdge } from '../../../domain/mind-map';
 import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE, LAYOUT_SPACING } from '../../../shared/lib/constants';
 
 export type LayoutDirection = 'LR' | 'TB';

@@ -1,5 +1,4 @@
-import type { AppNode, AppEdge } from '../../../store/types';
-import type { LayoutKind } from '../engines/layoutTypes';
+import type { AppNode, AppEdge, LayoutKind } from '../../../domain/mind-map';
 import type { LayoutStrategy } from './types';
 import { hierarchyStrategy } from './hierarchy';
 import { rightStrategy } from './right';

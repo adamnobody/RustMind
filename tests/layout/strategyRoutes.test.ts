@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import type { AppNode, AppEdge } from '../../src/store/types';
+import type { AppNode, AppEdge } from '../../src/domain/mind-map';
 import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../src/shared/lib/constants';
 import { getLayoutStrategy } from '../../src/features/layout/strategies/registry';
 import { ribAnchorX } from '../../src/features/layout/strategies/fishbone';
-import type { LayoutKind } from '../../src/features/layout/engines/layoutTypes';
+import type { LayoutKind } from '../../src/domain/mind-map';
 import type { RoutedEdge, Rect, Point } from '../../src/features/edges/lib/routing';
 
 /** Позиция узла — левый верхний угол; размер берётся из констант приложения. */

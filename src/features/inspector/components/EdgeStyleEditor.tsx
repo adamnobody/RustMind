@@ -3,11 +3,13 @@ import { useMindMapStore } from '../../../store/mindMapStore';
 import { useT } from '../../../shared/i18n';
 import {
   DEFAULT_EDGE_STYLE,
-  type MindEdgeData,
-  type EdgeArrowType,
-  type EdgeLinePattern,
 } from '../../edges/types';
-import type { EdgeRoutingChoice } from '../../edges/lib/routing';
+import type {
+  EdgeArrowType,
+  EdgeLinePattern,
+  EdgeRoutingChoice,
+  MindEdgeData,
+} from '../../../domain/mind-map';
 import type { TranslationKey } from '../../../shared/i18n/translations';
 import { ColorField, NumberField, SegField, TextField, ToggleField } from './fields';
 import { ArrowGlyph, LinePatternGlyph, RoutingGlyph } from './glyphs';

@@ -3,8 +3,8 @@ import { useMindMapStore } from '../../src/store/mindMapStore';
 import { serializeMindMap, deserializeMindMap } from '../../src/features/persistence/serializer';
 import type { SerializedMindMap } from '../../src/features/persistence/schema';
 import { FILE_VERSION } from '../../src/features/persistence/schema';
-import { DEFAULT_EDGE_STYLE, type EdgeStyle } from '../../src/features/edges/types';
-import type { AppNode, AppEdge, ProjectSettings } from '../../src/store/types';
+import { DEFAULT_EDGE_STYLE } from '../../src/features/edges/types';
+import type { AppNode, AppEdge, EdgeStyle, ProjectSettings } from '../../src/domain/mind-map';
 
 const settings: ProjectSettings = { handleVisibility: 'dashed' };
 

@@ -14,7 +14,7 @@ import {
 } from '@xyflow/react';
 import { useShallow } from 'zustand/react/shallow';
 
-import type { AppNode } from '../../../store/types';
+import type { AppNode } from '../../../domain/mind-map';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { MindNode } from '../../nodes/components/MindNode';

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import type { AppNode, AppEdge } from '../../src/store/types';
+import type { AppNode, AppEdge } from '../../src/domain/mind-map';
 import { resolveEdgeRoute } from '../../src/features/edges/lib/resolveRoute';
 import { sidePort, type EdgeRoutingChoice, type Rect } from '../../src/features/edges/lib/routing';
 import { getLayoutStrategy } from '../../src/features/layout/strategies/registry';
-import type { LayoutKind } from '../../src/features/layout/engines/layoutTypes';
+import type { LayoutKind } from '../../src/domain/mind-map';
 
 const RECTS: Record<string, Rect> = {
   R: { x: 0, y: 0, width: 220, height: 56 },
