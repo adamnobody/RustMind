@@ -311,6 +311,7 @@ const ru = {
   'dialog.unsavedClose': 'Есть несохранённые изменения. Всё равно закрыть?',
   'dialog.unsavedHome': 'Есть несохранённые изменения. Выйти в меню?',
   'dialog.recoverDraft': 'Найден несохранённый черновик после прошлой сессии. Восстановить его?',
+  'dialog.confirmDeleteBranch': 'Удалить ветку со всеми дочерними узлами?',
 
   'file.invalidFormat': 'Неверный формат файла',
 
@@ -612,6 +613,7 @@ const en: Record<TranslationKey, string> = {
   'dialog.unsavedClose': 'You have unsaved changes. Close anyway?',
   'dialog.unsavedHome': 'You have unsaved changes. Return to the menu?',
   'dialog.recoverDraft': 'An unsaved draft from your last session was found. Restore it?',
+  'dialog.confirmDeleteBranch': 'Delete the branch with all its child nodes?',
 
   'file.invalidFormat': 'Invalid file format',
 
@@ -909,6 +911,7 @@ const de: Record<TranslationKey, string> = {
   'dialog.unsavedClose': 'Es gibt ungespeicherte Änderungen. Trotzdem schließen?',
   'dialog.unsavedHome': 'Es gibt ungespeicherte Änderungen. Zum Menü zurückkehren?',
   'dialog.recoverDraft': 'Ein ungespeicherter Entwurf der letzten Sitzung wurde gefunden. Wiederherstellen?',
+  'dialog.confirmDeleteBranch': 'Den Zweig mit allen untergeordneten Knoten löschen?',
 
   'file.invalidFormat': 'Ungültiges Dateiformat',
 
@@ -1207,6 +1210,7 @@ const fr: Record<TranslationKey, string> = {
   'dialog.unsavedClose': 'Modifications non enregistrées. Fermer quand même ?',
   'dialog.unsavedHome': 'Modifications non enregistrées. Revenir au menu ?',
   'dialog.recoverDraft': 'Un brouillon non enregistré de la dernière session a été trouvé. Le restaurer ?',
+  'dialog.confirmDeleteBranch': 'Supprimer la branche avec tous ses nœuds enfants ?',
 
   'file.invalidFormat': 'Format de fichier invalide',
 

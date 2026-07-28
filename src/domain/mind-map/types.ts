@@ -152,6 +152,8 @@ export interface LoadDocumentPayload {
   edges: AppEdge[];
   projectSettings?: ProjectSettings;
   groups?: Group[];
+  /** Дата создания из файла; у старых/импортированных файлов может отсутствовать. */
+  createdAt?: string;
 }
 
 /** Всё, что не помечено явно как free, остаётся структурным ребром для legacy-файлов. */

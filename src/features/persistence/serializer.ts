@@ -176,6 +176,7 @@ export function deserializeMindMap(serialized: SerializedMindMap): LoadDocumentP
     documentName: serialized.documentName,
     layoutType,
     groups,
+    createdAt: serialized.createdAt,
     projectSettings: {
       handleVisibility: coerceHandleVisibility(serialized.projectSettings?.handleVisibility),
       backgroundColor: serialized.projectSettings?.backgroundColor,

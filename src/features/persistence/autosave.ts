@@ -58,6 +58,7 @@ export function useAutosave(intervalMs = DEFAULT_INTERVAL_MS): void {
           s.edges,
           s.projectSettings,
           s.groups,
+          s.createdAt,
         );
         saveDraft(data, s.filePath);
       } else {

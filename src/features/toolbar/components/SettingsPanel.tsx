@@ -11,6 +11,7 @@ import {
 } from '../../../store/uiStore';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useT } from '../../../shared/i18n';
+import { version as appVersion } from '../../../../package.json';
 import styles from './SettingsPanel.module.css';
 
 const nodeFontOptions: { value: NodeFontSize; label: string }[] = [
@@ -232,7 +233,7 @@ export function SettingsPanel(): React.JSX.Element {
 
         <section className={styles.about}>
           <h3 className={styles.heading}>{t('settings.about')}</h3>
-          <p className={styles.aboutTitle}>RustMind 0.1.0</p>
+          <p className={styles.aboutTitle}>RustMind {appVersion}</p>
           <p className={styles.aboutText}>{t('settings.aboutText')}</p>
         </section>
       </div>

@@ -63,6 +63,7 @@ export function usePersistence(): PersistenceActions {
         state.edges,
         state.projectSettings,
         state.groups,
+        state.createdAt,
       );
       await fileService.saveToPath(path, data);
       state.setFilePath(path);
@@ -84,6 +85,7 @@ export function usePersistence(): PersistenceActions {
         state.edges,
         state.projectSettings,
         state.groups,
+        state.createdAt,
       );
       await fileService.saveToPath(path, data);
       state.setFilePath(path);

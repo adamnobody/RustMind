@@ -71,6 +71,21 @@ export function useGlobalHotkeys(): void {
         return;
       }
 
+      // Авто-раскладка — L (без модификаторов), то же действие, что пункт
+      // меню «Правка → Авто-раскладка»: имеет смысл только для network
+      // (форс-симуляция), поэтому и пункт меню, и хоткей живут только там.
+      // Стоит до switch: в network L перехватывает printable-quick-edit.
+      // e.code (физическая клавиша), чтобы работало и на кириллице ('д').
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && e.code === 'KeyL') {
+        const { layoutType, applyAutoLayoutManual } = useMindMapStore.getState();
+        if (layoutType === 'network') {
+          e.preventDefault();
+          applyAutoLayoutManual();
+          setTimeout(() => useUIStore.getState().triggerFitView(), 50);
+          return;
+        }
+      }
+
       // Helper: выделить новый узел без авто-редактирования — быстрый наброс структуры.
       const focusNew = (newId: string | null): void => {
         if (newId) {

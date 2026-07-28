@@ -155,6 +155,7 @@ export const useMindMapStore = create<MindMapState>()(
     isDirty: false,
     layoutType: DEFAULT_LAYOUT_KIND,
     projectSettings: { handleVisibility: DEFAULT_HANDLE_VISIBILITY },
+    createdAt: new Date().toISOString(),
 
     past: [],
     future: [],
@@ -488,6 +489,18 @@ export const useMindMapStore = create<MindMapState>()(
       const node = get().nodes.find((n) => n.id === id);
       if (!node || node.data.isRoot) return;
 
+      // Настройка «Подтверждать удаление ветки»: спрашиваем только когда у
+      // узла есть потомки, и ДО записи истории — отмена не оставляет следов
+      // ни в графе, ни в undo-стеке. Единая точка для всех входов (Delete/
+      // Backspace, контекстное меню, toolbar узла) — они все идут сюда.
+      if (
+        useUIStore.getState().settings.confirmBranchDelete &&
+        get().getDescendantIds(id).length > 0 &&
+        !window.confirm(translate('dialog.confirmDeleteBranch'))
+      ) {
+        return;
+      }
+
       const parentId = treeParentOf(id, get().edges);
 
       recordHistory('structural');
@@ -612,6 +625,9 @@ export const useMindMapStore = create<MindMapState>()(
         state.documentName = payload.documentName;
         state.layoutType = payload.layoutType;
         state.projectSettings = payload.projectSettings ?? { handleVisibility: DEFAULT_HANDLE_VISIBILITY };
+        // Старый/импортированный файл без createdAt: фиксируем значение один
+        // раз здесь — при следующем сохранении оно запишется и дальше не меняется.
+        state.createdAt = payload.createdAt ?? new Date().toISOString();
         state.isDirty = false;
         state.past = [];
         state.future = [];
@@ -632,6 +648,7 @@ export const useMindMapStore = create<MindMapState>()(
         state.isDirty = false;
         state.layoutType = DEFAULT_LAYOUT_KIND;
         state.projectSettings = { handleVisibility: DEFAULT_HANDLE_VISIBILITY };
+        state.createdAt = new Date().toISOString();
         state.past = [];
         state.future = [];
         state.canUndo = false;

@@ -61,6 +61,13 @@ export interface MindMapState {
   isDirty: boolean;
   layoutType: LayoutType;
   projectSettings: ProjectSettings;
+  /**
+   * Дата создания документа (ISO). Ставится при создании/загрузке и дальше
+   * только читается сериализатором — повторные сохранения её не трогают,
+   * обновляется лишь updatedAt. В историю undo/redo не входит (это мета
+   * документа, а не граф).
+   */
+  createdAt: string;
 
   /** Стек прошлого/будущего для undo/redo. */
   past: HistorySnapshot[];

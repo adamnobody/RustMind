@@ -703,3 +703,67 @@ describe('isDirty tracking', () => {
     expect(useMindMapStore.getState().isDirty).toBe(true);
   });
 });
+
+describe('createdAt — дата создания документа', () => {
+  beforeEach(() => {
+    useMindMapStore.getState().resetDocument();
+  });
+
+  // Тот же путь, что handleSave/handleSaveAs/useAutosave в usePersistence.
+  function serializeCurrentState(): SerializedMindMap {
+    const s = useMindMapStore.getState();
+    return serializeMindMap(
+      s.documentName,
+      s.layoutType,
+      s.nodes,
+      s.edges,
+      s.projectSettings,
+      s.groups,
+      s.createdAt,
+    );
+  }
+
+  it('ставится при создании нового документа', () => {
+    const { createdAt } = useMindMapStore.getState();
+    expect(Number.isNaN(Date.parse(createdAt))).toBe(false);
+  });
+
+  it('не меняется между повторными сохранениями', () => {
+    const first = serializeCurrentState();
+    const second = serializeCurrentState();
+    expect(second.createdAt).toBe(first.createdAt);
+  });
+
+  it('updatedAt при этом обновляется на каждое сохранение', async () => {
+    const first = serializeCurrentState();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const second = serializeCurrentState();
+    expect(second.updatedAt >= first.updatedAt).toBe(true);
+  });
+
+  it('loadDocument сохраняет createdAt из файла и пишет его при сохранении', () => {
+    useMindMapStore.getState().loadDocument({
+      documentName: 'Doc',
+      layoutType: 'hierarchy',
+      nodes: [makeNode('root', true)],
+      edges: [],
+      createdAt: '2020-01-02T03:04:05.000Z',
+    });
+
+    expect(useMindMapStore.getState().createdAt).toBe('2020-01-02T03:04:05.000Z');
+    expect(serializeCurrentState().createdAt).toBe('2020-01-02T03:04:05.000Z');
+  });
+
+  it('старый файл без createdAt: значение фиксируется один раз и дальше стабильно', () => {
+    useMindMapStore.getState().loadDocument({
+      documentName: 'Old',
+      layoutType: 'hierarchy',
+      nodes: [makeNode('root', true)],
+      edges: [],
+    });
+
+    const first = serializeCurrentState().createdAt;
+    expect(Number.isNaN(Date.parse(first))).toBe(false);
+    expect(serializeCurrentState().createdAt).toBe(first);
+  });
+});
