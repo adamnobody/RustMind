@@ -225,6 +225,91 @@
   gap: 16px;
 }
 
+/* Сворачиваемые секции панели узла — разделитель только между секциями. */
+.collapsible {
+  border-bottom: 1px solid var(--rm-border);
+}
+
+.collapsibleHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 22px;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.collapsibleHeader:hover .collapsibleTitle {
+  color: var(--rm-text);
+}
+
+.collapsibleTitle {
+  flex: 1;
+  margin: 0;
+  font-size: 11px;
+  font-weight: var(--rm-font-weight-regular);
+  letter-spacing: 2.5px;
+  color: var(--ins-text2);
+  text-transform: uppercase;
+}
+
+.collapsibleChevron {
+  display: flex;
+  color: var(--rm-text-muted);
+  transition: transform 0.18s var(--rm-ease-out-expo);
+}
+
+.collapsibleChevronOpen {
+  transform: rotate(180deg);
+}
+
+.collapsibleBody {
+  padding: 0 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fieldStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldDisabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.fieldSubgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--rm-border-soft);
+  border-radius: 10px;
+  background: var(--ins-inset);
+}
+
+.fieldSubgroupTitle {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--rm-text-subtle);
+  text-transform: uppercase;
+}
+
+.fieldSubgroupBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .empty {
   margin: 0;
   padding: 20px 22px;
@@ -565,6 +650,22 @@
   appearance: none;
   padding-right: 38px;
   cursor: pointer;
+  /* Нативный popup Windows иначе рисует серый фон + светлый текст → нечитаемо. */
+  color-scheme: dark;
+}
+
+.select option {
+  background-color: #0f1419;
+  color: #e8eef2;
+}
+
+:global([data-theme='light']) .select {
+  color-scheme: light;
+}
+
+:global([data-theme='light']) .select option {
+  background-color: #ffffff;
+  color: #12242e;
 }
 
 .select:hover,
@@ -701,5 +802,9 @@
   .scan,
   .caret {
     animation: none;
+  }
+
+  .collapsibleChevron {
+    transition: none;
   }
 }

@@ -11,9 +11,34 @@ import styles from './Inspector.module.css';
  * inside the style panel.
  *
  * Каждое поле по умолчанию рисует собственную секцию (padding 20/22 + нижний
- * разделитель) — так устроен прототип. `inGroup` выключает обёртку для полей,
- * собранных в одну группу (например, «Точки соединения»).
+ * разделитель) — так устроен прототип рёбер. `inGroup` выключает обёртку для
+ * полей внутри CollapsibleSection (панель узла).
  */
+
+function FieldFrame({
+  label,
+  inGroup,
+  disabled,
+  children,
+}: {
+  label?: string;
+  inGroup?: boolean;
+  disabled?: boolean;
+  children: React.ReactNode;
+}): React.JSX.Element {
+  if (inGroup === true) {
+    return (
+      <div
+        className={clsx(styles.fieldStack, disabled === true && styles.fieldDisabled)}
+        aria-disabled={disabled === true ? true : undefined}
+      >
+        {label !== undefined && <span className={styles.fieldLabel}>{label}</span>}
+        {children}
+      </div>
+    );
+  }
+  return <Section caption={label}>{children}</Section>;
+}
 
 /** Палитра прототипа — единственный источник быстрых цветов панели. */
 export const INSPECTOR_PALETTE = [
@@ -63,6 +88,63 @@ export function GroupBody({ children }: { children: React.ReactNode }): React.JS
   return <div className={styles.groupBody}>{children}</div>;
 }
 
+/** Сворачиваемая секция панели узла (заголовок + тело). Состояние только в памяти. */
+export function CollapsibleSection({
+  title,
+  defaultOpen = true,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}): React.JSX.Element {
+  const [open, setOpen] = useState(defaultOpen);
+  const panelId = useId();
+  return (
+    <section className={styles.collapsible}>
+      <button
+        type="button"
+        className={styles.collapsibleHeader}
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className={styles.groupHeadingMark} aria-hidden="true">
+          ◆
+        </span>
+        <span className={styles.collapsibleTitle}>{title}</span>
+        <span
+          className={clsx(styles.collapsibleChevron, open && styles.collapsibleChevronOpen)}
+          aria-hidden="true"
+        >
+          <Icon name="chevron-down" size={14} />
+        </span>
+      </button>
+      {open ? (
+        <div id={panelId} className={styles.collapsibleBody} role="region" aria-label={title}>
+          {children}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/** Вложенная подгруппа внутри секции (например «Граница»). */
+export function FieldSubgroup({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <div className={styles.fieldSubgroup}>
+      <span className={styles.fieldSubgroupTitle}>{title}</span>
+      <div className={styles.fieldSubgroupBody}>{children}</div>
+    </div>
+  );
+}
+
 interface SegOption<T extends string> {
   value: T;
   /** Содержимое кнопки: текст или маленькая SVG-схема варианта. */
@@ -79,6 +161,8 @@ interface SegFieldProps<T extends string> {
   columns?: number;
   /** Пониженная высота кнопок (прототип: ряд «Начертание»). */
   compact?: boolean;
+  inGroup?: boolean;
+  disabled?: boolean;
   onChange: (value: T) => void;
 }
 
@@ -88,10 +172,12 @@ export function SegField<T extends string>({
   options,
   columns,
   compact,
+  inGroup,
+  disabled,
   onChange,
 }: SegFieldProps<T>): React.JSX.Element {
   return (
-    <Section caption={label}>
+    <FieldFrame label={label} inGroup={inGroup} disabled={disabled}>
       <div
         className={styles.segment}
         role="radiogroup"
@@ -106,6 +192,7 @@ export function SegField<T extends string>({
             aria-checked={option.value === value}
             aria-label={option.title}
             title={option.title}
+            disabled={disabled === true}
             className={clsx(
               styles.segmentItem,
               compact === true && styles.segmentItemCompact,
@@ -117,7 +204,7 @@ export function SegField<T extends string>({
           </button>
         ))}
       </div>
-    </Section>
+    </FieldFrame>
   );
 }
 
@@ -133,12 +220,14 @@ interface ToggleGroupItem {
 export function ToggleGroupField({
   label,
   items,
+  inGroup,
 }: {
   label: string;
   items: ToggleGroupItem[];
+  inGroup?: boolean;
 }): React.JSX.Element {
   return (
-    <Section caption={label}>
+    <FieldFrame label={label} inGroup={inGroup}>
       <div
         className={styles.segment}
         role="group"
@@ -163,7 +252,7 @@ export function ToggleGroupField({
           </button>
         ))}
       </div>
-    </Section>
+    </FieldFrame>
   );
 }
 
@@ -173,6 +262,8 @@ interface ColorFieldProps {
   value: string | undefined;
   /** Hex shown in the picker when there is no override (a sensible starting point). */
   fallback: string;
+  inGroup?: boolean;
+  disabled?: boolean;
   onChange: (hex: string) => void;
   onReset: () => void;
 }
@@ -181,6 +272,8 @@ export function ColorField({
   label,
   value,
   fallback,
+  inGroup,
+  disabled,
   onChange,
   onReset,
 }: ColorFieldProps): React.JSX.Element {
@@ -189,17 +282,20 @@ export function ColorField({
   const paletteId = useId();
   const overridden = value !== undefined;
   const current = value ?? fallback;
+  const resetLabel = t('field.reset', { label: label.toLowerCase() });
+  const paletteOpen = open && disabled !== true;
 
   return (
-    <Section caption={label}>
+    <FieldFrame label={label} inGroup={inGroup} disabled={disabled}>
       <div className={styles.colorRow}>
         <button
           type="button"
-          className={clsx(styles.colorChip, open && styles.colorChipOpen)}
+          className={clsx(styles.colorChip, paletteOpen && styles.colorChipOpen)}
           style={{ background: current }}
           aria-label={label}
-          aria-expanded={open}
-          aria-controls={open ? paletteId : undefined}
+          aria-expanded={paletteOpen}
+          aria-controls={paletteOpen ? paletteId : undefined}
+          disabled={disabled === true}
           onClick={() => setOpen((v) => !v)}
         />
         <span className={clsx(styles.colorValue, !overridden && styles.colorValueDefault)}>
@@ -208,8 +304,9 @@ export function ColorField({
         <button
           type="button"
           className={styles.resetButton}
-          aria-label={t('field.reset', { label: label.toLowerCase() })}
-          disabled={!overridden}
+          aria-label={resetLabel}
+          title={resetLabel}
+          disabled={!overridden || disabled === true}
           onClick={() => {
             onReset();
             setOpen(false);
@@ -219,7 +316,7 @@ export function ColorField({
         </button>
       </div>
 
-      {open && (
+      {paletteOpen && (
         <div
           id={paletteId}
           className={styles.palette}
@@ -267,7 +364,7 @@ export function ColorField({
           </span>
         </div>
       )}
-    </Section>
+    </FieldFrame>
   );
 }
 
@@ -303,33 +400,39 @@ interface FontFieldProps {
   /** Активное переопределение; undefined = наследуемый шрифт приложения. */
   value: string | undefined;
   fonts: string[];
+  inGroup?: boolean;
   onChange: (font: string | undefined) => void;
 }
 
 /**
  * Список шрифтов — нативный <select>: системных гарнитур могут быть сотни, и
  * встроенные в него клавиатурная навигация, type-ahead и скрытие за пределами
- * окна ценнее, чем кастомный список. Закрытое состояние повторяет кнопку
- * выпадающего списка из прототипа.
+ * окна ценнее, чем кастомный список. Имена в списке — обычным UI-шрифтом:
+ * превью каждой гарнитурой делает список нечитаемым (декор, dingbats, контраст).
  */
-export function FontField({ label, value, fonts, onChange }: FontFieldProps): React.JSX.Element {
+export function FontField({
+  label,
+  value,
+  fonts,
+  inGroup,
+  onChange,
+}: FontFieldProps): React.JSX.Element {
   const t = useT();
   // Шрифт из открытого файла может отсутствовать в системе — показываем его
   // в списке, чтобы select не «терял» значение.
   const options = value !== undefined && !fonts.includes(value) ? [value, ...fonts] : fonts;
   return (
-    <Section caption={label}>
+    <FieldFrame label={label} inGroup={inGroup}>
       <span className={styles.selectWrap}>
         <select
           className={styles.select}
           value={value ?? ''}
           aria-label={label}
-          style={value !== undefined ? { fontFamily: `"${value}"` } : undefined}
           onChange={(e) => onChange(e.target.value === '' ? undefined : e.target.value)}
         >
           <option value="">{t('field.defaultOption')}</option>
           {options.map((font) => (
-            <option key={font} value={font} style={{ fontFamily: `"${font}"` }}>
+            <option key={font} value={font}>
               {font}
             </option>
           ))}
@@ -338,7 +441,7 @@ export function FontField({ label, value, fonts, onChange }: FontFieldProps): Re
           <Icon name="chevron-down" size={16} />
         </span>
       </span>
-    </Section>
+    </FieldFrame>
   );
 }
 
@@ -351,6 +454,7 @@ interface NumberFieldProps {
   suffix?: string;
   /** Поле внутри группы — без собственной секции и с более плотным слайдером. */
   inGroup?: boolean;
+  disabled?: boolean;
   onChange: (value: number) => void;
 }
 
@@ -362,6 +466,7 @@ export function NumberField({
   step = 1,
   suffix,
   inGroup,
+  disabled,
   onChange,
 }: NumberFieldProps): React.JSX.Element {
   const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
@@ -383,13 +488,21 @@ export function NumberField({
           step={step}
           value={value}
           aria-label={label}
+          disabled={disabled === true}
           style={{ '--ins-pct': `${pct}%` } as React.CSSProperties}
           onChange={(e) => onChange(Number(e.target.value))}
         />
       </div>
     </>
   );
-  return inGroup === true ? <div>{body}</div> : <Section>{body}</Section>;
+  if (inGroup === true) {
+    return (
+      <div className={clsx(disabled === true && styles.fieldDisabled)} aria-disabled={disabled === true ? true : undefined}>
+        {body}
+      </div>
+    );
+  }
+  return <Section>{body}</Section>;
 }
 
 interface ToggleFieldProps {

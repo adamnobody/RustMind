@@ -268,6 +268,7 @@
 
 .label {
   display: block;
+  white-space: pre-wrap;
   word-break: break-word;
   line-height: var(--rm-line-tight);
 }

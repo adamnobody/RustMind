@@ -132,6 +132,9 @@ const ru = {
   'node.underline': 'Подчёркнутый',
 
   // — стиль узла —
+  'node.sectionAppearance': 'Внешний вид',
+  'node.sectionText': 'Текст',
+  'node.border': 'Граница',
   'node.bgColor': 'Цвет фона',
   'node.shape': 'Форма',
   'node.borderColor': 'Цвет границы',
@@ -443,6 +446,9 @@ const en: Record<TranslationKey, string> = {
   'node.italic': 'Italic',
   'node.underline': 'Underline',
 
+  'node.sectionAppearance': 'Appearance',
+  'node.sectionText': 'Text',
+  'node.border': 'Border',
   'node.bgColor': 'Background color',
   'node.shape': 'Shape',
   'node.borderColor': 'Border color',
@@ -737,6 +743,9 @@ const de: Record<TranslationKey, string> = {
   'node.italic': 'Kursiv',
   'node.underline': 'Unterstrichen',
 
+  'node.sectionAppearance': 'Erscheinungsbild',
+  'node.sectionText': 'Text',
+  'node.border': 'Rahmen',
   'node.bgColor': 'Hintergrundfarbe',
   'node.shape': 'Form',
   'node.borderColor': 'Rahmenfarbe',
@@ -1031,6 +1040,9 @@ const fr: Record<TranslationKey, string> = {
   'node.italic': 'Italique',
   'node.underline': 'Souligné',
 
+  'node.sectionAppearance': 'Apparence',
+  'node.sectionText': 'Texte',
+  'node.border': 'Bordure',
   'node.bgColor': 'Couleur de fond',
   'node.shape': 'Forme',
   'node.borderColor': 'Couleur de bordure',

@@ -8,10 +8,10 @@ import {
 } from '../../nodes/types';
 import type { BorderPattern, HandleSide, MindNodeData, NodeShape } from '../../../domain/mind-map';
 import {
+  CollapsibleSection,
   ColorField,
+  FieldSubgroup,
   FontField,
-  GroupBody,
-  GroupHeading,
   NumberField,
   SegField,
   ToggleGroupField,
@@ -79,111 +79,130 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
     [setNodeStyle, nodeId],
   );
 
+  const borderPattern = style?.borderPattern ?? DEFAULT_NODE_STYLE.borderPattern;
+  const borderInactive = borderPattern === 'none';
+
   return (
     <>
-      <ColorField
-        label={t('node.bgColor')}
-        value={style?.backgroundColor}
-        fallback={data.color ?? COLOR_SEED.background}
-        onChange={(hex) => set({ backgroundColor: hex })}
-        onReset={() => set({ backgroundColor: undefined })}
-      />
+      <CollapsibleSection title={t('node.sectionAppearance')} defaultOpen>
+        <SegField
+          inGroup
+          label={t('node.shape')}
+          value={style?.shape ?? DEFAULT_NODE_STYLE.shape}
+          options={shapeOptions.map((o) => ({
+            value: o.value,
+            label: <ShapeGlyph shape={o.value} />,
+            title: t(o.labelKey),
+          }))}
+          onChange={(shape) => set({ shape })}
+        />
 
-      <SegField
-        label={t('node.shape')}
-        value={style?.shape ?? DEFAULT_NODE_STYLE.shape}
-        options={shapeOptions.map((o) => ({
-          value: o.value,
-          label: <ShapeGlyph shape={o.value} />,
-          title: t(o.labelKey),
-        }))}
-        onChange={(shape) => set({ shape })}
-      />
+        <ColorField
+          inGroup
+          label={t('node.bgColor')}
+          value={style?.backgroundColor}
+          fallback={data.color ?? COLOR_SEED.background}
+          onChange={(hex) => set({ backgroundColor: hex })}
+          onReset={() => set({ backgroundColor: undefined })}
+        />
 
-      <ColorField
-        label={t('node.borderColor')}
-        value={style?.borderColor}
-        fallback={COLOR_SEED.border}
-        onChange={(hex) => set({ borderColor: hex })}
-        onReset={() => set({ borderColor: undefined })}
-      />
+        <FieldSubgroup title={t('node.border')}>
+          <ColorField
+            inGroup
+            label={t('node.borderColor')}
+            value={style?.borderColor}
+            fallback={COLOR_SEED.border}
+            disabled={borderInactive}
+            onChange={(hex) => set({ borderColor: hex })}
+            onReset={() => set({ borderColor: undefined })}
+          />
 
-      <NumberField
-        label={t('node.borderWidth')}
-        value={style?.borderWidth ?? DEFAULT_NODE_STYLE.borderWidth}
-        min={0}
-        max={8}
-        suffix="px"
-        onChange={(borderWidth) => set({ borderWidth })}
-      />
+          <NumberField
+            inGroup
+            label={t('node.borderWidth')}
+            value={style?.borderWidth ?? DEFAULT_NODE_STYLE.borderWidth}
+            min={0}
+            max={8}
+            suffix="px"
+            disabled={borderInactive}
+            onChange={(borderWidth) => set({ borderWidth })}
+          />
 
-      <SegField
-        label={t('node.borderStyle')}
-        value={style?.borderPattern ?? DEFAULT_NODE_STYLE.borderPattern}
-        options={borderOptions.map((o) => ({
-          value: o.value,
-          label: <BorderGlyph pattern={o.value} />,
-          title: t(o.labelKey),
-        }))}
-        onChange={(borderPattern) => set({ borderPattern })}
-      />
+          <SegField
+            inGroup
+            label={t('node.borderStyle')}
+            value={borderPattern}
+            options={borderOptions.map((o) => ({
+              value: o.value,
+              label: <BorderGlyph pattern={o.value} />,
+              title: t(o.labelKey),
+            }))}
+            onChange={(next) => set({ borderPattern: next })}
+          />
+        </FieldSubgroup>
+      </CollapsibleSection>
 
-      <NumberField
-        label={t('node.fontSize')}
-        value={style?.fontSize ?? DEFAULT_NODE_STYLE.fontSize}
-        min={10}
-        max={40}
-        suffix="px"
-        onChange={(fontSize) => set({ fontSize })}
-      />
+      <CollapsibleSection title={t('node.sectionText')} defaultOpen>
+        <FontField
+          inGroup
+          label={t('node.font')}
+          value={style?.fontFamily}
+          fonts={fonts}
+          onChange={(fontFamily) => set({ fontFamily })}
+        />
 
-      <FontField
-        label={t('node.font')}
-        value={style?.fontFamily}
-        fonts={fonts}
-        onChange={(fontFamily) => set({ fontFamily })}
-      />
+        <NumberField
+          inGroup
+          label={t('node.fontSize')}
+          value={style?.fontSize ?? DEFAULT_NODE_STYLE.fontSize}
+          min={10}
+          max={40}
+          suffix="px"
+          onChange={(fontSize) => set({ fontSize })}
+        />
 
-      <ColorField
-        label={t('node.textColor')}
-        value={style?.textColor}
-        fallback={data.textColor ?? COLOR_SEED.text}
-        onChange={(hex) => set({ textColor: hex })}
-        onReset={() => set({ textColor: undefined })}
-      />
+        <ColorField
+          inGroup
+          label={t('node.textColor')}
+          value={style?.textColor}
+          fallback={data.textColor ?? COLOR_SEED.text}
+          onChange={(hex) => set({ textColor: hex })}
+          onReset={() => set({ textColor: undefined })}
+        />
 
-      {/* Начертание — независимые переключатели (жирный/курсив/подчёркнутый). */}
-      <ToggleGroupField
-        label={t('node.textStyle')}
-        items={[
-          {
-            key: 'bold',
-            label: <span style={{ fontWeight: 800 }}>B</span>,
-            title: t('node.bold'),
-            active: Boolean(style?.bold),
-            onToggle: () => set({ bold: !style?.bold }),
-          },
-          {
-            key: 'italic',
-            label: <span style={{ fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>I</span>,
-            title: t('node.italic'),
-            active: Boolean(style?.italic),
-            onToggle: () => set({ italic: !style?.italic }),
-          },
-          {
-            key: 'underline',
-            label: <span style={{ textDecoration: 'underline' }}>U</span>,
-            title: t('node.underline'),
-            active: Boolean(style?.underline),
-            onToggle: () => set({ underline: !style?.underline }),
-          },
-        ]}
-      />
+        {/* Начертание — независимые переключатели (жирный/курсив/подчёркнутый). */}
+        <ToggleGroupField
+          inGroup
+          label={t('node.textStyle')}
+          items={[
+            {
+              key: 'bold',
+              label: <span style={{ fontWeight: 800 }}>B</span>,
+              title: t('node.bold'),
+              active: Boolean(style?.bold),
+              onToggle: () => set({ bold: !style?.bold }),
+            },
+            {
+              key: 'italic',
+              label: <span style={{ fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>I</span>,
+              title: t('node.italic'),
+              active: Boolean(style?.italic),
+              onToggle: () => set({ italic: !style?.italic }),
+            },
+            {
+              key: 'underline',
+              label: <span style={{ textDecoration: 'underline' }}>U</span>,
+              title: t('node.underline'),
+              active: Boolean(style?.underline),
+              onToggle: () => set({ underline: !style?.underline }),
+            },
+          ]}
+        />
+      </CollapsibleSection>
 
       {/* Смещение хэндлов вдоль своей стороны: 0% — левый/верхний угол,
           50% — центр (дефолт, не хранится), 100% — правый/нижний угол. */}
-      <GroupHeading title={t('node.connectionPoints')} />
-      <GroupBody>
+      <CollapsibleSection title={t('node.connectionPoints')} defaultOpen={false}>
         {handleSides.map(({ side, labelKey }) => (
           <NumberField
             key={side}
@@ -196,7 +215,7 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
             onChange={(value) => setNodeHandleOffset(nodeId, side, value)}
           />
         ))}
-      </GroupBody>
+      </CollapsibleSection>
     </>
   );
 }
