@@ -250,6 +250,7 @@ const ru = {
   // — заметки —
   'note.title': 'Заметка',
   'note.hide': 'Скрыть заметку',
+  'note.delete': 'Удалить заметку',
   'note.placeholder': 'Текст заметки…',
 
   // — поиск —
@@ -556,6 +557,7 @@ const en: Record<TranslationKey, string> = {
 
   'note.title': 'Note',
   'note.hide': 'Hide note',
+  'note.delete': 'Delete note',
   'note.placeholder': 'Note text…',
 
   'tile.search': 'Search',
@@ -854,6 +856,7 @@ const de: Record<TranslationKey, string> = {
 
   'note.title': 'Notiz',
   'note.hide': 'Notiz ausblenden',
+  'note.delete': 'Notiz löschen',
   'note.placeholder': 'Notiztext…',
 
   'tile.search': 'Suche',
@@ -1153,6 +1156,7 @@ const fr: Record<TranslationKey, string> = {
 
   'note.title': 'Note',
   'note.hide': 'Masquer la note',
+  'note.delete': 'Supprimer la note',
   'note.placeholder': 'Texte de la note…',
 
   'tile.search': 'Recherche',

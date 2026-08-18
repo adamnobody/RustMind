@@ -1,7 +1,7 @@
 .panel {
   display: flex;
   flex-direction: column;
-  width: 240px;
+  width: max-content;
   padding: var(--rm-space-2);
   gap: var(--rm-space-2);
   background: var(--rm-panel);
@@ -16,6 +16,12 @@
   justify-content: space-between;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
 .title {
   font-size: var(--rm-font-sm);
   font-weight: var(--rm-font-weight-medium);
@@ -24,7 +30,7 @@
   letter-spacing: 0.05em;
 }
 
-.close {
+.iconBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -39,15 +45,24 @@
   cursor: pointer;
 }
 
-.close:hover {
+.iconBtn:hover {
   background: var(--rm-surface);
   color: var(--rm-text);
 }
 
+.delete:hover {
+  background: var(--rm-danger-muted);
+  color: var(--rm-danger);
+}
+
 .textarea {
-  width: 100%;
+  width: 224px;
+  min-width: 160px;
   min-height: 96px;
-  resize: vertical;
+  max-width: 520px;
+  max-height: 400px;
+  resize: both;
+  overflow: auto;
   box-sizing: border-box;
   padding: var(--rm-space-2);
   border: 1px solid var(--rm-border-soft);

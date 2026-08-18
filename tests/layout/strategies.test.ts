@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { AppNode, AppEdge } from '../../src/domain/mind-map';
 import { LAYOUT_KINDS, coerceLayoutKind } from '../../src/features/layout/engines/layoutTypes';
+import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../src/shared/lib/constants';
 import {
   LAYOUT_STRATEGIES,
   getLayoutStrategy,
@@ -261,10 +262,39 @@ describe('геометрические свойства ключевых рас�
     const { nodes, edges } = sampleGraph();
     const out = getLayoutStrategy('tree').layout(nodes, edges);
     const root = out.find((n) => n.id === 'R')!;
-    expect(root.position).toEqual({ x: 0, y: 0 });
+    // position — левый верхний угол, центр корня в (0,0).
+    expect(root.position).toEqual({ x: -ROOT_NODE_SIZE.width / 2, y: -ROOT_NODE_SIZE.height / 2 });
     const a = out.find((n) => n.id === 'A')!;
     const dist = Math.hypot(a.position.x, a.position.y);
     expect(dist).toBeGreaterThan(100);
+  });
+
+  it('tree (радиальное): узлы не накладываются друг на друга', () => {
+    // Много сиблингов + второй уровень — узкие секторы, где раньше был нахлёст.
+    const nodes = [makeNode('R', true)];
+    const edges: AppEdge[] = [];
+    for (let i = 0; i < 10; i += 1) {
+      nodes.push(makeNode(`A${i}`));
+      edges.push(treeEdge('R', `A${i}`));
+      for (let j = 0; j < 3; j += 1) {
+        nodes.push(makeNode(`B${i}_${j}`));
+        edges.push(treeEdge(`A${i}`, `B${i}_${j}`));
+      }
+    }
+    const out = getLayoutStrategy('tree').layout(nodes, edges);
+    const rects = out.map((n) => {
+      const size = n.data.isRoot ? ROOT_NODE_SIZE : DEFAULT_NODE_SIZE;
+      return { id: n.id, x: n.position.x, y: n.position.y, w: size.width, h: size.height };
+    });
+    for (let i = 0; i < rects.length; i += 1) {
+      for (let j = i + 1; j < rects.length; j += 1) {
+        const a = rects[i];
+        const b = rects[j];
+        const overlaps =
+          a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+        expect(overlaps, `${a.id} накладывается на ${b.id}`).toBe(false);
+      }
+    }
   });
 
   it('fishbone: голова (корень) правее категорий', () => {

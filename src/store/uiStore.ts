@@ -59,8 +59,8 @@ interface UiState {
   editingIntent: NodeEditingIntent | null;
   /** Ребро, чья подпись редактируется инлайн (двойной клик). Session-only. */
   editingEdgeId: string | null;
-  /** Узел, у которого открыта панель заметки. Session-only. */
-  openNoteNodeId: string | null;
+  /** Узлы с открытой панелью заметки. Несколько сразу — session-only. */
+  openNoteNodeIds: string[];
   /** Открыта ли строка поиска по узлам. Session-only. */
   searchOpen: boolean;
   /** Текущий поисковый запрос (подсветка совпадений в узлах). */
@@ -113,7 +113,7 @@ interface UiState {
   startNodeEditing: (id: string, intent?: NodeEditingIntent) => void;
   clearNodeEditing: () => void;
   setEditingEdgeId: (id: string | null) => void;
-  /** Открыть/закрыть панель заметки узла (toggle по тому же id). */
+  /** Открыть/закрыть панель заметки узла (toggle только этого id, остальные не трогает). */
   toggleNotePanel: (id: string) => void;
   /** Открыть/закрыть строку поиска. */
   toggleSearch: () => void;
@@ -261,7 +261,7 @@ export const useUIStore = create<UiState>()(
       editingNodeId: null,
       editingIntent: null,
       editingEdgeId: null,
-      openNoteNodeId: null,
+      openNoteNodeIds: [],
       searchOpen: false,
       searchQuery: '',
       notice: null,
@@ -330,7 +330,12 @@ export const useUIStore = create<UiState>()(
         }),
       setEditingEdgeId: (id) => set({ editingEdgeId: id }),
       toggleNotePanel: (id) =>
-        set((state) => ({ openNoteNodeId: state.openNoteNodeId === id ? null : id })),
+        set((state) => {
+          const ids = state.openNoteNodeIds;
+          return {
+            openNoteNodeIds: ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+          };
+        }),
       toggleSearch: () =>
         set((state) => ({
           searchOpen: !state.searchOpen,

@@ -13,8 +13,9 @@ beforeEach(() => {
 // Drag-from-handle creation (handleConnectEnd in MindMapCanvas) also had the same
 // bug fixed, but it requires ReactFlow context to render — verified manually.
 describe('useNodeActions — no auto-edit on create (toolbar path)', () => {
-  it('addChild: new node is selected but not in edit mode', () => {
+  it('addChild: parent stays selected and not in edit mode', () => {
     const rootId = useMindMapStore.getState().getRootNode()!.id;
+    useUIStore.setState({ selectedNodeId: rootId, selectedNodeIds: [rootId] });
     const { result } = renderHook(() => useNodeActions({ nodeId: rootId, isRoot: true }));
 
     act(() => {
@@ -22,8 +23,7 @@ describe('useNodeActions — no auto-edit on create (toolbar path)', () => {
     });
 
     const { selectedNodeId, editingNodeId } = useUIStore.getState();
-    expect(selectedNodeId).not.toBeNull();
-    expect(selectedNodeId).not.toBe(rootId); // the new child, not parent
+    expect(selectedNodeId).toBe(rootId);
     expect(editingNodeId).toBeNull();
   });
 

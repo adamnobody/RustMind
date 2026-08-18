@@ -25,6 +25,59 @@ function spyOnAutoLayout(layoutType: 'network' | 'hierarchy'): ReturnType<typeof
   return spy;
 }
 
+function pressTab(): void {
+  window.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }),
+  );
+}
+
+function pressChar(key: string): void {
+  window.dispatchEvent(
+    new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+  );
+}
+
+function treeChildrenOf(parentId: string): string[] {
+  return useMindMapStore
+    .getState()
+    .edges.filter((e) => e.source === parentId && e.data?.kind !== 'free')
+    .map((e) => e.target);
+}
+
+describe('useGlobalHotkeys — Tab keeps selection on the chosen node', () => {
+  beforeEach(() => {
+    useMindMapStore.getState().resetDocument();
+    useUIStore.setState({ selectedNodeId: null, selectedNodeIds: [], editingNodeId: null });
+  });
+
+  it('повторный Tab создаёт детей выбранного узла, выделение не уезжает', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    useUIStore.setState({ selectedNodeId: rootId, selectedNodeIds: [rootId] });
+    renderHook(() => useGlobalHotkeys());
+
+    pressTab();
+    pressTab();
+    pressTab();
+
+    expect(useUIStore.getState().selectedNodeId).toBe(rootId);
+    expect(treeChildrenOf(rootId)).toHaveLength(3);
+    expect(useMindMapStore.getState().nodes).toHaveLength(4);
+  });
+
+  it('печатный символ после Tab редактирует выбранный узел, не нового ребёнка', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    useUIStore.setState({ selectedNodeId: rootId, selectedNodeIds: [rootId] });
+    renderHook(() => useGlobalHotkeys());
+
+    pressTab();
+    pressChar('a');
+
+    expect(useUIStore.getState().selectedNodeId).toBe(rootId);
+    expect(useUIStore.getState().editingNodeId).toBe(rootId);
+    expect(useUIStore.getState().editingIntent).toEqual({ mode: 'replace', initialValue: 'a' });
+  });
+});
+
 describe('useGlobalHotkeys — L (авто-раскладка)', () => {
   beforeEach(() => {
     useMindMapStore.getState().resetDocument();

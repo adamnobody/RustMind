@@ -120,6 +120,27 @@ describe('uiStore — inspector visibility', () => {
   });
 });
 
+describe('uiStore — note panels', () => {
+  beforeEach(() => {
+    useUIStore.setState({ openNoteNodeIds: [] });
+  });
+
+  it('открытие заметки на втором узле не закрывает первую', () => {
+    const { toggleNotePanel } = useUIStore.getState();
+    toggleNotePanel('a');
+    toggleNotePanel('b');
+    expect(useUIStore.getState().openNoteNodeIds).toEqual(['a', 'b']);
+  });
+
+  it('повторный toggle закрывает только этот узел', () => {
+    const { toggleNotePanel } = useUIStore.getState();
+    toggleNotePanel('a');
+    toggleNotePanel('b');
+    toggleNotePanel('a');
+    expect(useUIStore.getState().openNoteNodeIds).toEqual(['b']);
+  });
+});
+
 describe('uiStore — внешний вид холста (шаг 16)', () => {
   it('дефолты: точки с яркостью 26%', () => {
     const { settings } = useUIStore.getState();

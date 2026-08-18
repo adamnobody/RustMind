@@ -95,10 +95,12 @@ export function useGlobalHotkeys(): void {
 
       switch (e.key) {
         case 'Tab': {
-          // Tab всегда предотвращаем (чтобы не уводил фокус по DOM)
+          // Tab всегда предотвращаем (чтобы не уводил фокус по DOM).
+          // Выделение остаётся на текущем узле: повторный Tab даёт ещё одного
+          // ребёнка ему же, а не цепочку внуков. Текст тоже идёт в выбранный.
           e.preventDefault();
           if (selectedNodeId) {
-            focusNew(addChildNode(selectedNodeId));
+            addChildNode(selectedNodeId);
           }
           break;
         }

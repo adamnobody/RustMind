@@ -37,9 +37,9 @@ export function useNodeActions({
   );
 
   const addChild = useCallback(() => {
-    const newId = addChildNode(nodeId);
-    focusNewNode(newId);
-  }, [addChildNode, nodeId, focusNewNode]);
+    // Как Tab: родитель остаётся выбранным, чтобы следующий ребёнок шёл к нему же.
+    addChildNode(nodeId);
+  }, [addChildNode, nodeId]);
 
   const addSibling = useCallback(() => {
     const newId = addSiblingNode(nodeId);

@@ -225,7 +225,7 @@ function MindNodeComponent({
   const isRoot = Boolean(data.isRoot);
   const nodeData = data as unknown as MindNodeData;
   const isDropTarget = useUIStore((s) => s.dragIndicator?.parentId === id);
-  const noteOpen = useUIStore((s) => s.openNoteNodeId === id);
+  const noteOpen = useUIStore((s) => s.openNoteNodeIds.includes(id));
   const toggleNotePanel = useUIStore((s) => s.toggleNotePanel);
   const searchQuery = useUIStore((s) => (s.searchOpen ? s.searchQuery.trim().toLowerCase() : ''));
   const showStatuses = useUIStore((s) => s.settings.showStatuses);
