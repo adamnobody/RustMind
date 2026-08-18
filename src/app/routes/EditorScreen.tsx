@@ -3,6 +3,7 @@ import { AppToolbar, SettingsPanel } from '../../features/toolbar';
 import { Inspector } from '../../features/inspector';
 import { LayoutTypeDialog } from '../../features/layout';
 import { TemplateDialog } from '../../features/templates';
+import { StatusCascadeDialog } from '../../features/nodes';
 import { usePersistence, useWindowCloseGuard, useAutosave } from '../../features/persistence';
 import { KeyboardProvider } from '../providers/KeyboardProvider';
 import styles from './EditorScreen.module.css';
@@ -41,6 +42,7 @@ export function EditorScreen({ onGoHome }: EditorScreenProps = {}): React.JSX.El
         <SettingsPanel />
         <LayoutTypeDialog />
         <TemplateDialog />
+        <StatusCascadeDialog />
       </div>
     </KeyboardProvider>
   );

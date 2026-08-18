@@ -17,14 +17,14 @@ export function useGlobalHotkeys(): void {
     function handleKeyDown(e: KeyboardEvent): void {
       // Читаем актуальное состояние напрямую из сторов (не через замыкание),
       // чтобы не пересоздавать обработчик на каждый рендер.
-      const { selectedNodeId, editingNodeId, setSelectedNodeId, setEditingNodeId } =
+      const { selectedNodeId, editingNodeId, setSelectedNodeId, setEditingNodeId, statusCascadePrompt } =
         useUIStore.getState();
       const { nodes, addChildNode, addSiblingNode, deleteNode, undo, redo } =
         useMindMapStore.getState();
 
       // 1. Если идёт редактирование — глобальные хоткеи отключены
       //    (Enter/Escape внутри textarea обрабатываются локально в useNodeEditing)
-      if (editingNodeId !== null) {
+      if (editingNodeId !== null || statusCascadePrompt !== null) {
         return;
       }
 

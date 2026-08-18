@@ -1,0 +1,13 @@
+.text {
+  margin: 0;
+  color: var(--rm-text, var(--text-primary));
+  font-size: var(--rm-font-md, 14px);
+  line-height: var(--rm-line, 1.45);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--rm-space-2, 8px);
+  margin-top: var(--rm-space-4, 16px);
+}

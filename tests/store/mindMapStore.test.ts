@@ -89,6 +89,47 @@ describe('mindMapStore', () => {
     expect(descendants).toContain(childB);
     expect(descendants).toContain(grandChild);
   });
+
+  it('status на листе не спрашивает про детей', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const leaf = store.addChildNode(rootId)!;
+
+    useMindMapStore.getState().updateNodeData(leaf, { status: 'completed' });
+
+    expect(useMindMapStore.getState().nodes.find((n) => n.id === leaf)?.data.status).toBe(
+      'completed',
+    );
+  });
+
+  it('cascadeStatus: статус каскадирует на потомков, сиблингов не трогает', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const a = store.addChildNode(rootId)!;
+    const b = useMindMapStore.getState().addChildNode(rootId)!;
+    const grand = useMindMapStore.getState().addChildNode(a)!;
+
+    useMindMapStore.getState().updateNodeData(a, { status: 'completed' }, { cascadeStatus: true });
+
+    const state = useMindMapStore.getState();
+    expect(state.nodes.find((n) => n.id === a)?.data.status).toBe('completed');
+    expect(state.nodes.find((n) => n.id === grand)?.data.status).toBe('completed');
+    expect(state.nodes.find((n) => n.id === b)?.data.status).toBeUndefined();
+    expect(state.nodes.find((n) => n.id === rootId)?.data.status).toBeUndefined();
+  });
+
+  it('без cascadeStatus статус только у родителя', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const a = store.addChildNode(rootId)!;
+    const grand = useMindMapStore.getState().addChildNode(a)!;
+
+    useMindMapStore.getState().updateNodeData(a, { status: 'failed' });
+
+    const state = useMindMapStore.getState();
+    expect(state.nodes.find((n) => n.id === a)?.data.status).toBe('failed');
+    expect(state.nodes.find((n) => n.id === grand)?.data.status).toBeUndefined();
+  });
 });
 
 describe('mindMapStore — undo/redo', () => {

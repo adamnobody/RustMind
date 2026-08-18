@@ -97,7 +97,11 @@ export interface MindMapState {
     options?: { skipHistory?: boolean },
   ) => boolean;
   updateNodeLabel: (id: string, label: string) => void;
-  updateNodeData: (id: string, data: Partial<MindNodeData>) => void;
+  updateNodeData: (
+    id: string,
+    data: Partial<MindNodeData>,
+    options?: { cascadeStatus?: boolean },
+  ) => void;
   /**
    * Свернуть/развернуть ветки узла: прячет/показывает перечисленных прямых
    * потомков вместе с их поддеревьями. Если все `childIds` уже свёрнуты —

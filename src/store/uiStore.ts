@@ -99,6 +99,14 @@ interface UiState {
   openContextMenu: (nodeId: string, x: number, y: number) => void;
   closeContextMenu: () => void;
 
+  /**
+   * Диалог «проставить статус детям?» — пока открыт, статус родителя ещё не
+   * записан. Session-only.
+   */
+  statusCascadePrompt: { nodeId: string; status: string | undefined } | null;
+  openStatusCascadePrompt: (prompt: { nodeId: string; status: string | undefined }) => void;
+  closeStatusCascadePrompt: () => void;
+
   setSelectedNodeId: (id: string | null) => void;
   /** Authoritative selection setter called by the canvas; syncs inspector auto-open. */
   setSelection: (nodeIds: string[], edgeIds: string[]) => void;
@@ -280,6 +288,9 @@ export const useUIStore = create<UiState>()(
       contextMenu: null,
       openContextMenu: (nodeId, x, y) => set({ contextMenu: { nodeId, x, y } }),
       closeContextMenu: () => set({ contextMenu: null }),
+      statusCascadePrompt: null,
+      openStatusCascadePrompt: (prompt) => set({ statusCascadePrompt: prompt }),
+      closeStatusCascadePrompt: () => set({ statusCascadePrompt: null }),
 
       setSelectedNodeId: (id) => get().setSelection(id ? [id] : [], []),
       setSelection: (nodeIds, edgeIds) =>

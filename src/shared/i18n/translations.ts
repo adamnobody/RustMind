@@ -313,6 +313,10 @@ const ru = {
   'dialog.unsavedHome': 'Есть несохранённые изменения. Выйти в меню?',
   'dialog.recoverDraft': 'Найден несохранённый черновик после прошлой сессии. Восстановить его?',
   'dialog.confirmDeleteBranch': 'Удалить ветку со всеми дочерними узлами?',
+  'dialog.confirmStatusChildren': 'Проставить этот статус всем дочерним узлам?',
+  'dialog.statusCascadeTitle': 'Статус дочерних узлов',
+  'dialog.yes': 'Да',
+  'dialog.no': 'Нет',
 
   'file.invalidFormat': 'Неверный формат файла',
 
@@ -616,6 +620,10 @@ const en: Record<TranslationKey, string> = {
   'dialog.unsavedHome': 'You have unsaved changes. Return to the menu?',
   'dialog.recoverDraft': 'An unsaved draft from your last session was found. Restore it?',
   'dialog.confirmDeleteBranch': 'Delete the branch with all its child nodes?',
+  'dialog.confirmStatusChildren': 'Apply this status to all child nodes?',
+  'dialog.statusCascadeTitle': 'Child node status',
+  'dialog.yes': 'Yes',
+  'dialog.no': 'No',
 
   'file.invalidFormat': 'Invalid file format',
 
@@ -915,6 +923,10 @@ const de: Record<TranslationKey, string> = {
   'dialog.unsavedHome': 'Es gibt ungespeicherte Änderungen. Zum Menü zurückkehren?',
   'dialog.recoverDraft': 'Ein ungespeicherter Entwurf der letzten Sitzung wurde gefunden. Wiederherstellen?',
   'dialog.confirmDeleteBranch': 'Den Zweig mit allen untergeordneten Knoten löschen?',
+  'dialog.confirmStatusChildren': 'Diesen Status auf alle untergeordneten Knoten übertragen?',
+  'dialog.statusCascadeTitle': 'Status der Unterknoten',
+  'dialog.yes': 'Ja',
+  'dialog.no': 'Nein',
 
   'file.invalidFormat': 'Ungültiges Dateiformat',
 
@@ -1215,6 +1227,10 @@ const fr: Record<TranslationKey, string> = {
   'dialog.unsavedHome': 'Modifications non enregistrées. Revenir au menu ?',
   'dialog.recoverDraft': 'Un brouillon non enregistré de la dernière session a été trouvé. Le restaurer ?',
   'dialog.confirmDeleteBranch': 'Supprimer la branche avec tous ses nœuds enfants ?',
+  'dialog.confirmStatusChildren': 'Appliquer ce statut à tous les nœuds enfants ?',
+  'dialog.statusCascadeTitle': 'Statut des nœuds enfants',
+  'dialog.yes': 'Oui',
+  'dialog.no': 'Non',
 
   'file.invalidFormat': 'Format de fichier invalide',
 

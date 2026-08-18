@@ -9,6 +9,7 @@ import type { HandleSide, StatusOption } from '../../../domain/mind-map';
 import { oppositeHandle } from '../../edges/types';
 import { treeChildrenMap } from '../../layout/strategies/shared';
 import { NODE_COLORS } from '../../../shared/lib/constants';
+import { requestNodeStatus } from '../lib/requestNodeStatus';
 import styles from './NodeContextMenu.module.css';
 
 const CHILD_DIRECTIONS: { side: HandleSide; labelKey: 'ctxMenu.addChildRight' | 'ctxMenu.addChildLeft' | 'ctxMenu.addChildTop' | 'ctxMenu.addChildBottom' }[] = [
@@ -70,7 +71,6 @@ export function NodeContextMenu(): React.JSX.Element | null {
     }),
   );
   const addChildNode = useMindMapStore((s) => s.addChildNode);
-  const updateNodeData = useMindMapStore((s) => s.updateNodeData);
   const deleteNode = useMindMapStore((s) => s.deleteNode);
   const toggleBranchCollapse = useMindMapStore((s) => s.toggleBranchCollapse);
   const setProjectSettings = useMindMapStore((s) => s.setProjectSettings);
@@ -108,7 +108,7 @@ export function NodeContextMenu(): React.JSX.Element | null {
   };
 
   const setStatus = (statusId: string | undefined): void => {
-    updateNodeData(id, { status: statusId });
+    requestNodeStatus(id, statusId);
     closeContextMenu();
   };
 

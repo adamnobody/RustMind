@@ -371,14 +371,20 @@ export const useMindMapStore = create<MindMapState>()(
       });
     },
 
-    updateNodeData: (id, data) => {
+    updateNodeData: (id, data, options) => {
       recordHistory('text');
+      const cascadeIds = options?.cascadeStatus ? get().getDescendantIds(id) : [];
       set((state) => {
         const node = state.nodes.find((n) => n.id === id);
-        if (node) {
-          node.data = { ...node.data, ...data };
-          state.isDirty = true;
+        if (!node) return;
+        node.data = { ...node.data, ...data };
+        if (cascadeIds.length > 0 && 'status' in data) {
+          const ids = new Set(cascadeIds);
+          for (const n of state.nodes) {
+            if (ids.has(n.id)) n.data.status = data.status;
+          }
         }
+        state.isDirty = true;
       });
     },
 

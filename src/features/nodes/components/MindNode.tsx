@@ -34,6 +34,7 @@ import type { LayoutStrategy } from '../../layout/strategies/types';
 import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../../shared/lib/constants';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
+import { requestNodeStatus } from '../lib/requestNodeStatus';
 import styles from './MindNode.module.css';
 
 const shapeClass: Record<NodeShape, string> = {
@@ -232,16 +233,14 @@ function MindNodeComponent({
   const searchMatch = searchQuery !== '' && nodeData.label.toLowerCase().includes(searchQuery);
 
   const toggleBranchCollapse = useMindMapStore((s) => s.toggleBranchCollapse);
-  const updateNodeData = useMindMapStore((s) => s.updateNodeData);
   const customStatuses = useMindMapStore((s) => s.projectSettings.customStatuses);
 
   // Дети (с sourceHandle их рёбер), прогресс и свёрнутые ветки — из mindMapStore.
   // Каждого ребёнка кодируем как "childId:sourceHandle" (примитивная строка,
   // useShallow/Object.is — массив рвал бы мемоизацию). Роутинг раскладки нужен,
   // чтобы вычислить сторону выхода ТЕМ ЖЕ способом, что рисует MindEdge.
-  // Прогресс считается по статусу КАЖДОГО листа независимо — смена статуса
-  // родителя никогда не трогает детей (нет каскада), поэтому просто читаем
-  // status каждого узла как есть.
+  // Прогресс — доля completed-листьев. Статус родителя на листья сам не
+  // влияет: каскад только если пользователь подтвердил его в диалоге.
   const { progressDone, progressTotal, foldedJoined, childEdgesJoined, layoutType } =
     useMindMapStore(
       useShallow((s) => {
@@ -413,7 +412,7 @@ function MindNodeComponent({
               aria-label="task"
               onClick={(e) => {
                 e.stopPropagation();
-                updateNodeData(id, { status: checked ? undefined : 'completed' });
+                requestNodeStatus(id, checked ? undefined : 'completed');
               }}
               onDoubleClick={(e) => e.stopPropagation()}
             >
