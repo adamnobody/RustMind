@@ -211,11 +211,11 @@ describe('isEdgeValidForLayout (мягкая пометка существующ
     }
   });
 
-  it('free-связь, дающая второй «вход» в узел, помечается невалидной в hierarchy', () => {
+  it('free-связь не помечается невалидной в hierarchy (не дерево)', () => {
     const { nodes, edges } = sampleGraph();
     const s = getLayoutStrategy('hierarchy');
     const assoc = edges.find((e) => e.data?.kind === 'free')!; // B→C, у C родитель A
-    expect(isEdgeValidForLayout(s, assoc, nodes, edges)).toBe(false);
+    expect(isEdgeValidForLayout(s, assoc, nodes, edges)).toBe(true);
   });
 
   it("в network (edgeConstraint 'any') невалидных рёбер не бывает", () => {

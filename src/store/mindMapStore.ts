@@ -549,10 +549,15 @@ export const useMindMapStore = create<MindMapState>()(
       // и программные вызовы).
       const { nodes, edges, layoutType } = get();
       const strategy = getLayoutStrategy(layoutType);
+      const freeLinkMode = useUIStore.getState().freeLinkMode;
       if (
         !connection.source ||
         !connection.target ||
-        !strategy.canConnect(connection.source, connection.target, { nodes, edges })
+        !(
+          freeLinkMode
+            ? connection.source !== connection.target
+            : strategy.canConnect(connection.source, connection.target, { nodes, edges })
+        )
       ) {
         useUIStore.getState().showNotice(translate(strategy.blockedReasonKey));
         return;

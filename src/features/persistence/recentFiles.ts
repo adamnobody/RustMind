@@ -48,10 +48,35 @@ export function projectNameFromPath(path: string): string {
   return base.replace(/\.rustmind$/i, '') || base;
 }
 
+/** Папка файла — всё до последнего разделителя. */
+export function directoryFromPath(path: string): string {
+  const i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+  if (i < 0) return '';
+  return path.slice(0, i) || path.slice(0, 1);
+}
+
+/** Убрать расширение и символы, недопустимые в имени файла. */
+export function sanitizeProjectName(raw: string): string {
+  return raw
+    .trim()
+    .replace(/\.rustmind$/i, '')
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '')
+    .trim();
+}
+
+/** Собрать путь `dir/name.rustmind`, сохраняя стиль разделителя папки. */
+export function joinProjectPath(dir: string, name: string): string {
+  const sep = dir.includes('\\') ? '\\' : '/';
+  const trimmed = dir.replace(/[\\/]+$/, '');
+  const folder = trimmed || (dir.startsWith('/') ? '/' : dir);
+  const base = sanitizeProjectName(name) || 'untitled';
+  if (folder === '/' || folder === '\\') return `${folder}${base}.rustmind`;
+  return `${folder}${sep}${base}.rustmind`;
+}
+
 /** Путь к файлу-соседу в той же папке с заданным базовым именем (+ .rustmind). */
 export function siblingPath(path: string, baseName: string): string {
-  const i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
-  return `${path.slice(0, i + 1)}${baseName}.rustmind`;
+  return joinProjectPath(directoryFromPath(path), baseName);
 }
 
 /** Добавляет/обновляет запись и поднимает её наверх. */

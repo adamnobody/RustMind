@@ -46,6 +46,8 @@ interface UiSettings {
   homeAccent: string;
   /** Шрифт главного меню (семейство). */
   homeFont: string;
+  /** Папка по умолчанию для новых проектов (пусто — не запоминать). */
+  newProjectDir: string;
 }
 
 interface UiState {
@@ -75,6 +77,8 @@ interface UiState {
   isLayoutPickerOpen: boolean;
   /** Диалог выбора стартового шаблона. */
   isTemplatePickerOpen: boolean;
+  /** Диалог имени и папки при первом сохранении / «Сохранить как». */
+  isSaveProjectOpen: boolean;
   settings: UiSettings;
 
   /**
@@ -86,6 +90,13 @@ interface UiState {
    */
   inspectorOpen: boolean;
   inspectorManuallyHidden: boolean;
+
+  /**
+   * Режим свободных связей: жест handle→узел рисует ассоциативное ребро
+   * без canConnect раскладки (циклы и сторонние связи разрешены).
+   * Дерево не меняется. Session-only.
+   */
+  freeLinkMode: boolean;
 
   /** fitView callback registered by the canvas component. Not persisted. */
   _fitViewFn: (() => void) | null;
@@ -117,6 +128,7 @@ interface UiState {
   /** Manual hide (panel close button) — sets the override so it won't auto-open. */
   hideInspector: () => void;
   toggleInspector: () => void;
+  toggleFreeLinkMode: () => void;
   setEditingNodeId: (id: string | null, intent?: NodeEditingIntent) => void;
   startNodeEditing: (id: string, intent?: NodeEditingIntent) => void;
   clearNodeEditing: () => void;
@@ -138,6 +150,8 @@ interface UiState {
   closeLayoutPicker: () => void;
   openTemplatePicker: () => void;
   closeTemplatePicker: () => void;
+  openSaveProject: () => void;
+  closeSaveProject: () => void;
   setNodeFontSize: (size: NodeFontSize) => void;
   setCanvasOption: (
     key: 'showGrid' | 'showMiniMap' | 'showControls' | 'showStatuses',
@@ -147,6 +161,7 @@ interface UiState {
   setBackgroundBrightness: (value: number) => void;
   setHomeAccent: (hex: string) => void;
   setHomeFont: (font: string) => void;
+  setNewProjectDir: (dir: string) => void;
   setBehaviorOption: (key: 'confirmBranchDelete', value: boolean) => void;
   registerFitView: (fn: () => void) => void;
   triggerFitView: () => void;
@@ -166,6 +181,7 @@ const defaultSettings: UiSettings = {
   backgroundBrightness: 26,
   homeAccent: '#5fd4ff',
   homeFont: 'IBM Plex Mono',
+  newProjectDir: '',
 };
 
 /**
@@ -278,9 +294,11 @@ export const useUIStore = create<UiState>()(
       isSettingsOpen: false,
       isLayoutPickerOpen: false,
       isTemplatePickerOpen: false,
+      isSaveProjectOpen: false,
       settings: defaultSettings,
       inspectorOpen: false,
       inspectorManuallyHidden: false,
+      freeLinkMode: false,
       _fitViewFn: null,
       dragIndicator: null,
       setDragIndicator: (indicator) => set({ dragIndicator: indicator }),
@@ -324,6 +342,7 @@ export const useUIStore = create<UiState>()(
       hideInspector: () => set({ inspectorOpen: false, inspectorManuallyHidden: true }),
       toggleInspector: () =>
         get().inspectorOpen ? get().hideInspector() : get().openInspector(),
+      toggleFreeLinkMode: () => set((state) => ({ freeLinkMode: !state.freeLinkMode })),
       setEditingNodeId: (id, intent = { mode: 'edit' }) =>
         set({
           editingNodeId: id,
@@ -380,6 +399,8 @@ export const useUIStore = create<UiState>()(
       closeLayoutPicker: () => set({ isLayoutPickerOpen: false }),
       openTemplatePicker: () => set({ isTemplatePickerOpen: true }),
       closeTemplatePicker: () => set({ isTemplatePickerOpen: false }),
+      openSaveProject: () => set({ isSaveProjectOpen: true }),
+      closeSaveProject: () => set({ isSaveProjectOpen: false }),
       setNodeFontSize: (size) =>
         set((state) => ({
           settings: { ...state.settings, nodeFontSize: size },
@@ -411,6 +432,10 @@ export const useUIStore = create<UiState>()(
           settings: { ...state.settings, homeFont: font },
         }));
       },
+      setNewProjectDir: (dir) =>
+        set((state) => ({
+          settings: { ...state.settings, newProjectDir: dir },
+        })),
       setBehaviorOption: (key, value) =>
         set((state) => ({
           settings: { ...state.settings, [key]: value },

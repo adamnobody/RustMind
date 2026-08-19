@@ -5,3 +5,4 @@ export * from './usePersistence';
 export * from './recentFiles';
 export * from './autosave';
 export * from './exportImage';
+export { SaveProjectDialog } from './components/SaveProjectDialog';

@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { Icon, type IconName } from '../../../shared/ui/Icon/Icon';
+import { projectNameFromPath } from '../../persistence/recentFiles';
 import { useT, translate } from '../../../shared/i18n';
 import type { HandleVisibility } from '../../../domain/mind-map';
 import { exportMindMap, type ExportFormat } from '../../persistence/exportImage';
@@ -53,7 +54,9 @@ export function AppToolbar({
   onHome,
 }: AppToolbarProps): React.JSX.Element {
   const documentName = useMindMapStore((s) => s.documentName);
+  const filePath = useMindMapStore((s) => s.filePath);
   const isDirty = useMindMapStore((s) => s.isDirty);
+  const headerName = filePath ? projectNameFromPath(filePath) : documentName;
   const layoutType = useMindMapStore((s) => s.layoutType);
   const applyAutoLayoutManual = useMindMapStore((s) => s.applyAutoLayoutManual);
   const undo = useMindMapStore((s) => s.undo);
@@ -71,6 +74,8 @@ export function AppToolbar({
   const triggerFitView = useUIStore((s) => s.triggerFitView);
   const inspectorOpen = useUIStore((s) => s.inspectorOpen);
   const toggleInspector = useUIStore((s) => s.toggleInspector);
+  const freeLinkMode = useUIStore((s) => s.freeLinkMode);
+  const toggleFreeLinkMode = useUIStore((s) => s.toggleFreeLinkMode);
   const settings = useUIStore((s) => s.settings);
   const setCanvasOption = useUIStore((s) => s.setCanvasOption);
   const t = useT();
@@ -79,6 +84,7 @@ export function AppToolbar({
   // пересборка нужна только network (форс-симуляция), там нет «правильной»
   // формы, которую можно потерять и вернуть заново.
   const isNetwork = layoutType === 'network';
+  const isFreeLayout = layoutType === 'free';
 
   // «Перестроить раскладку»: форс-пересборка текущего типа — способ вернуть
   // форму после ручного растаскивания узлов (nodeConstraint мягкий).
@@ -189,7 +195,7 @@ export function AppToolbar({
             <span className={styles.appName}>RustMind</span>
             <span className={styles.documentName}>
               {isDirty ? '● ' : ''}
-              {documentName}
+              {headerName}
             </span>
           </div>
         </div>
@@ -264,6 +270,15 @@ export function AppToolbar({
           label={t(LAYOUT_LABEL_KEYS[layoutType])}
           title={t('toolbar.changeLayoutType')}
           onClick={openLayoutPicker}
+        />
+
+        <ToolTile
+          icon="free-link"
+          label={t('tile.freeLinks')}
+          title={isFreeLayout ? t('toolbar.freeLinksOnFreeLayout') : t('toolbar.freeLinks')}
+          onClick={toggleFreeLinkMode}
+          disabled={isFreeLayout}
+          active={freeLinkMode && !isFreeLayout}
         />
 
         <span className={styles.tileSep} aria-hidden="true" />

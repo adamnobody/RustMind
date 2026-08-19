@@ -45,3 +45,10 @@ export function isDefaultChildLabel(label: string): boolean {
     (loc) => translations[loc]['label.child'] === label,
   );
 }
+
+/** Дефолтное «Без названия» в любой локали — ещё не сохраняли под своим именем. */
+export function isUntitledDocument(name: string): boolean {
+  return (Object.keys(translations) as Locale[]).some(
+    (loc) => translations[loc]['doc.untitled'] === name,
+  );
+}

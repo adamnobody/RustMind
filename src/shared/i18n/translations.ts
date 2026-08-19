@@ -79,6 +79,7 @@ const ru = {
   'tile.statuses': 'Статусы',
   'tile.rebuild': 'Раскладка',
   'tile.home': 'Домой',
+  'tile.freeLinks': 'Свободные связи',
 
   // — верхняя панель редактора —
   'toolbar.home': 'Главное меню',
@@ -97,6 +98,8 @@ const ru = {
   'toolbar.handlesAlways': 'Хэндлы: всегда',
   'toolbar.stylePanel': 'Панель стиля',
   'toolbar.statuses': 'Показывать статусы задач',
+  'toolbar.freeLinks': 'Свободные связи: любые линии между узлами',
+  'toolbar.freeLinksOnFreeLayout': 'На свободном типе карты связи уже не ограничены',
   'toolbar.lightTheme': 'Светлая тема',
   'toolbar.darkTheme': 'Тёмная тема',
   'toolbar.settings': 'Настройки',
@@ -320,6 +323,18 @@ const ru = {
 
   'file.invalidFormat': 'Неверный формат файла',
 
+  'saveProject.title': 'Сохранить проект',
+  'saveProject.subtitle': 'Имя файла и папка, куда записать карту.',
+  'saveProject.name': 'Имя проекта',
+  'saveProject.namePlaceholder': 'Моя карта',
+  'saveProject.path': 'Путь сохранения',
+  'saveProject.pathPlaceholder': 'Выберите папку…',
+  'saveProject.remember': 'Запомнить путь для новых проектов',
+  'saveProject.save': 'Сохранить',
+  'saveProject.hintSave': 'сохранить',
+  'saveProject.hintClose': 'закрыть',
+  'saveProject.overwrite': 'Файл «{name}» уже существует. Заменить?',
+
   // — содержимое нового документа —
   'doc.untitled': 'Без названия',
   'label.root': 'Главная тема',
@@ -402,6 +417,7 @@ const en: Record<TranslationKey, string> = {
   'tile.statuses': 'Statuses',
   'tile.rebuild': 'Layout',
   'tile.home': 'Home',
+  'tile.freeLinks': 'Free links',
 
   'toolbar.home': 'Main menu',
   'toolbar.new': 'New (Ctrl+N)',
@@ -419,6 +435,8 @@ const en: Record<TranslationKey, string> = {
   'toolbar.handlesAlways': 'Handles: always',
   'toolbar.stylePanel': 'Style panel',
   'toolbar.statuses': 'Show task statuses',
+  'toolbar.freeLinks': 'Free links: draw any connection between nodes',
+  'toolbar.freeLinksOnFreeLayout': 'Free-form layout already allows any connections',
   'toolbar.lightTheme': 'Light theme',
   'toolbar.darkTheme': 'Dark theme',
   'toolbar.settings': 'Settings',
@@ -627,6 +645,18 @@ const en: Record<TranslationKey, string> = {
 
   'file.invalidFormat': 'Invalid file format',
 
+  'saveProject.title': 'Save project',
+  'saveProject.subtitle': 'Choose a file name and the folder to write the map to.',
+  'saveProject.name': 'Project name',
+  'saveProject.namePlaceholder': 'My map',
+  'saveProject.path': 'Save location',
+  'saveProject.pathPlaceholder': 'Choose a folder…',
+  'saveProject.remember': 'Remember this folder for new projects',
+  'saveProject.save': 'Save',
+  'saveProject.hintSave': 'save',
+  'saveProject.hintClose': 'close',
+  'saveProject.overwrite': '“{name}” already exists. Replace it?',
+
   'doc.untitled': 'Untitled',
   'label.root': 'Main topic',
   'label.child': 'New idea',
@@ -705,6 +735,7 @@ const de: Record<TranslationKey, string> = {
   'tile.statuses': 'Status',
   'tile.rebuild': 'Layout',
   'tile.home': 'Start',
+  'tile.freeLinks': 'Freie Linien',
 
   'toolbar.home': 'Hauptmenü',
   'toolbar.new': 'Neu (Strg+N)',
@@ -722,6 +753,8 @@ const de: Record<TranslationKey, string> = {
   'toolbar.handlesAlways': 'Punkte: immer',
   'toolbar.stylePanel': 'Stilbereich',
   'toolbar.statuses': 'Aufgabenstatus anzeigen',
+  'toolbar.freeLinks': 'Freie Verbindungen: beliebige Linien zwischen Knoten',
+  'toolbar.freeLinksOnFreeLayout': 'Im freien Layout sind Verbindungen bereits unbeschränkt',
   'toolbar.lightTheme': 'Helles Thema',
   'toolbar.darkTheme': 'Dunkles Thema',
   'toolbar.settings': 'Einstellungen',
@@ -930,6 +963,18 @@ const de: Record<TranslationKey, string> = {
 
   'file.invalidFormat': 'Ungültiges Dateiformat',
 
+  'saveProject.title': 'Projekt speichern',
+  'saveProject.subtitle': 'Dateiname und Ordner, in dem die Karte gespeichert wird.',
+  'saveProject.name': 'Projektname',
+  'saveProject.namePlaceholder': 'Meine Karte',
+  'saveProject.path': 'Speicherort',
+  'saveProject.pathPlaceholder': 'Ordner wählen…',
+  'saveProject.remember': 'Ordner für neue Projekte merken',
+  'saveProject.save': 'Speichern',
+  'saveProject.hintSave': 'speichern',
+  'saveProject.hintClose': 'schließen',
+  'saveProject.overwrite': '„{name}“ existiert bereits. Ersetzen?',
+
   'doc.untitled': 'Ohne Titel',
   'label.root': 'Hauptthema',
   'label.child': 'Neue Idee',
@@ -1008,6 +1053,7 @@ const fr: Record<TranslationKey, string> = {
   'tile.statuses': 'Statuts',
   'tile.rebuild': 'Disposition',
   'tile.home': 'Accueil',
+  'tile.freeLinks': 'Liens libres',
 
   'toolbar.home': 'Menu principal',
   'toolbar.new': 'Nouveau (Ctrl+N)',
@@ -1025,6 +1071,8 @@ const fr: Record<TranslationKey, string> = {
   'toolbar.handlesAlways': 'Points : toujours',
   'toolbar.stylePanel': 'Panneau de style',
   'toolbar.statuses': 'Afficher les statuts des tâches',
+  'toolbar.freeLinks': 'Liens libres : tracer n’importe quelle connexion entre nœuds',
+  'toolbar.freeLinksOnFreeLayout': 'Le type libre autorise déjà toutes les connexions',
   'toolbar.lightTheme': 'Thème clair',
   'toolbar.darkTheme': 'Thème sombre',
   'toolbar.settings': 'Paramètres',
@@ -1233,6 +1281,18 @@ const fr: Record<TranslationKey, string> = {
   'dialog.no': 'Non',
 
   'file.invalidFormat': 'Format de fichier invalide',
+
+  'saveProject.title': 'Enregistrer le projet',
+  'saveProject.subtitle': 'Nom du fichier et dossier où écrire la carte.',
+  'saveProject.name': 'Nom du projet',
+  'saveProject.namePlaceholder': 'Ma carte',
+  'saveProject.path': 'Emplacement',
+  'saveProject.pathPlaceholder': 'Choisir un dossier…',
+  'saveProject.remember': 'Mémoriser ce dossier pour les nouveaux projets',
+  'saveProject.save': 'Enregistrer',
+  'saveProject.hintSave': 'enregistrer',
+  'saveProject.hintClose': 'fermer',
+  'saveProject.overwrite': '« {name} » existe déjà. Le remplacer ?',
 
   'doc.untitled': 'Sans titre',
   'label.root': 'Thème principal',

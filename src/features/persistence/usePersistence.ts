@@ -7,6 +7,25 @@ import { fileService } from './fileService';
 import { serializeMindMap, deserializeMindMap } from './serializer';
 import { addRecentFile, projectNameFromPath } from './recentFiles';
 
+/** Записать текущую карту в path под заданным именем проекта. */
+export async function saveDocumentAs(path: string, documentName: string): Promise<void> {
+  const state = useMindMapStore.getState();
+  const data = serializeMindMap(
+    documentName,
+    state.layoutType,
+    state.nodes,
+    state.edges,
+    state.projectSettings,
+    state.groups,
+    state.createdAt,
+  );
+  await fileService.saveToPath(path, data);
+  state.setDocumentName(documentName);
+  state.setFilePath(path);
+  state.markSaved();
+  addRecentFile(path, projectNameFromPath(path));
+}
+
 export interface PersistenceActions {
   handleSave: () => Promise<void>;
   handleSaveAs: () => Promise<void>;
@@ -47,51 +66,18 @@ export function usePersistence(): PersistenceActions {
   const triggerFitView = useUIStore((s) => s.triggerFitView);
 
   const handleSave = useCallback(async () => {
-    await withErrorAlert(async () => {
-      const state = useMindMapStore.getState();
-      let path = state.filePath;
-
-      if (!path) {
-        path = await fileService.showSaveDialog(state.documentName);
-        if (!path) return;
-      }
-
-      const data = serializeMindMap(
-        state.documentName,
-        state.layoutType,
-        state.nodes,
-        state.edges,
-        state.projectSettings,
-        state.groups,
-        state.createdAt,
+    const state = useMindMapStore.getState();
+    if (state.filePath) {
+      await withErrorAlert(() =>
+        saveDocumentAs(state.filePath!, projectNameFromPath(state.filePath!)),
       );
-      await fileService.saveToPath(path, data);
-      state.setFilePath(path);
-      state.markSaved();
-      addRecentFile(path, projectNameFromPath(path));
-    });
+      return;
+    }
+    useUIStore.getState().openSaveProject();
   }, []);
 
   const handleSaveAs = useCallback(async () => {
-    await withErrorAlert(async () => {
-      const state = useMindMapStore.getState();
-      const path = await fileService.showSaveDialog(state.documentName);
-      if (!path) return;
-
-      const data = serializeMindMap(
-        state.documentName,
-        state.layoutType,
-        state.nodes,
-        state.edges,
-        state.projectSettings,
-        state.groups,
-        state.createdAt,
-      );
-      await fileService.saveToPath(path, data);
-      state.setFilePath(path);
-      state.markSaved();
-      addRecentFile(path, projectNameFromPath(path));
-    });
+    useUIStore.getState().openSaveProject();
   }, []);
 
   const handleOpen = useCallback(async () => {

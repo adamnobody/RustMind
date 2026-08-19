@@ -404,6 +404,71 @@ describe('mindMapStore — onConnect', () => {
   });
 });
 
+describe('mindMapStore — freeLinkMode', () => {
+  beforeEach(() => {
+    useMindMapStore.getState().resetDocument();
+    useUIStore.setState({ freeLinkMode: false });
+  });
+
+  afterEach(() => {
+    useUIStore.setState({ freeLinkMode: false });
+  });
+
+  it('без режима hierarchy блокирует child→root', () => {
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    const childId = useMindMapStore.getState().addChildNode(rootId)!;
+    const before = useMindMapStore.getState().edges.length;
+
+    useMindMapStore.getState().onConnect({ source: childId, target: rootId });
+
+    expect(useMindMapStore.getState().edges).toHaveLength(before);
+  });
+
+  it('с режимом child→root — free-ребро, родитель ребёнка не меняется', () => {
+    useUIStore.setState({ freeLinkMode: true });
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    const childId = useMindMapStore.getState().addChildNode(rootId)!;
+
+    useMindMapStore.getState().onConnect({
+      source: childId,
+      target: rootId,
+      sourceHandle: 'bottom',
+      targetHandle: 'top',
+    });
+
+    const state = useMindMapStore.getState();
+    const assoc = state.edges.find((e) => e.data?.kind === 'free');
+    expect(assoc).toMatchObject({ source: childId, target: rootId });
+    expect(state.getParentId(childId)).toBe(rootId);
+  });
+
+  it('с режимом связь между сиблингами не делает одного родителем другого', () => {
+    useUIStore.setState({ freeLinkMode: true });
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    const aId = useMindMapStore.getState().addChildNode(rootId)!;
+    const bId = useMindMapStore.getState().addChildNode(rootId)!;
+
+    useMindMapStore.getState().onConnect({ source: aId, target: bId });
+
+    const state = useMindMapStore.getState();
+    expect(state.getParentId(bId)).toBe(rootId);
+    expect(state.getDescendantIds(aId)).not.toContain(bId);
+    expect(state.edges.some((e) => e.source === aId && e.target === bId && e.data?.kind === 'free')).toBe(
+      true,
+    );
+  });
+
+  it('даже в режиме самопетля не создаётся', () => {
+    useUIStore.setState({ freeLinkMode: true });
+    const rootId = useMindMapStore.getState().getRootNode()!.id;
+    const before = useMindMapStore.getState().edges.length;
+
+    useMindMapStore.getState().onConnect({ source: rootId, target: rootId });
+
+    expect(useMindMapStore.getState().edges).toHaveLength(before);
+  });
+});
+
 describe('mindMapStore — projectSettings', () => {
   beforeEach(() => {
     useMindMapStore.getState().resetDocument();

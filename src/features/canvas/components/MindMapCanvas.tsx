@@ -225,6 +225,7 @@ function CanvasInner(): React.JSX.Element {
   const isValidConnection = useCallback(
     (conn: Edge | Connection) => {
       if (!conn.source || !conn.target) return false;
+      if (useUIStore.getState().freeLinkMode) return conn.source !== conn.target;
       const { nodes: n, edges: eds } = useMindMapStore.getState();
       return strategy.canConnect(conn.source, conn.target, { nodes: n, edges: eds });
     },

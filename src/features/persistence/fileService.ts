@@ -70,6 +70,16 @@ export const fileService = {
     return result;
   },
 
+  async showDirectoryDialog(defaultPath?: string): Promise<string | null> {
+    const result = await open({
+      directory: true,
+      multiple: false,
+      defaultPath: defaultPath || undefined,
+    });
+    if (!result || Array.isArray(result)) return null;
+    return result;
+  },
+
   async showSaveDialog(defaultName?: string): Promise<string | null> {
     const result = await save({
       filters: DIALOG_FILTERS,

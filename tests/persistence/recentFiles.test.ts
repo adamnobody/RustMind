@@ -5,6 +5,9 @@ import {
   removeRecentFile,
   projectNameFromPath,
   siblingPath,
+  directoryFromPath,
+  sanitizeProjectName,
+  joinProjectPath,
 } from '../../src/features/persistence/recentFiles';
 
 describe('recentFiles (шаг 19)', () => {
@@ -54,6 +57,15 @@ describe('recentFiles (шаг 19)', () => {
   it('siblingPath — файл-сосед в той же папке, оба разделителя', () => {
     expect(siblingPath('C:\\maps\\old.rustmind', 'new')).toBe('C:\\maps\\new.rustmind');
     expect(siblingPath('/home/u/a.rustmind', 'a копия')).toBe('/home/u/a копия.rustmind');
+  });
+
+  it('directoryFromPath / joinProjectPath / sanitizeProjectName', () => {
+    expect(directoryFromPath('C:\\maps\\Моя карта.rustmind')).toBe('C:\\maps');
+    expect(directoryFromPath('/home/user/plan.rustmind')).toBe('/home/user');
+    expect(sanitizeProjectName('  Имя.rustmind  ')).toBe('Имя');
+    expect(sanitizeProjectName('a<>:"/\\|?*b')).toBe('ab');
+    expect(joinProjectPath('C:\\maps', 'Моя карта')).toBe('C:\\maps\\Моя карта.rustmind');
+    expect(joinProjectPath('/home/u/', 'plan')).toBe('/home/u/plan.rustmind');
   });
 
   it('removeRecentFile убирает только указанный путь', () => {

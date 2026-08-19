@@ -1,4 +1,4 @@
-import type { AppNode, AppEdge, LayoutKind } from '../../../domain/mind-map';
+import { isTreeEdge, type AppNode, type AppEdge, type LayoutKind } from '../../../domain/mind-map';
 import type { LayoutStrategy } from './types';
 import { hierarchyStrategy } from './hierarchy';
 import { rightStrategy } from './right';
@@ -51,6 +51,8 @@ export function isEdgeValidForLayout(
   edges: AppEdge[],
 ): boolean {
   if (strategy.edgeConstraint === 'any') return true;
+  // Ассоциативные связи не участвуют в дереве — canConnect к ним неприменим.
+  if (!isTreeEdge(edge)) return true;
   const others = edges.filter((e) => e.id !== edge.id);
   return strategy.canConnect(edge.source, edge.target, { nodes, edges: others });
 }
