@@ -547,9 +547,9 @@ export const useMindMapStore = create<MindMapState>()(
       // типа, не создаётся вовсе — с коротким тостом почему. Канвас блокирует
       // такие жесты ещё в isValidConnection; это — второй рубеж (напр. тесты
       // и программные вызовы).
-      const { nodes, edges, layoutType } = get();
+      const { nodes, edges, layoutType, projectSettings } = get();
       const strategy = getLayoutStrategy(layoutType);
-      const freeLinkMode = useUIStore.getState().freeLinkMode;
+      const freeLinkMode = projectSettings.freeLinkMode === true;
       if (
         !connection.source ||
         !connection.target ||

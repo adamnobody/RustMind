@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { Icon } from '../../../shared/ui/Icon/Icon';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useT, type TranslationKey } from '../../../shared/i18n';
 import { NODE_COLORS } from '../../../shared/lib/constants';
@@ -110,6 +111,7 @@ export function LevelPalettePicker({ nodeId }: LevelPalettePickerProps): React.J
             <span className={styles.name}>{t('palette.custom')}</span>
           </button>
           <label className={styles.pick} title={t('palette.customHint')}>
+            <Icon name="plus" size={12} />
             <input
               type="color"
               className={styles.pickInput}

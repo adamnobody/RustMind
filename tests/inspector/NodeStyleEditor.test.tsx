@@ -99,6 +99,26 @@ describe('NodeStyleEditor — section hierarchy', () => {
     ).toBe('Georgia');
   });
 
+  it('exposes a labeled custom color control in the palette', async () => {
+    await renderEditor();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Цвет фона' }));
+
+    expect(screen.getByLabelText('Свой цвет')).toBeInTheDocument();
+    expect(screen.getByText('Свой цвет')).toBeInTheDocument();
+    expect(screen.getByLabelText('Цвет фона: HEX')).toBeInTheDocument();
+  });
+
+  it('applies a typed hex as a custom fill color', async () => {
+    const { nodeId } = await renderEditor();
+
+    fireEvent.change(screen.getByLabelText('Цвет фона: HEX'), { target: { value: '#ff00aa' } });
+
+    expect(
+      useMindMapStore.getState().nodes.find((n) => n.id === nodeId)?.data.style?.backgroundColor,
+    ).toBe('#ff00aa');
+  });
+
   it('disables border color and width when border style is none', async () => {
     const { nodeId, rerender } = await renderEditor({ style: { borderPattern: 'none' } });
 

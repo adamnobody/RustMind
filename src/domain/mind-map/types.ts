@@ -111,6 +111,8 @@ export interface ProjectSettings {
   edgeColor?: string;
   levelColors?: string[];
   customStatuses?: StatusOption[];
+  /** Свободные связи: жест рисует ассоциативное ребро без canConnect раскладки. */
+  freeLinkMode?: boolean;
 }
 
 export interface AppNode {

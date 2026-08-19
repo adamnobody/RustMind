@@ -256,6 +256,16 @@ export function ToggleGroupField({
   );
 }
 
+/** #RGB / #RRGGBB → #rrggbb; иначе undefined (для type=color и ввода HEX). */
+function toPickerHex(raw: string): string | undefined {
+  const h = raw.trim().replace(/^#/, '');
+  if (/^[0-9a-fA-F]{6}$/.test(h)) return `#${h.toLowerCase()}`;
+  if (/^[0-9a-fA-F]{3}$/.test(h)) {
+    return `#${h[0]}${h[0]}${h[1]}${h[1]}${h[2]}${h[2]}`.toLowerCase();
+  }
+  return undefined;
+}
+
 interface ColorFieldProps {
   label: string;
   /** The active override, or undefined when the element falls back to the theme default. */
@@ -279,11 +289,16 @@ export function ColorField({
 }: ColorFieldProps): React.JSX.Element {
   const t = useT();
   const [open, setOpen] = useState(false);
+  const [hexDraft, setHexDraft] = useState<string | null>(null);
   const paletteId = useId();
   const overridden = value !== undefined;
   const current = value ?? fallback;
+  const pickerHex = toPickerHex(current) ?? '#808080';
+  const inPalette =
+    value !== undefined && INSPECTOR_PALETTE.some((hex) => hex.toLowerCase() === value.toLowerCase());
   const resetLabel = t('field.reset', { label: label.toLowerCase() });
   const paletteOpen = open && disabled !== true;
+  const hexShown = hexDraft ?? (overridden ? current.toUpperCase() : '');
 
   return (
     <FieldFrame label={label} inGroup={inGroup} disabled={disabled}>
@@ -298,9 +313,23 @@ export function ColorField({
           disabled={disabled === true}
           onClick={() => setOpen((v) => !v)}
         />
-        <span className={clsx(styles.colorValue, !overridden && styles.colorValueDefault)}>
-          {overridden ? current.toUpperCase() : t('field.default')}
-        </span>
+        <input
+          type="text"
+          className={clsx(styles.colorHex, !overridden && hexDraft === null && styles.colorValueDefault)}
+          value={hexShown}
+          placeholder={t('field.default')}
+          spellCheck={false}
+          autoComplete="off"
+          aria-label={t('field.hex', { label })}
+          disabled={disabled === true}
+          onFocus={() => setHexDraft(overridden ? current.toUpperCase() : '')}
+          onChange={(e) => {
+            setHexDraft(e.target.value);
+            const parsed = toPickerHex(e.target.value);
+            if (parsed) onChange(parsed);
+          }}
+          onBlur={() => setHexDraft(null)}
+        />
         <button
           type="button"
           className={styles.resetButton}
@@ -309,6 +338,7 @@ export function ColorField({
           disabled={!overridden || disabled === true}
           onClick={() => {
             onReset();
+            setHexDraft(null);
             setOpen(false);
           }}
         >
@@ -326,42 +356,52 @@ export function ColorField({
             if (e.key === 'Escape') setOpen(false);
           }}
         >
-          <button
-            type="button"
-            className={clsx(styles.paletteAuto, !overridden && styles.paletteAutoActive)}
-            aria-pressed={!overridden}
-            onClick={() => {
-              onReset();
-              setOpen(false);
-            }}
-          >
-            {t('field.auto')}
-          </button>
-          {INSPECTOR_PALETTE.map((hex) => (
+          <div className={styles.paletteSwatches}>
             <button
-              key={hex}
               type="button"
-              className={clsx(styles.swatch, value === hex && styles.swatchActive)}
-              // color задаёт и обводку выбранного (currentColor), и саму заливку
-              style={{ background: hex, color: hex }}
-              aria-label={hex}
-              aria-pressed={value === hex}
+              className={clsx(styles.paletteAuto, !overridden && styles.paletteAutoActive)}
+              aria-pressed={!overridden}
               onClick={() => {
-                onChange(hex);
+                onReset();
+                setHexDraft(null);
                 setOpen(false);
               }}
-            />
-          ))}
-          {/* Произвольный цвет — нативная пипетка в том же чипе палитры. */}
-          <span className={clsx(styles.swatch, styles.swatchCustom)} title={t('field.customColor')}>
+            >
+              {t('field.auto')}
+            </button>
+            {INSPECTOR_PALETTE.map((hex) => (
+              <button
+                key={hex}
+                type="button"
+                className={clsx(styles.swatch, value === hex && styles.swatchActive)}
+                // color задаёт и обводку выбранного (currentColor), и саму заливку
+                style={{ background: hex, color: hex }}
+                aria-label={hex}
+                aria-pressed={value === hex}
+                onClick={() => {
+                  onChange(hex);
+                  setHexDraft(null);
+                  setOpen(false);
+                }}
+              />
+            ))}
+          </div>
+          <label
+            className={clsx(styles.paletteCustom, overridden && !inPalette && styles.paletteCustomActive)}
+          >
+            <span className={styles.paletteCustomRainbow} aria-hidden="true" />
+            <span aria-hidden="true">
+              <Icon name="plus" size={12} />
+            </span>
+            <span>{t('field.customColor')}</span>
             <input
               type="color"
               className={styles.colorInput}
-              value={current}
+              value={pickerHex}
               aria-label={t('field.customColor')}
               onChange={(e) => onChange(e.target.value)}
             />
-          </span>
+          </label>
         </div>
       )}
     </FieldFrame>

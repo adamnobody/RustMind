@@ -94,6 +94,8 @@ interface SerializedProjectSettings {
   edgeColor?: string;
   levelColors?: string[];
   customStatuses?: SerializedStatusOption[];
+  /** v4+: свободные связи. Нет поля = выкл. */
+  freeLinkMode?: boolean;
 }
 
 interface SerializedGroupTitleStyle {

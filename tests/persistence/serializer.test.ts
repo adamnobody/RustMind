@@ -299,6 +299,20 @@ describe('style and projectSettings', () => {
     expect(restored.projectSettings?.handleVisibility).toBe('always');
   });
 
+  it('projectSettings.freeLinkMode переживает round-trip и в старых файлах выкл', () => {
+    const nodes = [makeNode('root', true)];
+    const on = serializeMindMap('Doc', 'hierarchy', nodes, [], {
+      handleVisibility: 'dashed',
+      freeLinkMode: true,
+    });
+    expect(on.projectSettings?.freeLinkMode).toBe(true);
+    expect(deserializeMindMap(on).projectSettings?.freeLinkMode).toBe(true);
+
+    const off = serializeMindMap('Doc', 'hierarchy', nodes, [], { handleVisibility: 'dashed' });
+    expect(off.projectSettings?.freeLinkMode).toBeUndefined();
+    expect(deserializeMindMap(off).projectSettings?.freeLinkMode).toBeUndefined();
+  });
+
   it('старый файл без projectSettings: handleVisibility = DEFAULT (dashed)', () => {
     const nodes = [makeNode('root', true)];
     const serialized = serializeMindMap('Doc', 'tree-LR', nodes, [], defaultProjectSettings);

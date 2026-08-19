@@ -98,13 +98,6 @@ interface UiState {
   inspectorOpen: boolean;
   inspectorManuallyHidden: boolean;
 
-  /**
-   * Режим свободных связей: жест handle→узел рисует ассоциативное ребро
-   * без canConnect раскладки (циклы и сторонние связи разрешены).
-   * Дерево не меняется. Session-only.
-   */
-  freeLinkMode: boolean;
-
   /** fitView callback registered by the canvas component. Not persisted. */
   _fitViewFn: (() => void) | null;
   /** Сброс текста оглавления в граф. Регистрирует OutlineEditor. */
@@ -137,7 +130,6 @@ interface UiState {
   /** Manual hide (panel close button) — sets the override so it won't auto-open. */
   hideInspector: () => void;
   toggleInspector: () => void;
-  toggleFreeLinkMode: () => void;
   setEditingNodeId: (id: string | null, intent?: NodeEditingIntent) => void;
   startNodeEditing: (id: string, intent?: NodeEditingIntent) => void;
   clearNodeEditing: () => void;
@@ -315,7 +307,6 @@ export const useUIStore = create<UiState>()(
       settings: defaultSettings,
       inspectorOpen: false,
       inspectorManuallyHidden: false,
-      freeLinkMode: false,
       _fitViewFn: null,
       _flushOutlineFn: null,
       dragIndicator: null,
@@ -360,7 +351,6 @@ export const useUIStore = create<UiState>()(
       hideInspector: () => set({ inspectorOpen: false, inspectorManuallyHidden: true }),
       toggleInspector: () =>
         get().inspectorOpen ? get().hideInspector() : get().openInspector(),
-      toggleFreeLinkMode: () => set((state) => ({ freeLinkMode: !state.freeLinkMode })),
       setEditingNodeId: (id, intent = { mode: 'edit' }) =>
         set({
           editingNodeId: id,

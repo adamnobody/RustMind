@@ -497,12 +497,27 @@
     0 0 0 2px var(--rm-accent);
 }
 
-.colorValue {
+.colorHex {
   flex: 1;
-  font-size: 13px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
   color: var(--ins-text2);
+  font-family: inherit;
+  font-size: 13px;
   letter-spacing: 0.8px;
   font-variant-numeric: tabular-nums;
+}
+
+.colorHex::placeholder {
+  color: var(--rm-text-muted);
+  letter-spacing: 0.3px;
+}
+
+.colorHex:focus {
+  outline: none;
 }
 
 .colorValueDefault {
@@ -542,14 +557,20 @@
 /* палитра, раскрывающаяся под чипом */
 .palette {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
   margin-top: 14px;
   padding: 12px;
   border: 1px solid var(--rm-border-soft);
   border-radius: 10px;
   background: var(--ins-inset);
+}
+
+.paletteSwatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 .paletteAuto {
@@ -597,9 +618,44 @@
     0 0 0 4px currentColor;
 }
 
-/* «свой цвет» — нативная пипетка под тем же чипом палитры */
-.swatchCustom {
-  overflow: hidden;
+.paletteCustom {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px dashed var(--rm-border-soft);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ins-text2);
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition:
+    border-color 0.16s var(--rm-ease-out-expo),
+    color 0.16s var(--rm-ease-out-expo);
+}
+
+.paletteCustom:hover {
+  border-color: var(--rm-accent);
+  color: var(--rm-text);
+}
+
+.paletteCustomActive {
+  border-style: solid;
+  border-color: var(--rm-accent);
+  color: var(--rm-accent);
+}
+
+.paletteCustomRainbow {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--rm-border-strong);
   background: conic-gradient(
     from 0deg,
     #e0576f,
@@ -615,12 +671,12 @@
 
 .colorInput {
   position: absolute;
-  inset: -4px;
-  width: calc(100% + 8px);
-  height: calc(100% + 8px);
+  inset: 0;
+  width: 100%;
+  height: 100%;
   padding: 0;
   border: none;
-  background: transparent;
+  opacity: 0;
   cursor: pointer;
 }
 

@@ -407,11 +407,6 @@ describe('mindMapStore — onConnect', () => {
 describe('mindMapStore — freeLinkMode', () => {
   beforeEach(() => {
     useMindMapStore.getState().resetDocument();
-    useUIStore.setState({ freeLinkMode: false });
-  });
-
-  afterEach(() => {
-    useUIStore.setState({ freeLinkMode: false });
   });
 
   it('без режима hierarchy блокирует child→root', () => {
@@ -425,7 +420,7 @@ describe('mindMapStore — freeLinkMode', () => {
   });
 
   it('с режимом child→root — free-ребро, родитель ребёнка не меняется', () => {
-    useUIStore.setState({ freeLinkMode: true });
+    useMindMapStore.getState().setProjectSettings({ freeLinkMode: true });
     const rootId = useMindMapStore.getState().getRootNode()!.id;
     const childId = useMindMapStore.getState().addChildNode(rootId)!;
 
@@ -443,7 +438,7 @@ describe('mindMapStore — freeLinkMode', () => {
   });
 
   it('с режимом связь между сиблингами не делает одного родителем другого', () => {
-    useUIStore.setState({ freeLinkMode: true });
+    useMindMapStore.getState().setProjectSettings({ freeLinkMode: true });
     const rootId = useMindMapStore.getState().getRootNode()!.id;
     const aId = useMindMapStore.getState().addChildNode(rootId)!;
     const bId = useMindMapStore.getState().addChildNode(rootId)!;
@@ -459,13 +454,19 @@ describe('mindMapStore — freeLinkMode', () => {
   });
 
   it('даже в режиме самопетля не создаётся', () => {
-    useUIStore.setState({ freeLinkMode: true });
+    useMindMapStore.getState().setProjectSettings({ freeLinkMode: true });
     const rootId = useMindMapStore.getState().getRootNode()!.id;
     const before = useMindMapStore.getState().edges.length;
 
     useMindMapStore.getState().onConnect({ source: rootId, target: rootId });
 
     expect(useMindMapStore.getState().edges).toHaveLength(before);
+  });
+
+  it('resetDocument сбрасывает freeLinkMode', () => {
+    useMindMapStore.getState().setProjectSettings({ freeLinkMode: true });
+    useMindMapStore.getState().resetDocument();
+    expect(useMindMapStore.getState().projectSettings.freeLinkMode).toBeUndefined();
   });
 });
 
@@ -497,9 +498,10 @@ describe('mindMapStore — projectSettings', () => {
       layoutType: 'hierarchy',
       nodes: [],
       edges: [],
-      projectSettings: { handleVisibility: 'hidden' },
+      projectSettings: { handleVisibility: 'hidden', freeLinkMode: true },
     });
     expect(useMindMapStore.getState().projectSettings.handleVisibility).toBe('hidden');
+    expect(useMindMapStore.getState().projectSettings.freeLinkMode).toBe(true);
   });
 
   it('loadDocument без projectSettings: дефолт (dashed)', () => {

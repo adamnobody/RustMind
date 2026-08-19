@@ -240,6 +240,7 @@ const ru = {
   'field.reset': 'Сбросить {label}',
   'field.auto': 'авто',
   'field.customColor': 'Свой цвет',
+  'field.hex': '{label}: HEX',
 
   // — тулбар узла —
   'nodeToolbar.addChild': 'Добавить дочерний узел (Tab)',
@@ -603,6 +604,7 @@ const en: Record<TranslationKey, string> = {
   'field.reset': 'Reset {label}',
   'field.auto': 'auto',
   'field.customColor': 'Custom color',
+  'field.hex': '{label}: HEX',
 
   'nodeToolbar.addChild': 'Add child node (Tab)',
   'nodeToolbar.addSibling': 'Add sibling node (Enter)',
@@ -954,6 +956,7 @@ const de: Record<TranslationKey, string> = {
   'field.reset': '{label} zurücksetzen',
   'field.auto': 'auto',
   'field.customColor': 'Eigene Farbe',
+  'field.hex': '{label}: HEX',
 
   'nodeToolbar.addChild': 'Unterknoten hinzufügen (Tab)',
   'nodeToolbar.addSibling': 'Nachbarknoten hinzufügen (Enter)',
@@ -1306,6 +1309,7 @@ const fr: Record<TranslationKey, string> = {
   'field.reset': 'Réinitialiser {label}',
   'field.auto': 'auto',
   'field.customColor': 'Couleur personnalisée',
+  'field.hex': '{label} : HEX',
 
   'nodeToolbar.addChild': 'Ajouter un nœud enfant (Tab)',
   'nodeToolbar.addSibling': 'Ajouter un nœud voisin (Entrée)',

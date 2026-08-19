@@ -192,17 +192,3 @@ describe('uiStore — внешний вид главного меню', () => {
     useUIStore.getState().setHomeFont('IBM Plex Mono');
   });
 });
-
-describe('uiStore — freeLinkMode', () => {
-  beforeEach(() => {
-    useUIStore.setState({ freeLinkMode: false });
-  });
-
-  it('toggleFreeLinkMode включает и выключает режим', () => {
-    expect(useUIStore.getState().freeLinkMode).toBe(false);
-    useUIStore.getState().toggleFreeLinkMode();
-    expect(useUIStore.getState().freeLinkMode).toBe(true);
-    useUIStore.getState().toggleFreeLinkMode();
-    expect(useUIStore.getState().freeLinkMode).toBe(false);
-  });
-});

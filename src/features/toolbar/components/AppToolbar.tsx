@@ -78,8 +78,7 @@ export function AppToolbar({
   const toggleInspector = useUIStore((s) => s.toggleInspector);
   const outlineOpen = useUIStore((s) => s.outlineOpen);
   const toggleOutline = useUIStore((s) => s.toggleOutline);
-  const freeLinkMode = useUIStore((s) => s.freeLinkMode);
-  const toggleFreeLinkMode = useUIStore((s) => s.toggleFreeLinkMode);
+  const freeLinkMode = projectSettings.freeLinkMode === true;
   const settings = useUIStore((s) => s.settings);
   const setCanvasOption = useUIStore((s) => s.setCanvasOption);
   const t = useT();
@@ -283,7 +282,7 @@ export function AppToolbar({
           icon="free-link"
           label={t('tile.freeLinks')}
           title={isFreeLayout ? t('toolbar.freeLinksOnFreeLayout') : t('toolbar.freeLinks')}
-          onClick={toggleFreeLinkMode}
+          onClick={() => setProjectSettings({ freeLinkMode: !freeLinkMode })}
           disabled={isFreeLayout}
           active={freeLinkMode && !isFreeLayout}
         />
