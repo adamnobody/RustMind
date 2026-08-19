@@ -27,6 +27,7 @@ import type {
 import { isDefaultChildLabel } from '../../../shared/i18n';
 import { oppositeHandle, DEFAULT_TREE_EDGE_HANDLES } from '../../edges/types';
 import { isTreeEdge } from '../../../domain/mind-map';
+import { inkOnHex } from '../levelPalettes';
 import { sidePort, type PortSide, type Rect } from '../../edges/lib/routing';
 import { resolveEdgeRoute } from '../../edges/lib/resolveRoute';
 import { getLayoutStrategy } from '../../layout/strategies/registry';
@@ -141,6 +142,8 @@ function collapseToggleStyle(side: PortSide): CSSProperties {
  */
 function boxStyleFrom(data: MindNodeData, shape: NodeShape): CSSProperties {
   const s = data.style;
+  const fill = s?.backgroundColor ?? data.color ?? data.levelColor ?? undefined;
+  const ink = s?.textColor ?? data.textColor ?? (fill ? inkOnHex(fill) : undefined);
   const pattern = s?.borderPattern;
   // Ромб рисует контур отдельным SVG (см. DiamondOutline) — clip-path обрезал бы
   // CSS-границу до одних углов. Поэтому border на .box для ромба не задаём.
@@ -152,8 +155,8 @@ function boxStyleFrom(data: MindNodeData, shape: NodeShape): CSSProperties {
         borderStyle: pattern ? (pattern === 'none' ? 'none' : pattern) : undefined,
       };
   return {
-    backgroundColor: s?.backgroundColor ?? data.color ?? data.levelColor ?? undefined,
-    color: s?.textColor ?? data.textColor ?? undefined,
+    backgroundColor: fill,
+    color: ink,
     ...border,
     fontSize: s?.fontSize != null ? `${s.fontSize}px` : undefined,
     // Кавычки — имена системных шрифтов содержат пробелы ("Segoe UI")

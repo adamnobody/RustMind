@@ -11,6 +11,7 @@ import {
 } from '../../../store/uiStore';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { useT } from '../../../shared/i18n';
+import { LevelPalettePicker } from '../../nodes/components/LevelPalettePicker';
 import { version as appVersion } from '../../../../package.json';
 import styles from './SettingsPanel.module.css';
 
@@ -22,8 +23,6 @@ const nodeFontOptions: { value: NodeFontSize; label: string }[] = [
 
 const themeValues: Theme[] = ['dark', 'light'];
 const patternValues: BackgroundPattern[] = ['dots', 'lines', 'cross'];
-
-const LEVEL_SEEDS = ['#2563eb', '#16a34a', '#d97706'];
 
 /** Строка выбора цвета с кнопкой сброса (для стилей проекта). */
 function ColorRow({
@@ -88,13 +87,6 @@ export function SettingsPanel(): React.JSX.Element {
     const reader = new FileReader();
     reader.onload = () => setProjectSettings({ backgroundImage: String(reader.result) });
     reader.readAsDataURL(file);
-  };
-
-  const setLevelColor = (index: number, hex: string | undefined): void => {
-    const arr = [...(projectSettings.levelColors ?? [])];
-    while (arr.length <= index) arr.push('');
-    arr[index] = hex ?? '';
-    setProjectSettings({ levelColors: arr.some((c) => c) ? arr : undefined });
   };
 
   const themeOptions = themeValues.map((value) => ({ value, label: t(`theme.${value}`) }));
@@ -217,18 +209,7 @@ export function SettingsPanel(): React.JSX.Element {
             onClear={() => setProjectSettings({ edgeColor: undefined })}
             clearLabel={t('settings.clear')}
           />
-          <span className={styles.subLabel}>{t('settings.levelColors')}</span>
-          {LEVEL_SEEDS.map((seed, i) => (
-            <ColorRow
-              key={i}
-              label={t('settings.level', { n: String(i + 1) })}
-              value={projectSettings.levelColors?.[i]}
-              seed={seed}
-              onChange={(hex) => setLevelColor(i, hex)}
-              onClear={() => setLevelColor(i, undefined)}
-              clearLabel={t('settings.clear')}
-            />
-          ))}
+          <LevelPalettePicker />
         </section>
 
         <section className={styles.about}>

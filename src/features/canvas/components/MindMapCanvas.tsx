@@ -24,6 +24,7 @@ import { MIND_NODE_TYPE } from '../../nodes/types';
 import { MIND_EDGE_TYPE, oppositeHandle } from '../../edges/types';
 import { getLayoutStrategy, isEdgeValidForLayout } from '../../layout/strategies/registry';
 import { collapsedHiddenIds, treeDepthMap } from '../../layout/strategies/shared';
+import { levelColorAt } from '../../nodes/levelPalettes';
 import {
   GroupBox,
   GroupSelectionButton,
@@ -123,8 +124,9 @@ function CanvasInner(): React.JSX.Element {
   // Узлы, скрытые сворачиванием (потомки свёрнутых узлов) — прячем их и их рёбра.
   const collapseHidden = useMemo(() => collapsedHiddenIds(nodes, edges), [nodes, edges]);
 
-  // Скрытие свёрнутых поддеревьев + внедрение цвета уровня (глобальные стили):
-  // levelColor — транзиентный фон для узлов БЕЗ собственного цвета, не пишется в файл.
+  // Скрытие свёрнутых поддеревьев + цвет уровня: levelColor не пишется в файл.
+  // Свой style.backgroundColor побеждает; data.color (корень / контекстное меню)
+  // перекрывает levelColor уже при отрисовке узла.
   const displayNodes = useMemo(() => {
     const hasLevels = !!levelColors && levelColors.some((c) => c);
     if (collapseHidden.size === 0 && !hasLevels) return nodes;
@@ -132,9 +134,9 @@ function CanvasInner(): React.JSX.Element {
     return nodes.map((n) => {
       let next = collapseHidden.has(n.id) ? { ...n, hidden: true } : n;
       if (hasLevels && depthOf) {
-        const explicitBg = n.data.style?.backgroundColor ?? n.data.color;
+        const explicitBg = n.data.style?.backgroundColor;
         const depth = depthOf.get(n.id) ?? 0;
-        const lc = !explicitBg && depth >= 1 ? levelColors?.[depth - 1] : undefined;
+        const lc = !explicitBg && depth >= 1 ? levelColorAt(levelColors, depth) : undefined;
         if (lc) next = { ...next, data: { ...next.data, levelColor: lc } };
       }
       return next;

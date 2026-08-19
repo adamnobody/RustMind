@@ -17,6 +17,7 @@ import {
   ToggleGroupField,
 } from './fields';
 import { BorderGlyph, ShapeGlyph } from './glyphs';
+import { LevelPalettePicker } from '../../nodes/components/LevelPalettePicker';
 
 const handleSides: { side: HandleSide; labelKey: TranslationKey }[] = [
   { side: 'top', labelKey: 'node.handleTop' },
@@ -105,6 +106,8 @@ export function NodeStyleEditor({ nodeId, data }: NodeStyleEditorProps): React.J
           onChange={(hex) => set({ backgroundColor: hex })}
           onReset={() => set({ backgroundColor: undefined })}
         />
+
+        <LevelPalettePicker nodeId={nodeId} />
 
         <FieldSubgroup title={t('node.border')}>
           <ColorField

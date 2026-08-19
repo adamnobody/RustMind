@@ -1,0 +1,141 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  color: var(--rm-text-muted);
+  font-size: var(--rm-font-sm);
+  letter-spacing: 0.5px;
+}
+
+.list {
+  display: grid;
+  gap: 6px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--rm-border-soft);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--rm-transition-fast) var(--rm-ease-out-expo),
+    background-color var(--rm-transition-fast) var(--rm-ease-out-expo);
+}
+
+.row:hover {
+  border-color: var(--rm-accent-soft);
+}
+
+.rowActive,
+.rowActive:hover {
+  border-color: var(--rm-accent);
+  background: var(--rm-accent-muted);
+}
+
+.dots {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.dot,
+.dotNone {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--rm-border-strong);
+}
+
+.dotNone {
+  width: 14px;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 3px,
+    var(--rm-border-soft) 3px,
+    var(--rm-border-soft) 4px
+  );
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--rm-text-muted);
+  font-size: var(--rm-font-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowActive .name {
+  color: var(--rm-accent);
+}
+
+.rowCustom {
+  gap: 6px;
+  padding-right: 6px;
+}
+
+.rowHit {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dotAnchor {
+  box-shadow:
+    inset 0 0 0 1px var(--rm-border-strong),
+    0 0 0 2px var(--rm-accent-muted);
+}
+
+.pick {
+  position: relative;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--rm-border-strong);
+  background: conic-gradient(
+    from 0deg,
+    #e0576f,
+    #ff8c50,
+    #f5c451,
+    #35ff87,
+    #5fd4ff,
+    #4c7cff,
+    #b28cff,
+    #e0576f
+  );
+  cursor: pointer;
+}
+
+.pickInput {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
