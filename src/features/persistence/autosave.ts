@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useMindMapStore } from '../../store/mindMapStore';
+import { useUIStore } from '../../store/uiStore';
 import { serializeMindMap } from './serializer';
 import type { SerializedMindMap } from './schema';
 
@@ -49,6 +50,7 @@ export function clearDraft(): void {
 export function useAutosave(intervalMs = DEFAULT_INTERVAL_MS): void {
   useEffect(() => {
     const id = setInterval(() => {
+      useUIStore.getState().flushOutline();
       const s = useMindMapStore.getState();
       if (s.isDirty) {
         const data = serializeMindMap(

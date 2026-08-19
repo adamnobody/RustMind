@@ -30,6 +30,7 @@ export type IconName =
   | 'group'
   | 'check-square'
   | 'free-link'
+  | 'list'
   // Иконки из шага 1/4, оставим для совместимости в будущем
   | 'zoomIn'
   | 'zoomOut'
@@ -312,6 +313,16 @@ const ICON_PATHS: Record<IconName, React.JSX.Element> = {
       <circle cx="6" cy="6" r="3" />
       <circle cx="18" cy="18" r="3" />
       <path d="M8.5 8.5c4 1 5 6 7 9" />
+    </>
+  ),
+  list: (
+    <>
+      <line x1="8" y1="6" x2="21" y2="6" />
+      <line x1="8" y1="12" x2="21" y2="12" />
+      <line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6" x2="3.01" y2="6" />
+      <line x1="3" y1="12" x2="3.01" y2="12" />
+      <line x1="3" y1="18" x2="3.01" y2="18" />
     </>
   ),
 };

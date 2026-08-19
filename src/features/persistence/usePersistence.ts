@@ -9,6 +9,7 @@ import { addRecentFile, projectNameFromPath } from './recentFiles';
 
 /** Записать текущую карту в path под заданным именем проекта. */
 export async function saveDocumentAs(path: string, documentName: string): Promise<void> {
+  useUIStore.getState().flushOutline();
   const state = useMindMapStore.getState();
   const data = serializeMindMap(
     documentName,
@@ -66,6 +67,7 @@ export function usePersistence(): PersistenceActions {
   const triggerFitView = useUIStore((s) => s.triggerFitView);
 
   const handleSave = useCallback(async () => {
+    useUIStore.getState().flushOutline();
     const state = useMindMapStore.getState();
     if (state.filePath) {
       await withErrorAlert(() =>
@@ -77,6 +79,7 @@ export function usePersistence(): PersistenceActions {
   }, []);
 
   const handleSaveAs = useCallback(async () => {
+    useUIStore.getState().flushOutline();
     useUIStore.getState().openSaveProject();
   }, []);
 

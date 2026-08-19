@@ -40,4 +40,5 @@ export const HOTKEYS = {
   saveAs: 'mod+shift+s',
   open: 'mod+o',
   newMap: 'mod+n',
+  outline: 'mod+shift+o',
 } as const;

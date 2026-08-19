@@ -4,6 +4,8 @@ import { Inspector } from '../../features/inspector';
 import { LayoutTypeDialog } from '../../features/layout';
 import { TemplateDialog } from '../../features/templates';
 import { StatusCascadeDialog } from '../../features/nodes';
+import { OutlineEditor } from '../../features/outline';
+import { useUIStore } from '../../store/uiStore';
 import {
   usePersistence,
   useWindowCloseGuard,
@@ -23,6 +25,7 @@ export function EditorScreen({ onGoHome }: EditorScreenProps = {}): React.JSX.El
   const { handleSave, handleSaveAs, handleOpen, handleNew } = usePersistence();
   useWindowCloseGuard();
   useAutosave();
+  const outlineOpen = useUIStore((s) => s.outlineOpen);
 
   return (
     <KeyboardProvider
@@ -42,8 +45,9 @@ export function EditorScreen({ onGoHome }: EditorScreenProps = {}): React.JSX.El
         <div className={styles.canvasWrapper}>
           <div className={styles.canvasArea}>
             <MindMapCanvas />
+            <OutlineEditor />
           </div>
-          <Inspector />
+          {!outlineOpen && <Inspector />}
         </div>
         <SettingsPanel />
         <LayoutTypeDialog />

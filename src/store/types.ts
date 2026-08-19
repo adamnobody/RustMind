@@ -150,6 +150,14 @@ export interface MindMapState {
   recomputeIfDerived: () => void;
 
   loadDocument: (payload: LoadDocumentPayload) => void;
+  /**
+   * Заменить дерево (оглавление → карта), не трогая файл, раскладку и
+   * настройки. В отличие от loadDocument, пишет историю и оставляет isDirty.
+   */
+  replaceTree: (
+    payload: { nodes: AppNode[]; edges: AppEdge[]; groups: Group[]; documentName: string },
+    options?: { skipHistory?: boolean },
+  ) => void;
   resetDocument: () => void;
   createNewDocument: () => void;
   setFilePath: (path: string | null) => void;

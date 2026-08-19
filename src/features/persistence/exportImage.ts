@@ -98,6 +98,7 @@ async function exportText(format: 'json' | 'markdown'): Promise<boolean> {
  * Markdown — дерево вложенным списком. Бросает при ошибке I/O — ловлю снаружи.
  */
 export async function exportMindMap(format: ExportFormat): Promise<boolean> {
+  useUIStore.getState().flushOutline();
   if (format === 'json' || format === 'markdown') return exportText(format);
 
   const { nodes } = useMindMapStore.getState();

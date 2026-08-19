@@ -616,6 +616,31 @@ export const useMindMapStore = create<MindMapState>()(
       }
     },
 
+    replaceTree: (payload, options) => {
+      if (!options?.skipHistory) recordHistory('structural');
+      const { layoutType } = get();
+      const normalized = normalizeStructure(payload.nodes, payload.edges, layoutType);
+      const strategy = getLayoutStrategy(layoutType);
+      const positioned =
+        strategy.positionMode === 'derived'
+          ? applyLayout(normalized.nodes, normalized.edges, layoutType)
+          : normalized;
+      set((state) => {
+        state.nodes = positioned.nodes;
+        state.edges = positioned.edges;
+        state.groups = payload.groups ?? [];
+        state.documentName = payload.documentName;
+        state.isDirty = true;
+      });
+      const ui = useUIStore.getState();
+      const keepNodes = new Set(positioned.nodes.map((n) => n.id));
+      const keepEdges = new Set(positioned.edges.map((e) => e.id));
+      ui.setSelection(
+        ui.selectedNodeIds.filter((id) => keepNodes.has(id)),
+        ui.selectedEdgeIds.filter((id) => keepEdges.has(id)),
+      );
+    },
+
     loadDocument: (payload) => {
       // Открытие документа сбрасывает историю: снимки из прошлого документа
       // относятся к другому дереву, их откат был бы бессмысленным/опасным.

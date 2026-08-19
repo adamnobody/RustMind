@@ -81,6 +81,11 @@ interface UiState {
   isSaveProjectOpen: boolean;
   /** Диалог выбора формата экспорта. Session-only. */
   isExportPickerOpen: boolean;
+  /**
+   * Режим оглавления (XMind Outliner): карта редактируется как Markdown-список.
+   * Session-only, не пишется в документ и localStorage.
+   */
+  outlineOpen: boolean;
   settings: UiSettings;
 
   /**
@@ -102,6 +107,8 @@ interface UiState {
 
   /** fitView callback registered by the canvas component. Not persisted. */
   _fitViewFn: (() => void) | null;
+  /** Сброс текста оглавления в граф. Регистрирует OutlineEditor. */
+  _flushOutlineFn: (() => void) | null;
 
   /** Текущая drop-цель во время drag узла (see DragIndicator). Session-only. */
   dragIndicator: DragIndicator | null;
@@ -156,6 +163,10 @@ interface UiState {
   closeSaveProject: () => void;
   openExportPicker: () => void;
   closeExportPicker: () => void;
+  toggleOutline: () => void;
+  closeOutline: () => void;
+  registerOutlineFlush: (fn: (() => void) | null) => void;
+  flushOutline: () => void;
   setNodeFontSize: (size: NodeFontSize) => void;
   setCanvasOption: (
     key: 'showGrid' | 'showMiniMap' | 'showControls' | 'showStatuses',
@@ -300,11 +311,13 @@ export const useUIStore = create<UiState>()(
       isTemplatePickerOpen: false,
       isSaveProjectOpen: false,
       isExportPickerOpen: false,
+      outlineOpen: false,
       settings: defaultSettings,
       inspectorOpen: false,
       inspectorManuallyHidden: false,
       freeLinkMode: false,
       _fitViewFn: null,
+      _flushOutlineFn: null,
       dragIndicator: null,
       setDragIndicator: (indicator) => set({ dragIndicator: indicator }),
 
@@ -408,6 +421,18 @@ export const useUIStore = create<UiState>()(
       closeSaveProject: () => set({ isSaveProjectOpen: false }),
       openExportPicker: () => set({ isExportPickerOpen: true }),
       closeExportPicker: () => set({ isExportPickerOpen: false }),
+      registerOutlineFlush: (fn) => set({ _flushOutlineFn: fn }),
+      flushOutline: () => get()._flushOutlineFn?.(),
+      toggleOutline: () => {
+        if (get().outlineOpen) {
+          get().flushOutline();
+          set({ outlineOpen: false });
+          setTimeout(() => get().triggerFitView(), 50);
+        } else {
+          set({ outlineOpen: true });
+        }
+      },
+      closeOutline: () => set({ outlineOpen: false }),
       setNodeFontSize: (size) =>
         set((state) => ({
           settings: { ...state.settings, nodeFontSize: size },

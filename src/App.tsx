@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { HomeScreen } from './app/routes/HomeScreen';
 import { EditorScreen } from './app/routes/EditorScreen';
 import { useMindMapStore } from './store/mindMapStore';
+import { useUIStore } from './store/uiStore';
 import { readDraft, clearDraft, deserializeMindMap } from './features/persistence';
 import { translate } from './shared/i18n';
 import './styles/global.css';
@@ -40,6 +41,7 @@ export function App(): React.JSX.Element {
     // Сбрасываем брошенный документ, чтобы устаревший isDirty не «просочился»
     // в следующую сессию редактора (guard закрытия окна смотрит на него).
     useMindMapStore.getState().resetDocument();
+    useUIStore.getState().closeOutline();
     setScreen('home');
   }, []);
 

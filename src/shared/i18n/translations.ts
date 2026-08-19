@@ -63,6 +63,7 @@ const ru = {
   'mi.redo': 'Вернуть',
   'mi.autoLayout': 'Авто-раскладка',
   'mi.stylePanel': 'Панель стиля',
+  'mi.outline': 'Структура',
   'mi.grid': 'Сетка',
   'mi.minimap': 'Миникарта',
   'mi.controls': 'Элементы управления',
@@ -79,6 +80,7 @@ const ru = {
   'tile.home': 'Домой',
   'tile.freeLinks': 'Свободные связи',
   'tile.export': 'Экспорт',
+  'tile.outline': 'Структура',
 
   // — верхняя панель редактора —
   'toolbar.home': 'Главное меню',
@@ -273,6 +275,7 @@ const ru = {
   // — поиск —
   'tile.search': 'Поиск',
   'toolbar.search': 'Поиск по узлам (Ctrl+F)',
+  'toolbar.outline': 'Структура: карта как Markdown-список (Ctrl+Shift+O)',
   'search.placeholder': 'Найти узел…',
   'search.none': 'нет',
   'search.prev': 'Предыдущее',
@@ -356,6 +359,10 @@ const ru = {
 
   // — холст —
   'canvas.hint': 'перетащи узел · Ctrl+колесо — зум',
+
+  'outline.hint':
+    'Вложенный список → дерево карты. Tab — вложить, Shift+Tab — вынести, Enter — пункт, Esc — карта. Строки «> » — заметка.',
+  'outline.placeholder': '# Название\n\n- Центральная тема\n  - Ветка\n    > заметка',
 } as const;
 
 export type TranslationKey = keyof typeof ru;
@@ -416,6 +423,7 @@ const en: Record<TranslationKey, string> = {
   'mi.redo': 'Redo',
   'mi.autoLayout': 'Auto layout',
   'mi.stylePanel': 'Style panel',
+  'mi.outline': 'Outline',
   'mi.grid': 'Grid',
   'mi.minimap': 'Minimap',
   'mi.controls': 'Controls',
@@ -431,6 +439,7 @@ const en: Record<TranslationKey, string> = {
   'tile.home': 'Home',
   'tile.freeLinks': 'Free links',
   'tile.export': 'Export',
+  'tile.outline': 'Outline',
 
   'toolbar.home': 'Main menu',
   'toolbar.new': 'New (Ctrl+N)',
@@ -612,6 +621,7 @@ const en: Record<TranslationKey, string> = {
 
   'tile.search': 'Search',
   'toolbar.search': 'Search nodes (Ctrl+F)',
+  'toolbar.outline': 'Outline: edit the map as a Markdown list (Ctrl+Shift+O)',
   'search.placeholder': 'Find a node…',
   'search.none': 'none',
   'search.prev': 'Previous',
@@ -690,6 +700,10 @@ const en: Record<TranslationKey, string> = {
   'label.child': 'New idea',
 
   'canvas.hint': 'drag a node · Ctrl+wheel to zoom',
+
+  'outline.hint':
+    'A nested list becomes the map tree. Tab indent, Shift+Tab outdent, Enter new item, Esc map. Lines starting with “> ” are notes.',
+  'outline.placeholder': '# Title\n\n- Central topic\n  - Branch\n    > note',
 };
 
 const de: Record<TranslationKey, string> = {
@@ -748,6 +762,7 @@ const de: Record<TranslationKey, string> = {
   'mi.redo': 'Wiederholen',
   'mi.autoLayout': 'Auto-Layout',
   'mi.stylePanel': 'Stilpanel',
+  'mi.outline': 'Struktur',
   'mi.grid': 'Raster',
   'mi.minimap': 'Minikarte',
   'mi.controls': 'Steuerung',
@@ -763,6 +778,7 @@ const de: Record<TranslationKey, string> = {
   'tile.home': 'Start',
   'tile.freeLinks': 'Freie Linien',
   'tile.export': 'Export',
+  'tile.outline': 'Struktur',
 
   'toolbar.home': 'Hauptmenü',
   'toolbar.new': 'Neu (Strg+N)',
@@ -944,6 +960,7 @@ const de: Record<TranslationKey, string> = {
 
   'tile.search': 'Suche',
   'toolbar.search': 'Knoten suchen (Strg+F)',
+  'toolbar.outline': 'Struktur: Karte als Markdown-Liste (Strg+Umschalt+O)',
   'search.placeholder': 'Knoten finden…',
   'search.none': 'keine',
   'search.prev': 'Zurück',
@@ -1022,6 +1039,10 @@ const de: Record<TranslationKey, string> = {
   'label.child': 'Neue Idee',
 
   'canvas.hint': 'Knoten ziehen · Strg+Rad zum Zoomen',
+
+  'outline.hint':
+    'Eine verschachtelte Liste wird zum Kartenbaum. Tab einrücken, Umschalt+Tab ausrücken, Enter neuer Punkt, Esc Karte. Zeilen mit „> “ sind Notizen.',
+  'outline.placeholder': '# Titel\n\n- Zentrales Thema\n  - Zweig\n    > Notiz',
 };
 
 const fr: Record<TranslationKey, string> = {
@@ -1080,6 +1101,7 @@ const fr: Record<TranslationKey, string> = {
   'mi.redo': 'Rétablir',
   'mi.autoLayout': 'Disposition auto',
   'mi.stylePanel': 'Panneau de style',
+  'mi.outline': 'Plan',
   'mi.grid': 'Grille',
   'mi.minimap': 'Mini-carte',
   'mi.controls': 'Contrôles',
@@ -1095,6 +1117,7 @@ const fr: Record<TranslationKey, string> = {
   'tile.home': 'Accueil',
   'tile.freeLinks': 'Liens libres',
   'tile.export': 'Export',
+  'tile.outline': 'Plan',
 
   'toolbar.home': 'Menu principal',
   'toolbar.new': 'Nouveau (Ctrl+N)',
@@ -1277,6 +1300,7 @@ const fr: Record<TranslationKey, string> = {
 
   'tile.search': 'Recherche',
   'toolbar.search': 'Rechercher des nœuds (Ctrl+F)',
+  'toolbar.outline': 'Plan : la carte en liste Markdown (Ctrl+Maj+O)',
   'search.placeholder': 'Trouver un nœud…',
   'search.none': 'aucun',
   'search.prev': 'Précédent',
@@ -1355,6 +1379,10 @@ const fr: Record<TranslationKey, string> = {
   'label.child': 'Nouvelle idée',
 
   'canvas.hint': 'glisse un nœud · Ctrl+molette pour zoomer',
+
+  'outline.hint':
+    'Une liste imbriquée devient l’arbre de la carte. Tab indenter, Maj+Tab désindenter, Entrée nouvel item, Échap carte. Les lignes « > » sont des notes.',
+  'outline.placeholder': '# Titre\n\n- Sujet central\n  - Branche\n    > note',
 };
 
 export const translations: Record<Locale, Record<TranslationKey, string>> = {

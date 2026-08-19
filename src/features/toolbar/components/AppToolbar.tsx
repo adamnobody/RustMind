@@ -5,6 +5,8 @@ import { useUIStore } from '../../../store/uiStore';
 import { Icon, type IconName } from '../../../shared/ui/Icon/Icon';
 import { projectNameFromPath } from '../../persistence/recentFiles';
 import { useT } from '../../../shared/i18n';
+import { useHotkeys } from '../../../shared/hooks/useHotkeys';
+import { HOTKEYS } from '../../../shared/lib/constants';
 import type { HandleVisibility } from '../../../domain/mind-map';
 import { LAYOUT_LABEL_KEYS } from '../../layout/lib/layoutLabels';
 import { MenuBar, type MenuDef } from './MenuBar';
@@ -74,11 +76,14 @@ export function AppToolbar({
   const triggerFitView = useUIStore((s) => s.triggerFitView);
   const inspectorOpen = useUIStore((s) => s.inspectorOpen);
   const toggleInspector = useUIStore((s) => s.toggleInspector);
+  const outlineOpen = useUIStore((s) => s.outlineOpen);
+  const toggleOutline = useUIStore((s) => s.toggleOutline);
   const freeLinkMode = useUIStore((s) => s.freeLinkMode);
   const toggleFreeLinkMode = useUIStore((s) => s.toggleFreeLinkMode);
   const settings = useUIStore((s) => s.settings);
   const setCanvasOption = useUIStore((s) => s.setCanvasOption);
   const t = useT();
+  useHotkeys(HOTKEYS.outline, () => useUIStore.getState().toggleOutline());
 
   // Позиции derived-раскладок всегда пересчитаны из структуры — ручная
   // пересборка нужна только network (форс-симуляция), там нет «правильной»
@@ -119,12 +124,12 @@ export function AppToolbar({
       id: 'edit',
       label: t('menu.edit'),
       items: [
-        { kind: 'action', label: t('mi.undo'), hotkey: 'Ctrl+Z', disabled: !canUndo, onSelect: undo },
+        { kind: 'action', label: t('mi.undo'), hotkey: 'Ctrl+Z', disabled: !canUndo || outlineOpen, onSelect: undo },
         {
           kind: 'action',
           label: t('mi.redo'),
           hotkey: 'Ctrl+Shift+Z',
-          disabled: !canRedo,
+          disabled: !canRedo || outlineOpen,
           onSelect: redo,
         },
         ...(isNetwork
@@ -139,6 +144,7 @@ export function AppToolbar({
       id: 'view',
       label: t('menu.view'),
       items: [
+        { kind: 'checkbox', label: t('mi.outline'), checked: outlineOpen, onSelect: toggleOutline },
         { kind: 'checkbox', label: t('mi.stylePanel'), checked: inspectorOpen, onSelect: toggleInspector },
         { kind: 'separator' },
         {
@@ -237,14 +243,14 @@ export function AppToolbar({
           label={t('tile.undo')}
           title={t('toolbar.undo')}
           onClick={undo}
-          disabled={!canUndo}
+          disabled={!canUndo || outlineOpen}
         />
         <ToolTile
           icon="redo"
           label={t('tile.redo')}
           title={t('toolbar.redo')}
           onClick={redo}
-          disabled={!canRedo}
+          disabled={!canRedo || outlineOpen}
         />
 
         <span className={styles.tileSep} aria-hidden="true" />
@@ -263,6 +269,14 @@ export function AppToolbar({
           label={t(LAYOUT_LABEL_KEYS[layoutType])}
           title={t('toolbar.changeLayoutType')}
           onClick={openLayoutPicker}
+        />
+
+        <ToolTile
+          icon="list"
+          label={t('tile.outline')}
+          title={t('toolbar.outline')}
+          onClick={toggleOutline}
+          active={outlineOpen}
         />
 
         <ToolTile
