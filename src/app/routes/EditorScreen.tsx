@@ -9,6 +9,7 @@ import {
   useWindowCloseGuard,
   useAutosave,
   SaveProjectDialog,
+  ExportDialog,
 } from '../../features/persistence';
 import { KeyboardProvider } from '../providers/KeyboardProvider';
 import styles from './EditorScreen.module.css';
@@ -49,6 +50,7 @@ export function EditorScreen({ onGoHome }: EditorScreenProps = {}): React.JSX.El
         <TemplateDialog />
         <StatusCascadeDialog />
         <SaveProjectDialog />
+        <ExportDialog />
       </div>
     </KeyboardProvider>
   );

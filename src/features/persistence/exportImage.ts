@@ -4,12 +4,17 @@ import { useMindMapStore } from '../../store/mindMapStore';
 import { useUIStore } from '../../store/uiStore';
 import { fileService } from './fileService';
 import { jpegToPdf } from './exportPdf';
+import { serializeMindMap } from './serializer';
+import { mapToMarkdown } from './exportMarkdown';
+import { projectNameFromPath } from './recentFiles';
 
-export type ExportFormat = 'png' | 'svg' | 'pdf';
+export type ExportFormat = 'png' | 'svg' | 'pdf' | 'json' | 'markdown';
 
 const MAX_DIM = 2400;
 const MIN_DIM = 640;
 const PAD = 0.08;
+
+export const EXPORT_FORMATS: ExportFormat[] = ['png', 'svg', 'pdf', 'json', 'markdown'];
 
 /** data:...;base64,XXX → Uint8Array (для PNG/JPEG). */
 function dataUrlToBytes(dataUrl: string): Uint8Array {
@@ -50,16 +55,52 @@ const EXTS: Record<ExportFormat, { ext: string; label: string }> = {
   png: { ext: 'png', label: 'PNG image' },
   svg: { ext: 'svg', label: 'SVG image' },
   pdf: { ext: 'pdf', label: 'PDF document' },
+  json: { ext: 'json', label: 'JSON' },
+  markdown: { ext: 'md', label: 'Markdown' },
 };
 
+function exportBaseName(): string {
+  const { documentName, filePath } = useMindMapStore.getState();
+  return filePath ? projectNameFromPath(filePath) : documentName;
+}
+
+async function pickPath(format: ExportFormat): Promise<string | null> {
+  return fileService.showSaveImageDialog(exportBaseName(), EXTS[format].ext, EXTS[format].label);
+}
+
+async function exportText(format: 'json' | 'markdown'): Promise<boolean> {
+  const state = useMindMapStore.getState();
+  const path = await pickPath(format);
+  if (!path) return false;
+  const name = exportBaseName();
+  const body =
+    format === 'json'
+      ? JSON.stringify(
+          serializeMindMap(
+            name,
+            state.layoutType,
+            state.nodes,
+            state.edges,
+            state.projectSettings,
+            state.groups,
+            state.createdAt,
+          ),
+          null,
+          2,
+        )
+      : mapToMarkdown(state.nodes, state.edges, name);
+  await fileService.saveTextToPath(path, body);
+  return true;
+}
+
 /**
- * Экспорт карты в PNG/SVG/PDF. Строит трансформ, вписывающий все узлы в кадр
- * (getViewportForBounds), рендерит `.react-flow__viewport` через html-to-image,
- * затем пишет файл (бинарь — через write_binary_file, SVG — текстом).
- * Бросает исключение при ошибке — вызывающий заворачивает в try/catch.
+ * Экспорт карты: PNG/SVG/PDF через снимок холста, JSON — сериализация документа,
+ * Markdown — дерево вложенным списком. Бросает при ошибке I/O — ловлю снаружи.
  */
 export async function exportMindMap(format: ExportFormat): Promise<boolean> {
-  const { nodes, documentName } = useMindMapStore.getState();
+  if (format === 'json' || format === 'markdown') return exportText(format);
+
+  const { nodes } = useMindMapStore.getState();
   const viewport = document.querySelector<HTMLElement>('.react-flow__viewport');
   if (!viewport || nodes.length === 0) return false;
 
@@ -80,7 +121,7 @@ export async function exportMindMap(format: ExportFormat): Promise<boolean> {
     },
   };
 
-  const path = await fileService.showSaveImageDialog(documentName, EXTS[format].ext, EXTS[format].label);
+  const path = await pickPath(format);
   if (!path) return false;
 
   if (format === 'svg') {
@@ -93,7 +134,6 @@ export async function exportMindMap(format: ExportFormat): Promise<boolean> {
     await fileService.saveBytesToPath(path, dataUrlToBytes(dataUrl));
     return true;
   }
-  // pdf
   const dataUrl = await toJpeg(viewport, { ...options, quality: 0.92 });
   const pdf = jpegToPdf(dataUrlToBytes(dataUrl), width, height);
   await fileService.saveBytesToPath(path, pdf);

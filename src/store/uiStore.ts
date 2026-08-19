@@ -79,6 +79,8 @@ interface UiState {
   isTemplatePickerOpen: boolean;
   /** Диалог имени и папки при первом сохранении / «Сохранить как». */
   isSaveProjectOpen: boolean;
+  /** Диалог выбора формата экспорта. Session-only. */
+  isExportPickerOpen: boolean;
   settings: UiSettings;
 
   /**
@@ -152,6 +154,8 @@ interface UiState {
   closeTemplatePicker: () => void;
   openSaveProject: () => void;
   closeSaveProject: () => void;
+  openExportPicker: () => void;
+  closeExportPicker: () => void;
   setNodeFontSize: (size: NodeFontSize) => void;
   setCanvasOption: (
     key: 'showGrid' | 'showMiniMap' | 'showControls' | 'showStatuses',
@@ -295,6 +299,7 @@ export const useUIStore = create<UiState>()(
       isLayoutPickerOpen: false,
       isTemplatePickerOpen: false,
       isSaveProjectOpen: false,
+      isExportPickerOpen: false,
       settings: defaultSettings,
       inspectorOpen: false,
       inspectorManuallyHidden: false,
@@ -401,6 +406,8 @@ export const useUIStore = create<UiState>()(
       closeTemplatePicker: () => set({ isTemplatePickerOpen: false }),
       openSaveProject: () => set({ isSaveProjectOpen: true }),
       closeSaveProject: () => set({ isSaveProjectOpen: false }),
+      openExportPicker: () => set({ isExportPickerOpen: true }),
+      closeExportPicker: () => set({ isExportPickerOpen: false }),
       setNodeFontSize: (size) =>
         set((state) => ({
           settings: { ...state.settings, nodeFontSize: size },

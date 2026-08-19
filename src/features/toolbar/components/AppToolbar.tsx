@@ -4,9 +4,8 @@ import { useMindMapStore } from '../../../store/mindMapStore';
 import { useUIStore } from '../../../store/uiStore';
 import { Icon, type IconName } from '../../../shared/ui/Icon/Icon';
 import { projectNameFromPath } from '../../persistence/recentFiles';
-import { useT, translate } from '../../../shared/i18n';
+import { useT } from '../../../shared/i18n';
 import type { HandleVisibility } from '../../../domain/mind-map';
-import { exportMindMap, type ExportFormat } from '../../persistence/exportImage';
 import { LAYOUT_LABEL_KEYS } from '../../layout/lib/layoutLabels';
 import { MenuBar, type MenuDef } from './MenuBar';
 import styles from './AppToolbar.module.css';
@@ -70,6 +69,7 @@ export function AppToolbar({
   const openSettings = useUIStore((s) => s.openSettings);
   const openLayoutPicker = useUIStore((s) => s.openLayoutPicker);
   const openTemplatePicker = useUIStore((s) => s.openTemplatePicker);
+  const openExportPicker = useUIStore((s) => s.openExportPicker);
   const toggleSearch = useUIStore((s) => s.toggleSearch);
   const triggerFitView = useUIStore((s) => s.triggerFitView);
   const inspectorOpen = useUIStore((s) => s.inspectorOpen);
@@ -93,17 +93,6 @@ export function AppToolbar({
     setTimeout(triggerFitView, 50);
   }, [applyAutoLayoutManual, triggerFitView]);
 
-  const handleExport = useCallback((format: ExportFormat) => {
-    void (async () => {
-      try {
-        await exportMindMap(format);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        window.alert(translate('dialog.error', { message }));
-      }
-    })();
-  }, []);
-
   const menus: MenuDef[] = [
     {
       id: 'file',
@@ -120,9 +109,7 @@ export function AppToolbar({
           onSelect: () => void onSaveAs?.(),
         },
         { kind: 'separator' },
-        { kind: 'action', label: t('mi.exportPng'), onSelect: () => handleExport('png') },
-        { kind: 'action', label: t('mi.exportSvg'), onSelect: () => handleExport('svg') },
-        { kind: 'action', label: t('mi.exportPdf'), onSelect: () => handleExport('pdf') },
+        { kind: 'action', label: t('mi.export'), onSelect: openExportPicker },
         ...(onHome
           ? ([{ kind: 'separator' }, { kind: 'action', label: t('mi.home'), onSelect: onHome }] as const)
           : []),
@@ -235,6 +222,12 @@ export function AppToolbar({
           label={t('tile.save')}
           title={t('toolbar.save')}
           onClick={() => void onSave?.()}
+        />
+        <ToolTile
+          icon="download"
+          label={t('tile.export')}
+          title={t('toolbar.export')}
+          onClick={openExportPicker}
         />
 
         <span className={styles.tileSep} aria-hidden="true" />
