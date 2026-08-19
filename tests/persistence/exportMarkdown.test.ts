@@ -24,7 +24,7 @@ describe('mapToMarkdown', () => {
     const edges = [tree('R', 'A'), tree('R', 'B')];
     const md = mapToMarkdown(nodes, edges, 'My map');
     expect(md).toBe(
-      ['# My map', '', '- Root', '  - Alpha', '    > hello', '    > world', '  - Beta', ''].join('\n'),
+      ['# My map', '', '- Root', '  - Alpha', '    > hello', '    > world', '  - Beta', '', '## Links', ''].join('\n'),
     );
   });
 
@@ -120,5 +120,44 @@ describe('applyMarkdownToGraph', () => {
     expect(root.id).toBe('R');
     expect(root.data.label).toBe('Project');
     expect(next.nodes.map((n) => n.data.label).sort()).toEqual(['Idea 1', 'Idea 2', 'Project']);
+  });
+
+  it('блок Links создаёт свободные рёбра по подписям узлов', () => {
+    const nodes = [
+      node('R', 'Root', { isRoot: true }),
+      node('A', 'Alpha', { order: 0 }),
+      node('B', 'Beta', { order: 1 }),
+    ];
+    const edges = [tree('R', 'A'), tree('R', 'B')];
+    const next = applyMarkdownToGraph(
+      '# Doc\n- Root\n  - Alpha\n  - Beta\n\n## Links\n- Alpha → Beta: see also\n',
+      { nodes, edges, groups: [], documentName: 'Doc' },
+    );
+    const free = next.edges.filter((e) => e.data?.kind === 'free');
+    expect(free).toHaveLength(1);
+    expect(free[0]).toMatchObject({ source: 'A', target: 'B' });
+    expect(free[0]?.data?.style?.label).toBe('see also');
+  });
+
+  it('Links заменяет прежние свободные рёбра; неизвестные имена пропускаются', () => {
+    const nodes = [
+      node('R', 'Root', { isRoot: true }),
+      node('A', 'A', { order: 0 }),
+      node('B', 'B', { order: 1 }),
+    ];
+    const edges: AppEdge[] = [
+      tree('R', 'A'),
+      tree('R', 'B'),
+      { id: 'old', source: 'A', target: 'B', data: { kind: 'free' } },
+    ];
+    const next = applyMarkdownToGraph('# Doc\n- Root\n  - A\n  - B\n\n## Links\n- B → A\n- Missing → A\n', {
+      nodes,
+      edges,
+      groups: [],
+      documentName: 'Doc',
+    });
+    const free = next.edges.filter((e) => e.data?.kind === 'free');
+    expect(free).toHaveLength(1);
+    expect(free[0]).toMatchObject({ source: 'B', target: 'A' });
   });
 });

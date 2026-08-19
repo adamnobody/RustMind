@@ -38,3 +38,40 @@
 .textarea::placeholder {
   color: var(--rm-text-subtle);
 }
+
+.suggest {
+  position: fixed;
+  z-index: 40;
+  margin: 0;
+  padding: 4px;
+  min-width: 180px;
+  max-width: min(360px, calc(100vw - 16px));
+  max-height: 240px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--rm-border-soft);
+  border-radius: var(--rm-radius);
+  background: var(--rm-panel);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.suggestItem,
+.suggestActive {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--rm-text);
+  font: inherit;
+  font-size: var(--rm-font-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.suggestActive,
+.suggestItem:hover {
+  background: var(--rm-accent-muted);
+  color: var(--rm-accent);
+}

@@ -42,14 +42,12 @@ export function mapToMarkdown(nodes: AppNode[], edges: AppEdge[], title: string)
   }
 
   const free = edges.filter((e) => !isTreeEdge(e));
-  if (free.length > 0) {
-    lines.push('', '## Links');
-    for (const e of free) {
-      const a = inline(byId.get(e.source)?.data.label ?? e.source);
-      const b = inline(byId.get(e.target)?.data.label ?? e.target);
-      const label = e.data?.style?.label?.trim();
-      lines.push(`- ${a} → ${b}${label ? `: ${inline(label)}` : ''}`);
-    }
+  lines.push('', '## Links');
+  for (const e of free) {
+    const a = inline(byId.get(e.source)?.data.label ?? e.source);
+    const b = inline(byId.get(e.target)?.data.label ?? e.target);
+    const label = e.data?.style?.label?.trim();
+    lines.push(`- ${a} → ${b}${label ? `: ${inline(label)}` : ''}`);
   }
 
   return `${lines.join('\n')}\n`;
@@ -71,6 +69,46 @@ export interface OutlineGraph {
   edges: AppEdge[];
   groups: Group[];
   documentName: string;
+}
+
+export interface OutlineLink {
+  source: string;
+  target: string;
+  label?: string;
+}
+
+/** Свободные связи из блока `## Links`: `- A → B` или `- A → B: подпись`. */
+export function parseMarkdownLinks(markdown: string): OutlineLink[] {
+  const lines = markdown.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  let inLinks = false;
+  const out: OutlineLink[] = [];
+  for (const raw of lines) {
+    const line = raw.replace(/[ \t]+$/, '');
+    const trimmed = line.trim();
+    if (LINKS_HEADING.test(trimmed)) {
+      inLinks = true;
+      continue;
+    }
+    if (inLinks && HEADING_RE.test(trimmed) && !LINKS_HEADING.test(trimmed)) break;
+    if (!inLinks || trimmed === '') continue;
+    const list = line.match(LIST_RE);
+    if (!list) continue;
+    const body = list[3] ?? '';
+    const m = body.match(/^(.*?)\s*(?:→|->)\s*(.*)$/);
+    if (!m) continue;
+    const source = inline(m[1] ?? '');
+    let rest = inline(m[2] ?? '');
+    if (!source || !rest) continue;
+    let label: string | undefined;
+    const colon = rest.indexOf(': ');
+    if (colon >= 0) {
+      label = inline(rest.slice(colon + 2)) || undefined;
+      rest = inline(rest.slice(0, colon));
+    }
+    if (!rest) continue;
+    out.push({ source, target: rest, label });
+  }
+  return out;
 }
 
 const LIST_RE = /^(\s*)([-*+]|\d+\.)\s+(.*)$/;
@@ -250,8 +288,38 @@ export function applyMarkdownToGraph(markdown: string, current: OutlineGraph): O
   }
 
   const keepIds = new Set(nodes.map((n) => n.id));
-  for (const e of current.edges) {
-    if (!isTreeEdge(e) && keepIds.has(e.source) && keepIds.has(e.target)) edges.push(e);
+  const idByLabel = new Map<string, string>();
+  for (const n of nodes) {
+    const key = inline(n.data.label).toLowerCase();
+    if (key && !idByLabel.has(key)) idByLabel.set(key, n.id);
+  }
+  const seenPairs = new Set<string>();
+  for (const link of parseMarkdownLinks(markdown)) {
+    const sid = idByLabel.get(link.source.toLowerCase());
+    const tid = idByLabel.get(link.target.toLowerCase());
+    if (!sid || !tid || sid === tid || !keepIds.has(sid) || !keepIds.has(tid)) continue;
+    const pair = `${sid}\0${tid}`;
+    if (seenPairs.has(pair)) continue;
+    seenPairs.add(pair);
+    const prev = current.edges.find((e) => !isTreeEdge(e) && e.source === sid && e.target === tid);
+    if (prev) {
+      if (!link.label) {
+        edges.push(prev);
+        continue;
+      }
+      edges.push({
+        ...prev,
+        data: { ...prev.data, kind: 'free', style: { ...prev.data?.style, label: link.label } },
+      });
+      continue;
+    }
+    edges.push({
+      id: `free_${sid}__${tid}`,
+      source: sid,
+      target: tid,
+      type: 'mindEdge',
+      data: { kind: 'free', ...(link.label ? { style: { label: link.label } } : {}) },
+    });
   }
 
   for (const n of nodes) {

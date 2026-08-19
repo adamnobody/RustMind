@@ -374,8 +374,9 @@ const ru = {
   'canvas.hint': 'перетащи узел · Ctrl+колесо — зум',
 
   'outline.hint':
-    'Вложенный список → дерево карты. Tab — вложить, Shift+Tab — вынести, Enter — пункт, Esc — карта. Строки «> » — заметка.',
-  'outline.placeholder': '# Название\n\n- Центральная тема\n  - Ветка\n    > заметка',
+    'Вложенный список → дерево карты. Tab — вложить, Shift+Tab — вынести, Enter — пункт, Esc — карта. Строки «> » — заметка. В Links наберите имя узла — подсказка, Enter или пробел поставит →.',
+  'outline.placeholder': '# Название\n\n- Центральная тема\n  - Ветка\n    > заметка\n\n## Links\n- ',
+  'outline.linkSuggest': 'Подсказки узлов',
 } as const;
 
 export type TranslationKey = keyof typeof ru;
@@ -728,8 +729,9 @@ const en: Record<TranslationKey, string> = {
   'canvas.hint': 'drag a node · Ctrl+wheel to zoom',
 
   'outline.hint':
-    'A nested list becomes the map tree. Tab indent, Shift+Tab outdent, Enter new item, Esc map. Lines starting with “> ” are notes.',
-  'outline.placeholder': '# Title\n\n- Central topic\n  - Branch\n    > note',
+    'A nested list becomes the map tree. Tab indent, Shift+Tab outdent, Enter new item, Esc map. Lines starting with “> ” are notes. In Links, type a node name — suggestions, Enter or Space inserts →.',
+  'outline.placeholder': '# Title\n\n- Central topic\n  - Branch\n    > note\n\n## Links\n- ',
+  'outline.linkSuggest': 'Node suggestions',
 };
 
 const de: Record<TranslationKey, string> = {
@@ -1080,8 +1082,9 @@ const de: Record<TranslationKey, string> = {
   'canvas.hint': 'Knoten ziehen · Strg+Rad zum Zoomen',
 
   'outline.hint':
-    'Eine verschachtelte Liste wird zum Kartenbaum. Tab einrücken, Umschalt+Tab ausrücken, Enter neuer Punkt, Esc Karte. Zeilen mit „> “ sind Notizen.',
-  'outline.placeholder': '# Titel\n\n- Zentrales Thema\n  - Zweig\n    > Notiz',
+    'Eine verschachtelte Liste wird zum Kartenbaum. Tab einrücken, Umschalt+Tab ausrücken, Enter neuer Punkt, Esc Karte. Zeilen mit „> “ sind Notizen. In Links den Knotennamen tippen — Vorschläge, Enter oder Leertaste setzt →.',
+  'outline.placeholder': '# Titel\n\n- Zentrales Thema\n  - Zweig\n    > Notiz\n\n## Links\n- ',
+  'outline.linkSuggest': 'Knotenvorschläge',
 };
 
 const fr: Record<TranslationKey, string> = {
@@ -1433,8 +1436,9 @@ const fr: Record<TranslationKey, string> = {
   'canvas.hint': 'glisse un nœud · Ctrl+molette pour zoomer',
 
   'outline.hint':
-    'Une liste imbriquée devient l’arbre de la carte. Tab indenter, Maj+Tab désindenter, Entrée nouvel item, Échap carte. Les lignes « > » sont des notes.',
-  'outline.placeholder': '# Titre\n\n- Sujet central\n  - Branche\n    > note',
+    'Une liste imbriquée devient l’arbre de la carte. Tab indenter, Maj+Tab désindenter, Entrée nouvel item, Échap carte. Les lignes « > » sont des notes. Dans Links, saisissez un nom de nœud — suggestions, Entrée ou Espace insère →.',
+  'outline.placeholder': '# Titre\n\n- Sujet central\n  - Branche\n    > note\n\n## Links\n- ',
+  'outline.linkSuggest': 'Suggestions de nœuds',
 };
 
 export const translations: Record<Locale, Record<TranslationKey, string>> = {

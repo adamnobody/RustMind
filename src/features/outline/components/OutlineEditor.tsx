@@ -5,7 +5,16 @@ import { useT } from '../../../shared/i18n';
 import {
   applyMarkdownToGraph,
   mapToMarkdown,
+  parseMarkdownOutline,
 } from '../../persistence/exportMarkdown';
+import {
+  applyLinkSuggestion,
+  flattenOutlineLabels,
+  insertLinkArrow,
+  linkSlotAt,
+  suggestLabels,
+} from '../lib/linkComplete';
+import { caretViewport, placeSuggestMenu, suggestClipRect } from '../lib/caret';
 import styles from './OutlineEditor.module.css';
 
 const DEBOUNCE_MS = 250;
@@ -94,7 +103,27 @@ export function OutlineEditor(): React.JSX.Element | null {
   const lastFlushed = useRef('');
   const timer = useRef<number | undefined>(undefined);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
   const selRef = useRef<{ start: number; end: number } | null>(null);
+  const [suggest, setSuggest] = useState<{ items: string[]; index: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<{ left: number; top: number; maxHeight: number } | null>(
+    null,
+  );
+
+  const refreshSuggest = useCallback((markdown: string, cursor: number): void => {
+    const slot = linkSlotAt(markdown, cursor);
+    if (!slot) {
+      setSuggest(null);
+      return;
+    }
+    const labels = [
+      ...flattenOutlineLabels(parseMarkdownOutline(markdown).roots),
+      ...useMindMapStore.getState().nodes.map((n) => n.data.label),
+    ];
+    const items = suggestLabels(labels, slot.query, slot.peer);
+    setSuggest(items.length > 0 ? { items, index: 0 } : null);
+  }, []);
 
   const commit = useCallback((markdown: string, record: boolean): boolean => {
     if (markdown === lastFlushed.current) return false;
@@ -160,12 +189,97 @@ export function OutlineEditor(): React.JSX.Element | null {
         timer.current = undefined;
         if (commit(textRef.current, !historyOnce.current)) historyOnce.current = true;
       }, DEBOUNCE_MS);
+      refreshSuggest(next, sel?.start ?? textareaRef.current?.selectionStart ?? next.length);
     },
-    [commit],
+    [commit, refreshSuggest],
+  );
+
+  useLayoutEffect(() => {
+    if (!suggest || !textareaRef.current) {
+      setMenuPos(null);
+      return;
+    }
+    const menuEl = menuRef.current;
+    if (menuEl) menuEl.style.maxHeight = 'none';
+    const measured = menuEl?.getBoundingClientRect();
+    const menu = {
+      width: measured && measured.width > 0 ? measured.width : 220,
+      height: measured && measured.height > 0 ? measured.height : suggest.items.length * 34 + 8,
+    };
+    setMenuPos(
+      placeSuggestMenu(
+        caretViewport(textareaRef.current),
+        menu,
+        suggestClipRect(overlayRef.current?.getBoundingClientRect()),
+      ),
+    );
+  }, [suggest, text]);
+
+  const pickSuggestion = useCallback(
+    (label: string): boolean => {
+      const el = textareaRef.current;
+      if (!el) return false;
+      const slot = linkSlotAt(el.value, el.selectionStart);
+      if (!slot) return false;
+      const next = applyLinkSuggestion(el.value, slot, label);
+      applyText(next.value, { start: next.cursor, end: next.cursor });
+      return true;
+    },
+    [applyText],
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
     const el = e.currentTarget;
+    const slot = linkSlotAt(el.value, el.selectionStart);
+
+    if (suggest && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      const delta = e.key === 'ArrowDown' ? 1 : -1;
+      setSuggest((s) => {
+        if (!s) return s;
+        const index = (s.index + delta + s.items.length) % s.items.length;
+        return { ...s, index };
+      });
+      return;
+    }
+
+    if (suggest && (e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const label = suggest.items[suggest.index] ?? suggest.items[0];
+      if (label) {
+        e.preventDefault();
+        pickSuggestion(label);
+        return;
+      }
+    }
+
+    if (suggest && e.key === ' ' && slot) {
+      const label = suggest.items[suggest.index] ?? suggest.items[0];
+      if (label) {
+        e.preventDefault();
+        pickSuggestion(label);
+        return;
+      }
+    }
+
+    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && slot?.slot === 'source') {
+      const next = insertLinkArrow(el.value, slot);
+      if (next) {
+        e.preventDefault();
+        applyText(next.value, { start: next.cursor, end: next.cursor });
+        return;
+      }
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (suggest) {
+        setSuggest(null);
+        return;
+      }
+      useUIStore.getState().toggleOutline();
+      return;
+    }
+
     if (e.key === 'Tab') {
       e.preventDefault();
       const next = indentBlock(el.value, el.selectionStart, el.selectionEnd, e.shiftKey);
@@ -178,18 +292,13 @@ export function OutlineEditor(): React.JSX.Element | null {
         e.preventDefault();
         applyText(next.value, { start: next.cursor, end: next.cursor });
       }
-      return;
-    }
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      useUIStore.getState().toggleOutline();
     }
   };
 
   if (!outlineOpen) return null;
 
   return (
-    <div className={styles.overlay}>
+    <div ref={overlayRef} className={styles.overlay}>
       <p className={styles.hint}>{t('outline.hint')}</p>
       <textarea
         ref={textareaRef}
@@ -198,9 +307,37 @@ export function OutlineEditor(): React.JSX.Element | null {
         spellCheck={false}
         placeholder={t('outline.placeholder')}
         aria-label={t('tile.outline')}
-        onChange={(e) => applyText(e.target.value)}
+        onChange={(e) => applyText(e.target.value, { start: e.target.selectionStart, end: e.target.selectionEnd })}
         onKeyDown={onKeyDown}
       />
+      {suggest ? (
+        <ul
+          ref={menuRef}
+          className={styles.suggest}
+          role="listbox"
+          aria-label={t('outline.linkSuggest')}
+          style={
+            menuPos
+              ? { left: menuPos.left, top: menuPos.top, maxHeight: menuPos.maxHeight }
+              : { visibility: 'hidden', left: 0, top: 0 }
+          }
+        >
+          {suggest.items.map((item, i) => (
+            <li key={item}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={i === suggest.index}
+                className={i === suggest.index ? styles.suggestActive : styles.suggestItem}
+                onMouseDown={(ev) => ev.preventDefault()}
+                onClick={() => pickSuggestion(item)}
+              >
+                {item}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }
