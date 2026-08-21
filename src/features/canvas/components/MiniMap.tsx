@@ -7,10 +7,11 @@ import {
   type MiniMapNodeProps,
 } from '@xyflow/react';
 import { useShallow } from 'zustand/react/shallow';
-import type { AppEdge, AppNode, MindNodeData } from '../../../domain/mind-map';
+import type { AppEdge, AppNode, Group, MindNodeData } from '../../../domain/mind-map';
 import { useMindMapStore } from '../../../store/mindMapStore';
 import { collapsedHiddenIds } from '../../layout/strategies/shared';
 import { DEFAULT_NODE_SIZE, ROOT_NODE_SIZE } from '../../../shared/lib/constants';
+import { GROUP_NODE_TYPE } from '../../groups';
 
 /** Совпадает с размером SVG встроенной FlowMiniMap (её дефолт, style width/height не задаём). */
 const MINIMAP_WIDTH = 200;
@@ -22,8 +23,31 @@ function miniColor(data: MindNodeData | undefined): string {
   return typeof c === 'string' && c.startsWith('#') ? c : 'var(--rm-accent)';
 }
 
+function miniGroupColor(data: { group?: Group } | undefined): string {
+  const c = data?.group?.color;
+  return typeof c === 'string' && c.startsWith('#') ? c : 'var(--rm-accent)';
+}
+
 /** Скруглённые прямоугольники вместо квадратов — под форму реальных узлов. */
-function MiniNode({ x, y, width, height, color }: MiniMapNodeProps): React.JSX.Element {
+function MiniNode({ id, x, y, width, height, color }: MiniMapNodeProps): React.JSX.Element {
+  if (id.startsWith('group:')) {
+    return (
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        rx={6}
+        ry={6}
+        fill={color}
+        fillOpacity={0.1}
+        stroke={color}
+        strokeOpacity={0.4}
+        strokeWidth={1}
+        vectorEffect="non-scaling-stroke"
+      />
+    );
+  }
   return <rect x={x} y={y} width={width} height={height} rx={4} ry={4} fill={color} />;
 }
 
@@ -130,7 +154,11 @@ export function MiniMap(): React.JSX.Element {
       <FlowMiniMap
         pannable
         zoomable
-        nodeColor={(node) => miniColor(node.data as MindNodeData | undefined)}
+        nodeColor={(node) =>
+          node.type === GROUP_NODE_TYPE
+            ? miniGroupColor(node.data as { group?: Group })
+            : miniColor(node.data as MindNodeData | undefined)
+        }
         nodeComponent={MiniNode}
         nodeStrokeWidth={0}
         maskColor="var(--rm-minimap-mask)"

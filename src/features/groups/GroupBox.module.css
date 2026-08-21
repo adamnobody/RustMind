@@ -23,8 +23,8 @@
   display: flex;
   align-items: center;
   gap: var(--rm-space-2);
-  max-width: min(280px, 80%);
-  padding: 0 var(--rm-space-3);
+  width: max-content;
+  padding: 2px var(--rm-space-3);
   box-sizing: border-box;
   border: 1px solid var(--rm-accent-soft);
   border-radius: var(--rm-radius-sm);
@@ -36,7 +36,11 @@
   touch-action: none;
 }
 
-.titleChip:active {
+.titleChipEditing {
+  cursor: text;
+}
+
+.titleChip:active:not(.titleChipEditing) {
   cursor: grabbing;
 }
 
@@ -45,12 +49,24 @@
 }
 
 .title {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
   white-space: nowrap;
   font-size: var(--rm-font-sm);
-  font-weight: var(--rm-font-weight-semibold);
+  font-weight: var(--rm-font-weight-medium);
   color: var(--rm-text-muted);
+}
+
+.titleInput {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--rm-text-muted);
+  font-family: inherit;
+  font-size: var(--rm-font-sm);
+  font-weight: var(--rm-font-weight-medium);
+  min-width: 4ch;
+  outline: none;
 }
 
 .del {

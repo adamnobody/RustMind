@@ -1,4 +1,4 @@
-import { useRef, type CSSProperties, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { type NodeProps } from '@xyflow/react';
 import clsx from 'clsx';
 import { useUIStore } from '../../store/uiStore';
@@ -8,27 +8,73 @@ import { DEFAULT_TITLE_PLACEMENT, snapTitleToBorder, titleChipStyle } from './ti
 import type { Group } from '../../domain/mind-map';
 import styles from './GroupBox.module.css';
 
+const DRAG_PX = 4;
+
 interface GroupBoxData {
   group: Group;
   selected: boolean;
 }
 
+function titleTextStyle(group: Group): CSSProperties {
+  const ts = group.titleStyle;
+  return {
+    color: ts?.color,
+    fontSize: ts?.fontSize,
+    fontWeight: ts?.bold ? 700 : undefined,
+    fontStyle: ts?.italic ? 'italic' : undefined,
+    textDecoration: ts?.underline ? 'underline' : undefined,
+    fontFamily: ts?.fontFamily ? `"${ts.fontFamily}"` : undefined,
+  };
+}
+
 /**
  * Полупрозрачная область группы (RF-нода типа groupBox). Тело — pointer-events:
  * none (клики проходят к узлам внутри); интерактивен только чип заголовка:
- * клик выбирает группу, drag двигает чип по периметру, × удаляет.
+ * клик выбирает и сразу редактирует заголовок, drag двигает чип по периметру.
  */
 export function GroupBox({ data }: NodeProps): React.JSX.Element {
   const { group, selected } = data as unknown as GroupBoxData;
   const rootRef = useRef<HTMLDivElement>(null);
-  const dragging = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const origin = useRef<{ x: number; y: number } | null>(null);
+  const dragged = useRef(false);
   const setSelectedGroupId = useUIStore((s) => s.setSelectedGroupId);
+  const setEditingGroupId = useUIStore((s) => s.setEditingGroupId);
+  const editingGroupId = useUIStore((s) => s.editingGroupId);
+  const editingIntent = useUIStore((s) => s.editingIntent);
   const deleteGroup = useMindMapStore((s) => s.deleteGroup);
   const updateGroup = useMindMapStore((s) => s.updateGroup);
+  const setGroupTitle = useMindMapStore((s) => s.setGroupTitle);
+  const isEditing = editingGroupId === group.id;
+  const [draft, setDraft] = useState(group.title);
 
   const accent = group.color;
   const radius = group.borderRadius ?? DEFAULT_GROUP_RADIUS;
   const placement = group.titlePlacement ?? DEFAULT_TITLE_PLACEMENT;
+  const textStyle = titleTextStyle(group);
+
+  useEffect(() => {
+    if (!isEditing) return;
+    const next =
+      editingIntent?.mode === 'replace' ? (editingIntent.initialValue ?? '') : group.title;
+    setDraft(next);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      if (editingIntent?.mode === 'replace') {
+        el.setSelectionRange(next.length, next.length);
+      } else {
+        el.select();
+      }
+    });
+  }, [isEditing, editingIntent, group.title]);
+
+  const commit = (): void => {
+    const trimmed = draft.trim();
+    if (trimmed.length > 0 && trimmed !== group.title) setGroupTitle(group.id, trimmed);
+    setEditingGroupId(null);
+  };
 
   const boxStyle: CSSProperties = {
     borderRadius: radius,
@@ -37,16 +83,9 @@ export function GroupBox({ data }: NodeProps): React.JSX.Element {
       : {}),
   };
 
-  const ts = group.titleStyle;
-  const titleStyle: CSSProperties = {
+  const chipStyle: CSSProperties = {
     ...titleChipStyle(placement),
-    height: GROUP_TITLE_HEIGHT,
-    color: ts?.color,
-    fontSize: ts?.fontSize,
-    fontWeight: ts?.bold ? 700 : undefined,
-    fontStyle: ts?.italic ? 'italic' : undefined,
-    textDecoration: ts?.underline ? 'underline' : undefined,
-    fontFamily: ts?.fontFamily ? `"${ts.fontFamily}"` : undefined,
+    minHeight: GROUP_TITLE_HEIGHT,
     ...(accent
       ? { borderColor: accent, background: `color-mix(in srgb, ${accent} 28%, var(--rm-panel))` }
       : {}),
@@ -65,28 +104,65 @@ export function GroupBox({ data }: NodeProps): React.JSX.Element {
   return (
     <div ref={rootRef} className={clsx(styles.group, selected && styles.selected)} style={boxStyle}>
       <div
-        className={clsx(styles.titleChip, selected && styles.titleChipSelected)}
-        style={titleStyle}
+        className={clsx(styles.titleChip, selected && styles.titleChipSelected, isEditing && styles.titleChipEditing)}
+        style={chipStyle}
         onPointerDown={(e) => {
+          if (isEditing) return;
           e.stopPropagation();
           e.preventDefault();
-          dragging.current = true;
+          origin.current = { x: e.clientX, y: e.clientY };
+          dragged.current = false;
           setSelectedGroupId(group.id);
           e.currentTarget.setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
-          if (!dragging.current) return;
+          const start = origin.current;
+          if (!start) return;
           e.stopPropagation();
+          if (!dragged.current) {
+            const dx = e.clientX - start.x;
+            const dy = e.clientY - start.y;
+            if (dx * dx + dy * dy < DRAG_PX * DRAG_PX) return;
+            dragged.current = true;
+          }
           projectPointer(e);
         }}
         onPointerUp={(e) => {
-          if (!dragging.current) return;
-          dragging.current = false;
+          if (!origin.current) return;
+          origin.current = null;
           e.currentTarget.releasePointerCapture(e.pointerId);
+          if (!dragged.current) setEditingGroupId(group.id);
+          dragged.current = false;
         }}
       >
-        <span className={styles.title}>{group.title}</span>
-        {selected ? (
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            className={styles.titleInput}
+            style={{ ...textStyle, width: `${Math.max(4, draft.length + 1)}ch` }}
+            value={draft}
+            aria-label="group title"
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onPointerDown={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                commit();
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                setDraft(group.title);
+                setEditingGroupId(null);
+              }
+            }}
+          />
+        ) : (
+          <span className={styles.title} style={textStyle}>
+            {group.title}
+          </span>
+        )}
+        {selected && !isEditing ? (
           <button
             type="button"
             className={styles.del}

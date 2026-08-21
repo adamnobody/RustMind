@@ -1,6 +1,7 @@
-import type { AppNode, AppEdge, LayoutType } from '../../domain/mind-map';
+import type { AppNode, AppEdge, Group, LayoutType } from '../../domain/mind-map';
 import { getLayoutStrategy } from './strategies/registry';
 import { layoutExcludedIds } from './strategies/shared';
+import { separateGroupIntruders } from '../groups/separate';
 
 /**
  * Applies auto-layout for the given layout kind via the strategy registry.
@@ -19,15 +20,20 @@ export function applyLayout(
   nodes: AppNode[],
   edges: AppEdge[],
   layoutType: LayoutType,
+  groups: Group[] = [],
 ): { nodes: AppNode[]; edges: AppEdge[] } {
   const strategy = getLayoutStrategy(layoutType);
   const excluded = layoutExcludedIds(nodes, edges);
-  if (excluded.size === 0) {
-    return { nodes: strategy.layout(nodes, edges), edges };
-  }
-  const laidOutNodes = nodes.filter((n) => !excluded.has(n.id));
-  const laidOutEdges = edges.filter((e) => !excluded.has(e.source) && !excluded.has(e.target));
+  const laidOutNodes = excluded.size === 0 ? nodes : nodes.filter((n) => !excluded.has(n.id));
+  const laidOutEdges =
+    excluded.size === 0 ? edges : edges.filter((e) => !excluded.has(e.source) && !excluded.has(e.target));
   const laidOut = strategy.layout(laidOutNodes, laidOutEdges);
   const posById = new Map(laidOut.map((n) => [n.id, n]));
-  return { nodes: nodes.map((n) => posById.get(n.id) ?? n), edges };
+  let next = excluded.size === 0 ? laidOut : nodes.map((n) => posById.get(n.id) ?? n);
+  // derived: после геометрической раскладки выносим чужие ветки из AABB групп.
+  // stored (free/network) — позиции пользователя, не трогаем.
+  if (strategy.positionMode === 'derived' && groups.length > 0) {
+    next = separateGroupIntruders(next, edges, groups);
+  }
+  return { nodes: next, edges };
 }

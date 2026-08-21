@@ -589,8 +589,8 @@ export const useMindMapStore = create<MindMapState>()(
     // внутренний шаг других действий (add/delete/open), чтобы они оставались
     // одной записью undo, а не двумя.
     applyAutoLayout: () => {
-      const { nodes, edges, layoutType } = get();
-      const result = applyLayout(nodes, edges, layoutType);
+      const { nodes, edges, layoutType, groups } = get();
+      const result = applyLayout(nodes, edges, layoutType, groups);
       set((state) => {
         state.nodes = result.nodes;
         state.edges = result.edges;
@@ -623,7 +623,7 @@ export const useMindMapStore = create<MindMapState>()(
       const strategy = getLayoutStrategy(layoutType);
       const positioned =
         strategy.positionMode === 'derived'
-          ? applyLayout(normalized.nodes, normalized.edges, layoutType)
+          ? applyLayout(normalized.nodes, normalized.edges, layoutType, payload.groups ?? [])
           : normalized;
       set((state) => {
         state.nodes = positioned.nodes;
@@ -652,7 +652,7 @@ export const useMindMapStore = create<MindMapState>()(
       const strategy = getLayoutStrategy(payload.layoutType);
       const positioned =
         strategy.positionMode === 'derived'
-          ? applyLayout(normalized.nodes, normalized.edges, payload.layoutType)
+          ? applyLayout(normalized.nodes, normalized.edges, payload.layoutType, payload.groups ?? [])
           : normalized;
       set((state) => {
         state.nodes = positioned.nodes;
@@ -731,6 +731,7 @@ export const useMindMapStore = create<MindMapState>()(
         state.groups.push({ id, title: translate('group.defaultTitle'), nodeIds: members });
         state.isDirty = true;
       });
+      get().recomputeIfDerived();
       return id;
     },
 
@@ -766,6 +767,7 @@ export const useMindMapStore = create<MindMapState>()(
         state.groups = state.groups.filter((g) => g.id !== id);
         state.isDirty = true;
       });
+      get().recomputeIfDerived();
     },
 
     pushHistory: (category = 'move') => {

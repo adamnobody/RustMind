@@ -69,6 +69,8 @@ interface UiState {
   groupDrawHitIds: string[];
   editingNodeId: string | null;
   editingIntent: NodeEditingIntent | null;
+  /** Инлайн-редактор заголовка группы. Session-only. */
+  editingGroupId: string | null;
   /** Ребро, чья подпись редактируется инлайн (двойной клик). Session-only. */
   editingEdgeId: string | null;
   /** Узлы с открытой панелью заметки. Несколько сразу — session-only. */
@@ -145,6 +147,7 @@ interface UiState {
   setEditingNodeId: (id: string | null, intent?: NodeEditingIntent) => void;
   startNodeEditing: (id: string, intent?: NodeEditingIntent) => void;
   clearNodeEditing: () => void;
+  setEditingGroupId: (id: string | null, intent?: NodeEditingIntent) => void;
   setEditingEdgeId: (id: string | null) => void;
   /** Открыть/закрыть панель заметки узла (toggle только этого id, остальные не трогает). */
   toggleNotePanel: (id: string) => void;
@@ -305,6 +308,7 @@ export const useUIStore = create<UiState>()(
       groupDrawHitIds: [],
       editingNodeId: null,
       editingIntent: null,
+      editingGroupId: null,
       editingEdgeId: null,
       openNoteNodeIds: [],
       searchOpen: false,
@@ -349,16 +353,17 @@ export const useUIStore = create<UiState>()(
             selectedEdgeIds: edgeIds,
             selectedNodeId: nodeIds[0] ?? null,
             selectedGroupId: null, // выбор узла/связи снимает выбор группы
+            editingGroupId: null,
             inspectorOpen,
           };
         }),
       setSelectedGroupId: (id) =>
         set((state) => ({
           selectedGroupId: id,
-          // Группа — единственная цель редактирования: снимаем узлы/связи.
           selectedNodeIds: [],
           selectedEdgeIds: [],
           selectedNodeId: null,
+          editingGroupId: id && state.editingGroupId === id ? state.editingGroupId : null,
           inspectorOpen: id ? !state.inspectorManuallyHidden || state.inspectorOpen : state.inspectorOpen,
         })),
       setGroupDrawMode: (on) =>
@@ -371,6 +376,7 @@ export const useUIStore = create<UiState>()(
                 selectedEdgeIds: [],
                 selectedNodeId: null,
                 selectedGroupId: null,
+                editingGroupId: null,
               }
             : {}),
         })),
@@ -383,16 +389,24 @@ export const useUIStore = create<UiState>()(
         set({
           editingNodeId: id,
           editingIntent: id ? intent : null,
+          editingGroupId: null,
         }),
       startNodeEditing: (id, intent = { mode: 'edit' }) =>
         set({
           editingNodeId: id,
           editingIntent: intent,
+          editingGroupId: null,
         }),
       clearNodeEditing: () =>
         set({
           editingNodeId: null,
           editingIntent: null,
+        }),
+      setEditingGroupId: (id, intent = { mode: 'edit' }) =>
+        set({
+          editingGroupId: id,
+          editingIntent: id ? intent : null,
+          editingNodeId: null,
         }),
       setEditingEdgeId: (id) => set({ editingEdgeId: id }),
       toggleNotePanel: (id) =>

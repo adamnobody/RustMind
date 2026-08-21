@@ -23,7 +23,10 @@ export function GroupSelectionButton(): React.JSX.Element | null {
       className={styles.button}
       onClick={() => {
         const gid = createGroup(selectedNodeIds);
-        if (gid) setSelectedGroupId(gid);
+        if (gid) {
+          setSelectedGroupId(gid);
+          useUIStore.getState().setEditingGroupId(gid);
+        }
       }}
     >
       <Icon name="group" size={16} />

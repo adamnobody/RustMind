@@ -125,7 +125,10 @@ export function GroupDrawOverlay(): React.JSX.Element | null {
       return;
     }
     const gid = useMindMapStore.getState().createGroup(members);
-    if (gid) setSelectedGroupId(gid);
+    if (gid) {
+      setSelectedGroupId(gid);
+      useUIStore.getState().setEditingGroupId(gid);
+    }
   };
 
   return (

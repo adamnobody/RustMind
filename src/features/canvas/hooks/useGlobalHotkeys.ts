@@ -17,8 +17,17 @@ export function useGlobalHotkeys(): void {
     function handleKeyDown(e: KeyboardEvent): void {
       // Читаем актуальное состояние напрямую из сторов (не через замыкание),
       // чтобы не пересоздавать обработчик на каждый рендер.
-      const { selectedNodeId, editingNodeId, setSelectedNodeId, setEditingNodeId, statusCascadePrompt, outlineOpen } =
-        useUIStore.getState();
+      const {
+        selectedNodeId,
+        editingNodeId,
+        editingGroupId,
+        selectedGroupId,
+        setSelectedNodeId,
+        setEditingNodeId,
+        setEditingGroupId,
+        statusCascadePrompt,
+        outlineOpen,
+      } = useUIStore.getState();
       const { nodes, addChildNode, addSiblingNode, deleteNode, undo, redo } =
         useMindMapStore.getState();
 
@@ -26,7 +35,7 @@ export function useGlobalHotkeys(): void {
 
       // 1. Если идёт редактирование — глобальные хоткеи отключены
       //    (Enter/Escape внутри textarea обрабатываются локально в useNodeEditing)
-      if (editingNodeId !== null || statusCascadePrompt !== null) {
+      if (editingNodeId !== null || editingGroupId !== null || statusCascadePrompt !== null) {
         return;
       }
 
@@ -68,7 +77,10 @@ export function useGlobalHotkeys(): void {
         const { selectedNodeIds, setSelectedGroupId } = useUIStore.getState();
         if (selectedNodeIds.length >= 2) {
           const gid = useMindMapStore.getState().createGroup(selectedNodeIds);
-          if (gid) setSelectedGroupId(gid);
+          if (gid) {
+            setSelectedGroupId(gid);
+            useUIStore.getState().setEditingGroupId(gid);
+          }
         }
         return;
       }
@@ -118,6 +130,11 @@ export function useGlobalHotkeys(): void {
         }
 
         case 'F2': {
+          if (selectedGroupId) {
+            e.preventDefault();
+            setEditingGroupId(selectedGroupId, { mode: 'edit' });
+            break;
+          }
           if (selectedNodeId) {
             e.preventDefault();
             setEditingNodeId(selectedNodeId, { mode: 'edit' });
@@ -172,6 +189,11 @@ export function useGlobalHotkeys(): void {
         }
 
         default: {
+          if (selectedGroupId && isPrintableCharacter(e)) {
+            e.preventDefault();
+            setEditingGroupId(selectedGroupId, { mode: 'replace', initialValue: e.key });
+            break;
+          }
           if (selectedNodeId && isPrintableCharacter(e)) {
             e.preventDefault();
             setEditingNodeId(selectedNodeId, { mode: 'replace', initialValue: e.key });
