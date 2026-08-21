@@ -94,12 +94,27 @@ export interface GroupTitleStyle {
   color?: string;
 }
 
+/** Сторона рамки, на которой сидит блок заголовка. */
+export type GroupTitleSide = 'top' | 'right' | 'bottom' | 'left';
+
+/**
+ * Якорь заголовка на периметре группы. `offset` — доля 0..1 вдоль стороны
+ * (слева направо для top/bottom, сверху вниз для left/right).
+ */
+export interface GroupTitlePlacement {
+  side: GroupTitleSide;
+  offset: number;
+}
+
 export interface Group {
   id: string;
   title: string;
   nodeIds: string[];
   color?: string;
+  /** Скругление углов области (px). Нет поля = дефолт. */
+  borderRadius?: number;
   titleStyle?: GroupTitleStyle;
+  titlePlacement?: GroupTitlePlacement;
 }
 
 export type HandleVisibility = 'hidden' | 'dashed' | 'always';

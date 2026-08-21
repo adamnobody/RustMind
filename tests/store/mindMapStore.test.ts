@@ -928,4 +928,22 @@ describe('mindMapStore — структурная модель (Tab/Enter, moveN
       .edges.find((e) => e.source === aId && e.target === rootId);
     expect(edge).toBeDefined();
   });
+
+  it('createGroup собирает узлы; updateGroup пишет радиус и якорь заголовка', () => {
+    const store = useMindMapStore.getState();
+    const rootId = store.getRootNode()!.id;
+    const aId = store.addChildNode(rootId)!;
+    const gid = useMindMapStore.getState().createGroup([rootId, aId]);
+    expect(gid).not.toBeNull();
+    useMindMapStore.getState().updateGroup(gid!, {
+      borderRadius: 20,
+      titlePlacement: { side: 'bottom', offset: 0.3 },
+    });
+    const group = useMindMapStore.getState().groups.find((g) => g.id === gid);
+    expect(group).toMatchObject({
+      nodeIds: [rootId, aId],
+      borderRadius: 20,
+      titlePlacement: { side: 'bottom', offset: 0.3 },
+    });
+  });
 });

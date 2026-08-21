@@ -57,6 +57,16 @@ interface UiState {
   selectedEdgeIds: string[];
   /** Выбранная группа (её заголовок редактируется в инспекторе). Session-only. */
   selectedGroupId: string | null;
+  /**
+   * Режим «нарисовать группу»: следующий жест на холсте — рамка, узлы внутри
+   * становятся членами новой группы. Session-only.
+   */
+  groupDrawMode: boolean;
+  /**
+   * Узлы под текущей рамкой «создать группу» — только подсветка, не выбор.
+   * Session-only.
+   */
+  groupDrawHitIds: string[];
   editingNodeId: string | null;
   editingIntent: NodeEditingIntent | null;
   /** Ребро, чья подпись редактируется инлайн (двойной клик). Session-only. */
@@ -125,6 +135,8 @@ interface UiState {
   setSelection: (nodeIds: string[], edgeIds: string[]) => void;
   /** Выбрать группу (снимает выбор узлов/связей, открывает инспектор). */
   setSelectedGroupId: (id: string | null) => void;
+  setGroupDrawMode: (on: boolean) => void;
+  setGroupDrawHitIds: (ids: string[]) => void;
   /** Manual open (toolbar) — clears the manual-hidden override. */
   openInspector: () => void;
   /** Manual hide (panel close button) — sets the override so it won't auto-open. */
@@ -289,6 +301,8 @@ export const useUIStore = create<UiState>()(
       selectedNodeIds: [],
       selectedEdgeIds: [],
       selectedGroupId: null,
+      groupDrawMode: false,
+      groupDrawHitIds: [],
       editingNodeId: null,
       editingIntent: null,
       editingEdgeId: null,
@@ -347,6 +361,20 @@ export const useUIStore = create<UiState>()(
           selectedNodeId: null,
           inspectorOpen: id ? !state.inspectorManuallyHidden || state.inspectorOpen : state.inspectorOpen,
         })),
+      setGroupDrawMode: (on) =>
+        set((state) => ({
+          groupDrawMode: on,
+          groupDrawHitIds: [],
+          ...(on
+            ? {
+                selectedNodeIds: [],
+                selectedEdgeIds: [],
+                selectedNodeId: null,
+                selectedGroupId: null,
+              }
+            : {}),
+        })),
+      setGroupDrawHitIds: (ids) => set({ groupDrawHitIds: ids }),
       openInspector: () => set({ inspectorOpen: true, inspectorManuallyHidden: false }),
       hideInspector: () => set({ inspectorOpen: false, inspectorManuallyHidden: true }),
       toggleInspector: () =>

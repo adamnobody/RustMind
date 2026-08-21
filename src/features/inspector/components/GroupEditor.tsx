@@ -3,6 +3,7 @@ import { useMindMapStore } from '../../../store/mindMapStore';
 import { listSystemFonts, FALLBACK_FONTS } from '../../../shared/lib/fonts';
 import { useT } from '../../../shared/i18n';
 import { ColorField, FontField, NumberField, TextField, ToggleGroupField } from './fields';
+import { DEFAULT_GROUP_RADIUS } from '../../groups';
 
 const DEFAULT_TITLE_SIZE = 12;
 const COLOR_SEED = { fill: '#5fd4ff', text: '#e2e8f0' } as const;
@@ -46,6 +47,15 @@ export function GroupEditor({ groupId }: GroupEditorProps): React.JSX.Element | 
         fallback={COLOR_SEED.fill}
         onChange={(hex) => updateGroup(groupId, { color: hex })}
         onReset={() => updateGroup(groupId, { color: undefined })}
+      />
+
+      <NumberField
+        label={t('group.cornerRadius')}
+        value={group.borderRadius ?? DEFAULT_GROUP_RADIUS}
+        min={0}
+        max={48}
+        suffix="px"
+        onChange={(borderRadius) => updateGroup(groupId, { borderRadius })}
       />
 
       <FontField

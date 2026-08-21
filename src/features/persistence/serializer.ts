@@ -8,6 +8,7 @@ import type {
   EdgeKind,
   EdgeStyle,
   Group,
+  GroupTitlePlacement,
   HandleOffsets,
   HandleVisibility,
   LayoutType,
@@ -39,6 +40,24 @@ function coerceHandleVisibility(value: string | undefined): HandleVisibility {
   return VALID_HANDLE_VISIBILITIES.includes(value as HandleVisibility)
     ? (value as HandleVisibility)
     : DEFAULT_HANDLE_VISIBILITY;
+}
+
+function coerceTitlePlacement(
+  raw: { side?: string; offset?: number } | undefined,
+): GroupTitlePlacement | undefined {
+  if (!raw) return undefined;
+  const { side } = raw;
+  if (side !== 'top' && side !== 'right' && side !== 'bottom' && side !== 'left') return undefined;
+  const offset =
+    typeof raw.offset === 'number' && Number.isFinite(raw.offset)
+      ? Math.min(1, Math.max(0, raw.offset))
+      : 0.08;
+  return { side, offset };
+}
+
+function coerceBorderRadius(raw: number | undefined): number | undefined {
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) return undefined;
+  return Math.min(48, Math.max(0, Math.round(raw)));
 }
 
 export function serializeMindMap(
@@ -97,7 +116,9 @@ export function serializeMindMap(
             title: g.title,
             nodeIds: g.nodeIds,
             color: g.color,
+            borderRadius: g.borderRadius,
             titleStyle: g.titleStyle,
+            titlePlacement: g.titlePlacement,
           }))
         : undefined,
     projectSettings: {
@@ -169,7 +190,9 @@ export function deserializeMindMap(serialized: SerializedMindMap): LoadDocumentP
       title: g.title,
       nodeIds: g.nodeIds.filter((id) => nodeIdSet.has(id)),
       color: g.color,
+      borderRadius: coerceBorderRadius(g.borderRadius),
       titleStyle: g.titleStyle,
+      titlePlacement: coerceTitlePlacement(g.titlePlacement),
     }))
     .filter((g) => g.nodeIds.length > 0);
 

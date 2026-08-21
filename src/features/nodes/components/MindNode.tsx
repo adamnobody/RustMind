@@ -234,6 +234,7 @@ function MindNodeComponent({
   const searchQuery = useUIStore((s) => (s.searchOpen ? s.searchQuery.trim().toLowerCase() : ''));
   const showStatuses = useUIStore((s) => s.settings.showStatuses);
   const searchMatch = searchQuery !== '' && nodeData.label.toLowerCase().includes(searchQuery);
+  const groupHit = useUIStore((s) => s.groupDrawHitIds.includes(id));
 
   const toggleBranchCollapse = useMindMapStore((s) => s.toggleBranchCollapse);
   const customStatuses = useMindMapStore((s) => s.projectSettings.customStatuses);
@@ -375,6 +376,7 @@ function MindNodeComponent({
         styles.node,
         isRoot && styles.root,
         selected && styles.selected,
+        groupHit && styles.selected,
         isDropTarget && styles.dropTarget,
         searchMatch && styles.searchMatch,
       )}

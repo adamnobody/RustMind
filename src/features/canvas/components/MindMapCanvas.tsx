@@ -27,11 +27,11 @@ import { collapsedHiddenIds, treeDepthMap } from '../../layout/strategies/shared
 import { levelColorAt } from '../../nodes/levelPalettes';
 import {
   GroupBox,
+  GroupDrawOverlay,
   GroupSelectionButton,
   groupBounds,
   GROUP_NODE_TYPE,
   GROUP_PADDING,
-  GROUP_TITLE_HEIGHT,
 } from '../../groups';
 import { DEFAULT_NODE_SIZE } from '../../../shared/lib/constants';
 import { resolveDropTarget } from '../lib/dropTarget';
@@ -96,6 +96,7 @@ function CanvasInner(): React.JSX.Element {
   const levelColors = useMindMapStore((s) => s.projectSettings.levelColors);
   const groups = useMindMapStore((s) => s.groups);
   const selectedGroupId = useUIStore((s) => s.selectedGroupId);
+  const groupDrawMode = useUIStore((s) => s.groupDrawMode);
 
   const setSelectedNodeId = useUIStore((s) => s.setSelectedNodeId);
   const setSelection = useUIStore((s) => s.setSelection);
@@ -143,9 +144,9 @@ function CanvasInner(): React.JSX.Element {
     });
   }, [nodes, edges, collapseHidden, levelColors]);
 
-  // Ноды-области групп: вычисляем bbox по видимым узлам-членам, кладём ПЕРЕД
-  // остальными (рисуются позади). Не draggable/selectable/connectable — тело
-  // pointer-events:none (клики проходят к узлам), интерактивен только заголовок.
+  // Ноды-области групп: bbox по видимым узлам-членам, кладём ПЕРЕД остальными
+  // (рисуются позади). Не draggable/selectable/connectable — тело
+  // pointer-events:none, интерактивен только чип заголовка на рамке.
   const groupNodes = useMemo(() => {
     if (groups.length === 0) return [];
     const byId = new Map(nodes.map((n) => [n.id, n]));
@@ -164,11 +165,11 @@ function CanvasInner(): React.JSX.Element {
       const b = groupBounds(rects);
       if (!b) continue;
       const width = b.width + GROUP_PADDING * 2;
-      const height = b.height + GROUP_PADDING * 2 + GROUP_TITLE_HEIGHT;
+      const height = b.height + GROUP_PADDING * 2;
       out.push({
         id: `group:${g.id}`,
         type: GROUP_NODE_TYPE,
-        position: { x: b.x - GROUP_PADDING, y: b.y - GROUP_PADDING - GROUP_TITLE_HEIGHT },
+        position: { x: b.x - GROUP_PADDING, y: b.y - GROUP_PADDING },
         data: { group: g, selected: selectedGroupId === g.id } as unknown as AppNode['data'],
         draggable: false,
         selectable: false,
@@ -178,7 +179,7 @@ function CanvasInner(): React.JSX.Element {
         zIndex: 0,
         width,
         height,
-        style: { width, height, pointerEvents: 'none' },
+        style: { width, height, pointerEvents: 'none', overflow: 'visible' },
       });
     }
     return out;
@@ -366,8 +367,9 @@ function CanvasInner(): React.JSX.Element {
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{ type: MIND_EDGE_TYPE }}
-        nodesDraggable={!isEditing}
-        panOnDrag={!isEditing}
+        nodesDraggable={!isEditing && !groupDrawMode}
+        panOnDrag={!isEditing && !groupDrawMode}
+        elementsSelectable={!groupDrawMode}
         style={canvasStyle}
       >
         {settings.showGrid && <CanvasBackground />}
@@ -375,6 +377,7 @@ function CanvasInner(): React.JSX.Element {
         {settings.showMiniMap && <MiniMap />}
       </ReactFlow>
       <SearchBar />
+      <GroupDrawOverlay />
       <GroupSelectionButton />
       <NodeContextMenu />
       {notice && (

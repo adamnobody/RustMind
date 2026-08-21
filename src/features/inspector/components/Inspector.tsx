@@ -78,6 +78,8 @@ export function Inspector(): React.JSX.Element | null {
       ? Object.keys(edge.data?.style ?? {}).some((k) => k !== 'label')
       : group
         ? group.color !== undefined ||
+          group.borderRadius !== undefined ||
+          group.titlePlacement !== undefined ||
           Object.values(group.titleStyle ?? {}).some((v) => v !== undefined)
         : false;
 
@@ -94,6 +96,8 @@ export function Inspector(): React.JSX.Element | null {
     } else if (group) {
       store.updateGroup(group.id, {
         color: undefined,
+        borderRadius: undefined,
+        titlePlacement: undefined,
         titleStyle: {
           fontFamily: undefined,
           fontSize: undefined,

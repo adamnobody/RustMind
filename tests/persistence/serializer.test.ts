@@ -59,7 +59,15 @@ describe('serializer round-trip', () => {
       levelColors: ['#111', '', '#333'],
     };
     const groups = [
-      { id: 'g1', title: 'Cluster', nodeIds: ['root', 'a'], color: '#00ff00', titleStyle: { bold: true } },
+      {
+        id: 'g1',
+        title: 'Cluster',
+        nodeIds: ['root', 'a'],
+        color: '#00ff00',
+        borderRadius: 18,
+        titleStyle: { bold: true },
+        titlePlacement: { side: 'left' as const, offset: 0.4 },
+      },
     ];
 
     const serialized = serializeMindMap('Doc', 'hierarchy', nodes, edges, projectSettings, groups);
@@ -73,7 +81,13 @@ describe('serializer round-trip', () => {
     expect(restored.projectSettings?.edgeColor).toBe('#ff0000');
     expect(restored.projectSettings?.levelColors).toEqual(['#111', '', '#333']);
     expect(restored.groups).toHaveLength(1);
-    expect(restored.groups?.[0]).toMatchObject({ title: 'Cluster', color: '#00ff00', nodeIds: ['root', 'a'] });
+    expect(restored.groups?.[0]).toMatchObject({
+      title: 'Cluster',
+      color: '#00ff00',
+      nodeIds: ['root', 'a'],
+      borderRadius: 18,
+      titlePlacement: { side: 'left', offset: 0.4 },
+    });
   });
 
   it('сохраняет createdAt при повторной сериализации', () => {

@@ -746,11 +746,14 @@ export const useMindMapStore = create<MindMapState>()(
     },
 
     updateGroup: (id, patch) => {
-      recordCoalesced(`group:${id}`, 'text');
+      const key = 'titlePlacement' in patch ? `groupplace:${id}` : `group:${id}`;
+      recordCoalesced(key, 'text');
       set((state) => {
         const group = state.groups.find((g) => g.id === id);
         if (!group) return;
         if ('color' in patch) group.color = patch.color;
+        if ('borderRadius' in patch) group.borderRadius = patch.borderRadius;
+        if ('titlePlacement' in patch) group.titlePlacement = patch.titlePlacement;
         if (patch.titleStyle) group.titleStyle = { ...group.titleStyle, ...patch.titleStyle };
         state.isDirty = true;
       });

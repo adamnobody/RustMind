@@ -81,6 +81,7 @@ const ru = {
   'tile.freeLinks': 'Свободные связи',
   'tile.export': 'Экспорт',
   'tile.outline': 'Структура',
+  'tile.group': 'Группа',
 
   // — верхняя панель редактора —
   'toolbar.home': 'Главное меню',
@@ -105,6 +106,7 @@ const ru = {
   'toolbar.lightTheme': 'Светлая тема',
   'toolbar.darkTheme': 'Тёмная тема',
   'toolbar.settings': 'Настройки',
+  'toolbar.createGroup': 'Создать группу — затем выделите область',
 
   'exportPicker.title': 'Экспорт карты',
   'exportPicker.subtitle': 'Картинка холста или данные карты — выберите формат файла.',
@@ -289,6 +291,9 @@ const ru = {
   'group.titleLabel': 'Заголовок',
   'group.titlePlaceholder': 'Название группы…',
   'group.fillColor': 'Цвет заливки',
+  'group.cornerRadius': 'Скругление углов',
+  'group.drawHint': 'Выделите область вокруг узлов · Esc — отмена',
+  'group.drawEmpty': 'В области нет узлов',
 
   // — настройки —
   'settings.title': 'Настройки',
@@ -454,6 +459,7 @@ const en: Record<TranslationKey, string> = {
   'tile.freeLinks': 'Free links',
   'tile.export': 'Export',
   'tile.outline': 'Outline',
+  'tile.group': 'Group',
 
   'toolbar.home': 'Main menu',
   'toolbar.new': 'New (Ctrl+N)',
@@ -477,6 +483,7 @@ const en: Record<TranslationKey, string> = {
   'toolbar.lightTheme': 'Light theme',
   'toolbar.darkTheme': 'Dark theme',
   'toolbar.settings': 'Settings',
+  'toolbar.createGroup': 'Create group — then drag a region',
 
   'exportPicker.title': 'Export map',
   'exportPicker.subtitle': 'A snapshot of the canvas or the map data — pick a file format.',
@@ -648,6 +655,9 @@ const en: Record<TranslationKey, string> = {
   'group.titleLabel': 'Title',
   'group.titlePlaceholder': 'Group name…',
   'group.fillColor': 'Fill color',
+  'group.cornerRadius': 'Corner radius',
+  'group.drawHint': 'Drag a region around nodes · Esc to cancel',
+  'group.drawEmpty': 'No nodes in that region',
 
   'settings.title': 'Settings',
   'settings.appearance': 'Appearance',
@@ -807,6 +817,7 @@ const de: Record<TranslationKey, string> = {
   'tile.freeLinks': 'Freie Linien',
   'tile.export': 'Export',
   'tile.outline': 'Struktur',
+  'tile.group': 'Gruppe',
 
   'toolbar.home': 'Hauptmenü',
   'toolbar.new': 'Neu (Strg+N)',
@@ -830,6 +841,7 @@ const de: Record<TranslationKey, string> = {
   'toolbar.lightTheme': 'Helles Thema',
   'toolbar.darkTheme': 'Dunkles Thema',
   'toolbar.settings': 'Einstellungen',
+  'toolbar.createGroup': 'Gruppe erstellen — dann einen Bereich aufziehen',
 
   'exportPicker.title': 'Karte exportieren',
   'exportPicker.subtitle': 'Eine Aufnahme der Leinwand oder die Kartendaten — Format wählen.',
@@ -1001,6 +1013,9 @@ const de: Record<TranslationKey, string> = {
   'group.titleLabel': 'Titel',
   'group.titlePlaceholder': 'Gruppenname…',
   'group.fillColor': 'Füllfarbe',
+  'group.cornerRadius': 'Eckenradius',
+  'group.drawHint': 'Bereich um Knoten aufziehen · Esc zum Abbrechen',
+  'group.drawEmpty': 'Keine Knoten in diesem Bereich',
 
   'settings.title': 'Einstellungen',
   'settings.appearance': 'Darstellung',
@@ -1160,6 +1175,7 @@ const fr: Record<TranslationKey, string> = {
   'tile.freeLinks': 'Liens libres',
   'tile.export': 'Export',
   'tile.outline': 'Plan',
+  'tile.group': 'Groupe',
 
   'toolbar.home': 'Menu principal',
   'toolbar.new': 'Nouveau (Ctrl+N)',
@@ -1183,6 +1199,7 @@ const fr: Record<TranslationKey, string> = {
   'toolbar.lightTheme': 'Thème clair',
   'toolbar.darkTheme': 'Thème sombre',
   'toolbar.settings': 'Paramètres',
+  'toolbar.createGroup': 'Créer un groupe — puis tracer une zone',
 
   'exportPicker.title': 'Exporter la carte',
   'exportPicker.subtitle': 'Une capture du canevas ou les données de la carte — choisissez le format.',
@@ -1355,6 +1372,9 @@ const fr: Record<TranslationKey, string> = {
   'group.titleLabel': 'Titre',
   'group.titlePlaceholder': 'Nom du groupe…',
   'group.fillColor': 'Couleur de remplissage',
+  'group.cornerRadius': 'Arrondi des coins',
+  'group.drawHint': 'Tracez une zone autour des nœuds · Échap pour annuler',
+  'group.drawEmpty': 'Aucun nœud dans cette zone',
 
   'settings.title': 'Paramètres',
   'settings.appearance': 'Apparence',

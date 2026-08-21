@@ -27,3 +27,17 @@ export function groupBounds(rects: Rect[]): Bounds | null {
   }
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
+
+export function rectsOverlap(a: Rect, b: Rect): boolean {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+/** Id элементов, чьи прямоугольники пересекают область (хотя бы краем). */
+export function idsInArea(items: Array<{ id: string } & Rect>, area: Rect): string[] {
+  if (area.w <= 0 || area.h <= 0) return [];
+  const out: string[] = [];
+  for (const item of items) {
+    if (rectsOverlap(item, area)) out.push(item.id);
+  }
+  return out;
+}

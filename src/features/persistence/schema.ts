@@ -107,12 +107,19 @@ interface SerializedGroupTitleStyle {
   color?: string;
 }
 
+interface SerializedGroupTitlePlacement {
+  side?: string;
+  offset?: number;
+}
+
 export interface SerializedGroup {
   id: string;
   title: string;
   nodeIds: string[];
   color?: string;
+  borderRadius?: number;
   titleStyle?: SerializedGroupTitleStyle;
+  titlePlacement?: SerializedGroupTitlePlacement;
 }
 
 export interface SerializedMindMap {

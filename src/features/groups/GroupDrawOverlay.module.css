@@ -1,0 +1,35 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.hint {
+  position: absolute;
+  top: var(--rm-space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  margin: 0;
+  padding: var(--rm-space-2) var(--rm-space-4);
+  border: 1px solid var(--rm-accent-soft);
+  border-radius: var(--rm-radius-full);
+  background: color-mix(in srgb, var(--rm-panel) 92%, transparent);
+  color: var(--rm-text);
+  font-size: var(--rm-font-sm);
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+
+.marquee {
+  position: fixed;
+  box-sizing: border-box;
+  border: 1.5px dashed var(--rm-accent);
+  border-radius: var(--rm-radius-sm);
+  background: color-mix(in srgb, var(--rm-accent) 12%, transparent);
+  pointer-events: none;
+}

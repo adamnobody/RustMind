@@ -159,9 +159,15 @@ export function useGlobalHotkeys(): void {
         }
 
         case 'Escape': {
+          const ui = useUIStore.getState();
+          if (ui.groupDrawMode) {
+            e.preventDefault();
+            ui.setGroupDrawMode(false);
+            return;
+          }
           // Снять выделение (узлов и группы)
           setSelectedNodeId(null);
-          useUIStore.getState().setSelectedGroupId(null);
+          ui.setSelectedGroupId(null);
           break;
         }
 

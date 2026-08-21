@@ -8,6 +8,7 @@ import type {
   AppEdge,
   EdgeStyle,
   Group,
+  GroupTitlePlacement,
   GroupTitleStyle,
   HandleSide,
   LayoutType,
@@ -170,8 +171,16 @@ export interface MindMapState {
   createGroup: (nodeIds: string[]) => string | null;
   /** Изменить заголовок группы (коалесится). */
   setGroupTitle: (id: string, title: string) => void;
-  /** Изменить цвет заливки / стиль заголовка группы. */
-  updateGroup: (id: string, patch: { color?: string; titleStyle?: GroupTitleStyle }) => void;
+  /** Изменить оформление группы (цвет, радиус, якорь заголовка, стиль текста). */
+  updateGroup: (
+    id: string,
+    patch: {
+      color?: string;
+      borderRadius?: number;
+      titleStyle?: GroupTitleStyle;
+      titlePlacement?: GroupTitlePlacement;
+    },
+  ) => void;
   /** Удалить группу (сами узлы не трогаются). */
   deleteGroup: (id: string) => void;
 

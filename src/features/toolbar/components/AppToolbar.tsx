@@ -78,6 +78,8 @@ export function AppToolbar({
   const toggleInspector = useUIStore((s) => s.toggleInspector);
   const outlineOpen = useUIStore((s) => s.outlineOpen);
   const toggleOutline = useUIStore((s) => s.toggleOutline);
+  const groupDrawMode = useUIStore((s) => s.groupDrawMode);
+  const setGroupDrawMode = useUIStore((s) => s.setGroupDrawMode);
   const freeLinkMode = projectSettings.freeLinkMode === true;
   const settings = useUIStore((s) => s.settings);
   const setCanvasOption = useUIStore((s) => s.setCanvasOption);
@@ -285,6 +287,15 @@ export function AppToolbar({
           onClick={() => setProjectSettings({ freeLinkMode: !freeLinkMode })}
           disabled={isFreeLayout}
           active={freeLinkMode && !isFreeLayout}
+        />
+
+        <ToolTile
+          icon="group"
+          label={t('tile.group')}
+          title={t('toolbar.createGroup')}
+          onClick={() => setGroupDrawMode(!groupDrawMode)}
+          disabled={outlineOpen}
+          active={groupDrawMode}
         />
 
         <span className={styles.tileSep} aria-hidden="true" />

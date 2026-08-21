@@ -11,10 +11,11 @@ import styles from './GroupSelectionButton.module.css';
 export function GroupSelectionButton(): React.JSX.Element | null {
   const t = useT();
   const selectedNodeIds = useUIStore((s) => s.selectedNodeIds);
+  const groupDrawMode = useUIStore((s) => s.groupDrawMode);
   const setSelectedGroupId = useUIStore((s) => s.setSelectedGroupId);
   const createGroup = useMindMapStore((s) => s.createGroup);
 
-  if (selectedNodeIds.length < 2) return null;
+  if (groupDrawMode || selectedNodeIds.length < 2) return null;
 
   return (
     <button
