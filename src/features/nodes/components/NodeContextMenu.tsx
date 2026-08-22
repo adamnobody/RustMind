@@ -55,8 +55,9 @@ export function NodeContextMenu(): React.JSX.Element | null {
   const setSelectedNodeId = useUIStore((s) => s.setSelectedNodeId);
   const [openSub, setOpenSub] = useState<'child' | 'status' | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const nodeMenu = menu?.kind === 'node' ? menu : null;
 
-  const nodeId = menu?.nodeId ?? null;
+  const nodeId = nodeMenu?.nodeId ?? null;
   const { isRoot, parentX, parentY, directChildIds, customStatuses } = useMindMapStore(
     useShallow((s) => {
       const node = nodeId ? s.nodes.find((n) => n.id === nodeId) : undefined;
@@ -76,7 +77,7 @@ export function NodeContextMenu(): React.JSX.Element | null {
   const setProjectSettings = useMindMapStore((s) => s.setProjectSettings);
 
   useEffect(() => {
-    if (!menu) return;
+    if (!nodeMenu) return;
     const onPointerDown = (e: PointerEvent): void => {
       if (!menuRef.current?.contains(e.target as Node)) closeContextMenu();
     };
@@ -89,14 +90,14 @@ export function NodeContextMenu(): React.JSX.Element | null {
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('keydown', onKey);
     };
-  }, [menu, closeContextMenu]);
+  }, [nodeMenu, closeContextMenu]);
 
-  if (!menu) return null;
-  const { nodeId: id } = menu;
+  if (!nodeMenu) return null;
+  const { nodeId: id } = nodeMenu;
   // ponytail: не учитывает высоту раскрытого подменю справа — приемлемо для
   // экранов десктоп-приложения, доработать флипом стороны, если понадобится.
-  const menuX = Math.min(menu.x, window.innerWidth - 240);
-  const menuY = Math.min(menu.y, window.innerHeight - 200);
+  const menuX = Math.min(nodeMenu.x, window.innerWidth - 240);
+  const menuY = Math.min(nodeMenu.y, window.innerHeight - 200);
 
   const addChild = (side: HandleSide): void => {
     const newId = addChildNode(id, positionForSide(parentX, parentY, side), {

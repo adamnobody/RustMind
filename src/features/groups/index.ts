@@ -1,7 +1,16 @@
 export { GroupBox } from './GroupBox';
 export { GroupSelectionButton } from './GroupSelectionButton';
 export { GroupDrawOverlay } from './GroupDrawOverlay';
-export { groupBounds, idsInArea, rectsOverlap, type Rect, type Bounds } from './bounds';
+export {
+  groupBounds,
+  paddedGroupBounds,
+  smallestBoundsAt,
+  idsInArea,
+  rectsOverlap,
+  type Rect,
+  type Bounds,
+} from './bounds';
+export { GroupContextMenu } from './GroupContextMenu';
 export { separateGroupIntruders, shortestEscape } from './separate';
 export {
   DEFAULT_TITLE_PLACEMENT,

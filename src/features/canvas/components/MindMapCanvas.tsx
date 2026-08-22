@@ -27,9 +27,11 @@ import { collapsedHiddenIds, treeDepthMap } from '../../layout/strategies/shared
 import { levelColorAt } from '../../nodes/levelPalettes';
 import {
   GroupBox,
+  GroupContextMenu,
   GroupDrawOverlay,
   GroupSelectionButton,
-  groupBounds,
+  paddedGroupBounds,
+  smallestBoundsAt,
   GROUP_NODE_TYPE,
   GROUP_PADDING,
 } from '../../groups';
@@ -146,7 +148,8 @@ function CanvasInner(): React.JSX.Element {
 
   // Ноды-области групп: bbox по видимым узлам-членам, кладём ПЕРЕД остальными
   // (рисуются позади). Не draggable/selectable/connectable — тело
-  // pointer-events:none, интерактивен только чип заголовка на рамке.
+  // pointer-events:none, чтобы ЛКМ/ПКМ узлов внутри не перехватывались.
+  // ПКМ по пустой области группы — onPaneContextMenu + hit-test.
   const groupNodes = useMemo(() => {
     if (groups.length === 0) return [];
     const byId = new Map(nodes.map((n) => [n.id, n]));
@@ -162,14 +165,12 @@ function CanvasInner(): React.JSX.Element {
           w: n.measured?.width ?? DEFAULT_NODE_SIZE.width,
           h: n.measured?.height ?? DEFAULT_NODE_SIZE.height,
         }));
-      const b = groupBounds(rects);
+      const b = paddedGroupBounds(rects, GROUP_PADDING);
       if (!b) continue;
-      const width = b.width + GROUP_PADDING * 2;
-      const height = b.height + GROUP_PADDING * 2;
       out.push({
         id: `group:${g.id}`,
         type: GROUP_NODE_TYPE,
-        position: { x: b.x - GROUP_PADDING, y: b.y - GROUP_PADDING },
+        position: { x: b.x, y: b.y },
         data: { group: g, selected: selectedGroupId === g.id } as unknown as AppNode['data'],
         draggable: false,
         selectable: false,
@@ -177,9 +178,9 @@ function CanvasInner(): React.JSX.Element {
         deletable: false,
         focusable: false,
         zIndex: 0,
-        width,
-        height,
-        style: { width, height, pointerEvents: 'none', overflow: 'visible' },
+        width: b.width,
+        height: b.height,
+        style: { width: b.width, height: b.height, pointerEvents: 'none', overflow: 'visible' },
       });
     }
     return out;
@@ -356,6 +357,27 @@ function CanvasInner(): React.JSX.Element {
           setSelectedNodeId(null);
           useUIStore.getState().setSelectedGroupId(null);
         }}
+        onPaneContextMenu={(event) => {
+          if (useUIStore.getState().groupDrawMode) return;
+          const point = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+          const id = smallestBoundsAt(
+            groupNodes.map((n) => ({
+              id: (n.data as unknown as { group: { id: string } }).group.id,
+              bounds: {
+                x: n.position.x,
+                y: n.position.y,
+                width: n.width ?? 0,
+                height: n.height ?? 0,
+              },
+            })),
+            point,
+          );
+          if (!id) return;
+          event.preventDefault();
+          const ui = useUIStore.getState();
+          ui.setSelectedGroupId(id);
+          ui.openGroupContextMenu(id, event.clientX, event.clientY);
+        }}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         connectionMode={ConnectionMode.Loose}
@@ -380,6 +402,7 @@ function CanvasInner(): React.JSX.Element {
       <GroupDrawOverlay />
       <GroupSelectionButton />
       <NodeContextMenu />
+      <GroupContextMenu />
       {notice && (
         <div className={styles.notice} role="status">
           {notice}

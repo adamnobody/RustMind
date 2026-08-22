@@ -23,12 +23,10 @@ export interface DragIndicator {
   index?: number;
 }
 
-/** Правый клик по узлу открывает контекстное меню в точке курсора. Session-only. */
-export interface NodeContextMenuState {
-  nodeId: string;
-  x: number;
-  y: number;
-}
+/** Правый клик по узлу или группе. Session-only. */
+export type ContextMenuState =
+  | { kind: 'node'; nodeId: string; x: number; y: number }
+  | { kind: 'group'; groupId: string; x: number; y: number };
 
 interface UiSettings {
   nodeFontSize: NodeFontSize;
@@ -119,9 +117,10 @@ interface UiState {
   dragIndicator: DragIndicator | null;
   setDragIndicator: (indicator: DragIndicator | null) => void;
 
-  /** Контекстное меню узла (правый клик). Session-only. */
-  contextMenu: NodeContextMenuState | null;
+  /** Контекстное меню узла или группы (правый клик). Session-only. */
+  contextMenu: ContextMenuState | null;
   openContextMenu: (nodeId: string, x: number, y: number) => void;
+  openGroupContextMenu: (groupId: string, x: number, y: number) => void;
   closeContextMenu: () => void;
 
   /**
@@ -331,7 +330,9 @@ export const useUIStore = create<UiState>()(
       setDragIndicator: (indicator) => set({ dragIndicator: indicator }),
 
       contextMenu: null,
-      openContextMenu: (nodeId, x, y) => set({ contextMenu: { nodeId, x, y } }),
+      openContextMenu: (nodeId, x, y) => set({ contextMenu: { kind: 'node', nodeId, x, y } }),
+      openGroupContextMenu: (groupId, x, y) =>
+        set({ contextMenu: { kind: 'group', groupId, x, y } }),
       closeContextMenu: () => set({ contextMenu: null }),
       statusCascadePrompt: null,
       openStatusCascadePrompt: (prompt) => set({ statusCascadePrompt: prompt }),

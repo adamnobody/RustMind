@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { groupBounds, idsInArea, rectsOverlap } from '../../src/features/groups/bounds';
+import {
+  groupBounds,
+  paddedGroupBounds,
+  smallestBoundsAt,
+  idsInArea,
+  rectsOverlap,
+} from '../../src/features/groups/bounds';
 
 describe('groupBounds', () => {
   it('охватывает все прямоугольники', () => {
@@ -21,6 +27,36 @@ describe('groupBounds', () => {
       width: 50,
       height: 30,
     });
+  });
+});
+
+describe('paddedGroupBounds', () => {
+  it('расширяет bbox на padding с каждой стороны', () => {
+    expect(paddedGroupBounds([{ x: 10, y: 20, w: 50, h: 30 }], 8)).toEqual({
+      x: 2,
+      y: 12,
+      width: 66,
+      height: 46,
+    });
+  });
+});
+
+describe('smallestBoundsAt', () => {
+  const items = [
+    { id: 'outer', bounds: { x: 0, y: 0, width: 200, height: 200 } },
+    { id: 'inner', bounds: { x: 40, y: 40, width: 40, height: 40 } },
+  ];
+
+  it('берёт меньшую область при наложении', () => {
+    expect(smallestBoundsAt(items, { x: 50, y: 50 })).toBe('inner');
+  });
+
+  it('берёт внешнюю, если точка только в ней', () => {
+    expect(smallestBoundsAt(items, { x: 10, y: 10 })).toBe('outer');
+  });
+
+  it('null вне всех областей', () => {
+    expect(smallestBoundsAt(items, { x: -1, y: 0 })).toBeNull();
   });
 });
 

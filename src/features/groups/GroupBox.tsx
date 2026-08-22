@@ -29,8 +29,9 @@ function titleTextStyle(group: Group): CSSProperties {
 
 /**
  * Полупрозрачная область группы (RF-нода типа groupBox). Тело — pointer-events:
- * none (клики проходят к узлам внутри); интерактивен только чип заголовка:
- * клик выбирает и сразу редактирует заголовок, drag двигает чип по периметру.
+ * none (ЛКМ/ПКМ нод внутри проходят насквозь); ПКМ по пустой области ловит
+ * pane hit-test. Интерактивен чип заголовка: клик — правки, drag — якорь, ПКМ —
+ * меню группы.
  */
 export function GroupBox({ data }: NodeProps): React.JSX.Element {
   const { group, selected } = data as unknown as GroupBoxData;
@@ -106,9 +107,19 @@ export function GroupBox({ data }: NodeProps): React.JSX.Element {
       <div
         className={clsx(styles.titleChip, selected && styles.titleChipSelected, isEditing && styles.titleChipEditing)}
         style={chipStyle}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setSelectedGroupId(group.id);
+          useUIStore.getState().openGroupContextMenu(group.id, e.clientX, e.clientY);
+        }}
         onPointerDown={(e) => {
           if (isEditing) return;
           e.stopPropagation();
+          if (e.button !== 0) {
+            setSelectedGroupId(group.id);
+            return;
+          }
           e.preventDefault();
           origin.current = { x: e.clientX, y: e.clientY };
           dragged.current = false;

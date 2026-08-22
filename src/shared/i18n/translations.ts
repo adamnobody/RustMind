@@ -267,6 +267,7 @@ const ru = {
   'ctxMenu.addChildBottom': 'Снизу',
   'ctxMenu.changeStatus': 'Изменить статус',
   'ctxMenu.delete': 'Удалить ноду',
+  'ctxMenu.deleteGroup': 'Удалить группу',
   'ctxMenu.hideChildren': 'Скрыть дочерние ноды',
 
   // — заметки —
@@ -634,6 +635,7 @@ const en: Record<TranslationKey, string> = {
   'ctxMenu.addChildBottom': 'Bottom',
   'ctxMenu.changeStatus': 'Change status',
   'ctxMenu.delete': 'Delete node',
+  'ctxMenu.deleteGroup': 'Delete group',
   'ctxMenu.hideChildren': 'Hide child nodes',
 
   'note.title': 'Note',
@@ -992,6 +994,7 @@ const de: Record<TranslationKey, string> = {
   'ctxMenu.addChildBottom': 'Unten',
   'ctxMenu.changeStatus': 'Status ändern',
   'ctxMenu.delete': 'Knoten löschen',
+  'ctxMenu.deleteGroup': 'Gruppe löschen',
   'ctxMenu.hideChildren': 'Unterknoten ausblenden',
 
   'note.title': 'Notiz',
@@ -1351,6 +1354,7 @@ const fr: Record<TranslationKey, string> = {
   'ctxMenu.addChildBottom': 'Bas',
   'ctxMenu.changeStatus': 'Changer le statut',
   'ctxMenu.delete': 'Supprimer le nœud',
+  'ctxMenu.deleteGroup': 'Supprimer le groupe',
   'ctxMenu.hideChildren': 'Masquer les nœuds enfants',
 
   'note.title': 'Note',

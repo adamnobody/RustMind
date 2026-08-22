@@ -1,0 +1,52 @@
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 4px 8px;
+}
+
+.caption {
+  padding: 0 6px;
+  color: var(--rm-text-subtle);
+  font-size: var(--rm-font-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(7, 18px);
+  gap: 6px;
+  padding: 0 6px;
+}
+
+.swatch {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.swatch:hover {
+  transform: scale(1.12);
+}
+
+.swatchAuto {
+  border-color: var(--rm-border);
+  background:
+    linear-gradient(to bottom right, transparent calc(50% - 0.5px), var(--rm-text-subtle) calc(50% - 0.5px), var(--rm-text-subtle) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    var(--rm-panel);
+}
+
+.swatchOn {
+  box-shadow: 0 0 0 2px var(--rm-surface), 0 0 0 3.5px var(--rm-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swatch:hover {
+    transform: none;
+  }
+}
